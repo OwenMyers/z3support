@@ -5,11 +5,17 @@ import matplotlib.pyplot as plt
 from matplotlib.patches import FancyBboxPatch
 from matplotlib.patches import Rectangle
 from matplotlib.collections import PatchCollection
+from datamodel.vertex import Vertex
 
 L = 4
 LINE_SIZE = 0.05
 # link length 
 LL = 1.0
+
+def plot_vertex(x, y, row, ax):
+    vertex = Vertex(x, y)
+    vertex.fill_from_csv_row(row)
+    vertex.get_patches_to_plot(LL)
 
 def draw_lattice_backround(ax):
     patches = []
