@@ -44,19 +44,25 @@ def main():
     fig = plt.figure()
     ax = fig.add_subplot(111)
 
-    draw_lattice_backround(ax)
 
-    location = Point(1, 1)
+    location = Point(0, 3)
     vert = Vertex(location, lat_size)
-    vert.N = 'In'
+    vert.N = 'Out'
     vert.E = 'In'
     vert.S = 'In'
     vert.W = 'In'
-    patches = vert.get_patches_to_plot(LINK_LENGTH)
+    vert.make_patches_to_plot(LINK_LENGTH)
 
-    collection = PatchCollection(patches)
+    collection = PatchCollection(vert.rect_patches)
     collection.set_color('grey')
     ax.add_collection(collection)
+
+    draw_lattice_backround(ax)
+
+    collection = PatchCollection(vert.tri_patches)
+    collection.set_color('black')
+    ax.add_collection(collection)
+
 
     plt.axis('equal')
     #plt.axis('off')
