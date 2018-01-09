@@ -42,23 +42,25 @@ def plot_test_points(ax, lat_size):
     rect_patches = []
     tri_patches = []
 
-    location = Point(1, 1)
-    vert = Vertex(location, lat_size)
-    vert.N = 'In'
-    vert.E = 'In'
-    vert.S = 'In'
-    vert.W = 'In'
+    location = Point(0, 1)
+    vert = Vertex(lat_size)
+    vert.location = location
+    vert.N = 'Out'
+    vert.E = 'Out'
+    vert.S = 'Out'
+    vert.W = 'Out'
     vert.make_patches_to_plot(LINK_LENGTH)
 
     rect_patches += vert.rect_patches
     tri_patches += vert.tri_patches
 
-    location = Point(2, 2)
-    vert = Vertex(location, lat_size)
-    vert.N = 'Out'
-    vert.E = 'Out'
-    vert.S = 'Out'
-    vert.W = 'Out'
+    location = Point(3, 3)
+    vert = Vertex(lat_size)
+    vert.location = location
+    vert.N = 'In'
+    vert.E = 'In'
+    vert.S = 'In'
+    vert.W = 'In'
     vert.make_patches_to_plot(LINK_LENGTH)
 
     rect_patches += vert.rect_patches
@@ -81,6 +83,8 @@ def main():
     rect_patches = []
     tri_patches = []
 
+    testing = True 
+
     lattice_files = os.listdir('lattices')
 
     for cur_f in lattice_files:
@@ -89,6 +93,10 @@ def main():
         
         fig = plt.figure()
         ax = fig.add_subplot(111)
+
+        if testing:
+            plot_test_points(ax, lat_size)
+            break
 
         full_f_name = os.path.join('lattices', cur_f)
 
@@ -122,6 +130,10 @@ def main():
         #plt.show()
         full_fig_name = os.path.join('figures', 'lattices', cur_f.split('.')[0] + '.png')
         plt.savefig(full_fig_name )
+
+    if testing:
+        plt.axis('equal')
+        plt.show()
 
 if __name__ == "__main__":
     main()

@@ -31,7 +31,7 @@ class Vertex:
         self.location = Point(float(row['x']), 
                               float(row['y']))
 
-    def full_north_patch(self, link_length, link_width):
+    def full_north_patch(self, link_length, link_width, location, flip_direction=False):
         if self.N == 'Blank':
             return
         elif self.N == 'Out':
@@ -39,39 +39,41 @@ class Vertex:
         elif self.N == 'In':
             orientation = np.pi
         # Triangle stuff
-        center_x = self.location.x
-        center_y = self.location.y + link_length/2.0
+        center_x = location.x
+        center_y = location.y + link_length/2.0
         triangle = mpatches.RegularPolygon((center_x,center_y), 3, radius=link_width/2.0, orientation=orientation)
 
         # Rectangle stuff
-        lower_left_x = self.location.x - link_width/2.0
-        lower_left_y = self.location.y
+        lower_left_x = location.x - link_width/2.0
+        lower_left_y = location.y
         p = rounded_rect_patch(lower_left_x, lower_left_y, link_width, link_length)
 
         self.rect_patches.append(p)
         self.tri_patches.append(triangle)
 
-    def half_north_patch(self, link_length, link_width):
+    def half_north_patch(self, link_length, link_width, location, flip_direction=False):
         if self.N == 'Blank':
             return
         elif self.N == 'Out':
             orientation = 0.0
         elif self.N == 'In':
             orientation = np.pi
+        if flip_direction:
+            orientation += np.pi
         # Triangle stuff
-        center_x = self.location.x
-        center_y = self.location.y + link_length/2.0
+        center_x = location.x
+        center_y = location.y + link_length/2.0
         triangle = mpatches.RegularPolygon((center_x,center_y), 3, radius=link_width/2.0, orientation=orientation)
 
         # Rectangle stuff
-        lower_left_x = self.location.x - link_width/2.0
-        lower_left_y = self.location.y
+        lower_left_x = location.x - link_width/2.0
+        lower_left_y = location.y
         p = rounded_rect_patch(lower_left_x, lower_left_y, link_width, link_length/2.0)
 
         self.rect_patches.append(p)
         self.tri_patches.append(triangle)
  
-    def full_south_patch(self, link_length, link_width):
+    def full_south_patch(self, link_length, link_width, location, flip_direction=False):
         if self.S == 'Blank':
             return
         elif self.S == 'Out':
@@ -79,39 +81,41 @@ class Vertex:
         elif self.S == 'In':
             orientation = 0.0
         # Triangle stuff
-        center_x = self.location.x
-        center_y = self.location.y - link_length/2.0
+        center_x = location.x
+        center_y = location.y - link_length/2.0
         triangle = mpatches.RegularPolygon((center_x,center_y), 3, radius=link_width/2.0, orientation=orientation)
 
         # Rectangle stuff
-        lower_left_x = self.location.x - link_width/2.0
-        lower_left_y = self.location.y - link_length
+        lower_left_x = location.x - link_width/2.0
+        lower_left_y = location.y - link_length
         p = rounded_rect_patch(lower_left_x, lower_left_y, link_width, link_length)
 
         self.rect_patches.append(p)
         self.tri_patches.append(triangle)
 
-    def half_south_patch(self, link_length, link_width):
+    def half_south_patch(self, link_length, link_width, location, flip_direction=False):
         if self.S == 'Blank':
             return
         elif self.S == 'Out':
             orientation = np.pi
         elif self.S == 'In':
             orientation = 0.0
+        if flip_direction:
+            orientation += np.pi
         # Triangle stuff
-        center_x = self.location.x
-        center_y = self.location.y - link_length/2.0
+        center_x = location.x
+        center_y = location.y - link_length/2.0
         triangle = mpatches.RegularPolygon((center_x,center_y), 3, radius=link_width/2.0, orientation=orientation)
 
         # Rectangle stuff
-        lower_left_x = self.location.x - link_width/2.0
-        lower_left_y = self.location.y - link_length/2.0
+        lower_left_x = location.x - link_width/2.0
+        lower_left_y = location.y - link_length/2.0
         p = rounded_rect_patch(lower_left_x, lower_left_y, link_width, link_length/2.0)
 
         self.rect_patches.append(p)
         self.tri_patches.append(triangle)
 
-    def full_east_patch(self, link_length, link_width):
+    def full_east_patch(self, link_length, link_width, location, flip_direction=False):
         if self.E == 'Blank':
             return
         elif self.E == 'Out':
@@ -119,39 +123,41 @@ class Vertex:
         elif self.E == 'In':
             orientation = np.pi/2.0
         # Triangle stuff
-        center_x = self.location.x + link_length/2.0
-        center_y = self.location.y 
+        center_x = location.x + link_length/2.0
+        center_y = location.y 
         triangle = mpatches.RegularPolygon((center_x,center_y), 3, radius=link_width/2.0, orientation=orientation)
 
         # Rectangle stuff
-        lower_left_x = self.location.x 
-        lower_left_y = self.location.y - link_width/2.0
+        lower_left_x = location.x 
+        lower_left_y = location.y - link_width/2.0
         p = rounded_rect_patch(lower_left_x, lower_left_y, link_length, link_width)
 
         self.rect_patches.append(p)
         self.tri_patches.append(triangle)
 
-    def half_east_patch(self, link_length, link_width):
+    def half_east_patch(self, link_length, link_width, location, flip_direction=False):
         if self.E == 'Blank':
             return
         elif self.E == 'Out':
             orientation = -np.pi/2.0
         elif self.E == 'In':
             orientation = np.pi/2.0
+        if flip_direction:
+            orientation += np.pi
         # Triangle stuff
-        center_x = self.location.x + link_length/2.0
-        center_y = self.location.y 
+        center_x = location.x + link_length/2.0
+        center_y = location.y 
         triangle = mpatches.RegularPolygon((center_x,center_y), 3, radius=link_width/2.0, orientation=orientation)
 
         # Rectangle stuff
-        lower_left_x = self.location.x
-        lower_left_y = self.location.y - link_width/2.0
+        lower_left_x = location.x
+        lower_left_y = location.y - link_width/2.0
         p = rounded_rect_patch(lower_left_x, lower_left_y, link_length/2.0, link_width)
 
         self.rect_patches.append(p)
         self.tri_patches.append(triangle)
 
-    def full_west_patch(self, link_length, link_width):
+    def full_west_patch(self, link_length, link_width, location, flip_direction=False):
         if self.W == 'Blank':
             return
         elif self.W == 'Out':
@@ -159,33 +165,35 @@ class Vertex:
         elif self.W == 'In':
             orientation = -np.pi/2.0
         # Triangle stuff
-        center_x = self.location.x - link_length/2.0
-        center_y = self.location.y 
+        center_x = location.x - link_length/2.0
+        center_y = location.y 
         triangle = mpatches.RegularPolygon((center_x,center_y), 3, radius=link_width/2.0, orientation=orientation)
 
         # Rectangle stuff
-        lower_left_x = self.location.x - link_length
-        lower_left_y = self.location.y - link_width/2.0
+        lower_left_x = location.x - link_length
+        lower_left_y = location.y - link_width/2.0
         p = rounded_rect_patch(lower_left_x, lower_left_y, link_length, link_width)
 
         self.rect_patches.append(p)
         self.tri_patches.append(triangle)
 
-    def half_west_patch(self, link_length, link_width):
+    def half_west_patch(self, link_length, link_width, location, flip_direction=False):
         if self.W == 'Blank':
             return
         elif self.W == 'Out':
             orientation = np.pi/2.0
         elif self.W == 'In':
             orientation = -np.pi/2.0
+        if flip_direction:
+            orientation += np.pi
         # Triangle stuff
-        center_x = self.location.x - link_length/2.0
-        center_y = self.location.y 
+        center_x = location.x - link_length/2.0
+        center_y = location.y 
         triangle = mpatches.RegularPolygon((center_x,center_y), 3, radius=link_width/2.0, orientation=orientation)
 
         # Rectangle stuff
-        lower_left_x = self.location.x - link_length/2.0
-        lower_left_y = self.location.y - link_width/2.0
+        lower_left_x = location.x - link_length/2.0
+        lower_left_y = location.y - link_width/2.0
         p = rounded_rect_patch(lower_left_x, lower_left_y, link_length/2.0, link_width)
 
         self.rect_patches.append(p)
@@ -196,58 +204,74 @@ class Vertex:
         link_width = float(link_length) * 0.2
 
         if self.vertex_at_boundry_question() == "not at boundary":
-            self.full_north_patch(link_length, link_width) 
-            self.full_south_patch(link_length, link_width) 
-            self.full_east_patch(link_length, link_width) 
-            self.full_west_patch(link_length, link_width) 
+            self.full_north_patch(link_length, link_width, self.location) 
+            self.full_south_patch(link_length, link_width, self.location) 
+            self.full_east_patch(link_length, link_width, self.location) 
+            self.full_west_patch(link_length, link_width, self.location) 
 
         if self.vertex_at_boundry_question() == "down left":
-            self.full_north_patch(link_length, link_width)
-            self.half_south_patch(link_length, link_width)
-            self.full_east_patch(link_length, link_width)
-            self.half_west_patch(link_length, link_width)
+            self.full_north_patch(link_length, link_width, self.location)
+            self.half_south_patch(link_length, link_width, self.location)
+            self.full_east_patch(link_length, link_width, self.location)
+            self.half_west_patch(link_length, link_width, self.location)
 
         if self.vertex_at_boundry_question() == "up left":
-            self.half_north_patch(link_length, link_width)
-            self.full_south_patch(link_length, link_width)
-            self.full_east_patch(link_length, link_width)
-            self.half_west_patch(link_length, link_width)
+            self.half_north_patch(link_length, link_width, self.location)
+            self.full_south_patch(link_length, link_width, self.location)
+            self.full_east_patch(link_length, link_width, self.location)
+            self.half_west_patch(link_length, link_width, self.location)
 
         if self.vertex_at_boundry_question() == "up right":
-            self.half_north_patch(link_length, link_width)
-            self.full_south_patch(link_length, link_width)
-            self.half_east_patch(link_length, link_width)
-            self.full_west_patch(link_length, link_width)
+            self.half_north_patch(link_length, link_width, self.location)
+            self.full_south_patch(link_length, link_width, self.location)
+            self.half_east_patch(link_length, link_width, self.location)
+            self.full_west_patch(link_length, link_width, self.location)
 
         if self.vertex_at_boundry_question() == "down right":
-            self.full_north_patch(link_length, link_width)
-            self.half_south_patch(link_length, link_width)
-            self.half_east_patch(link_length, link_width)
-            self.full_west_patch(link_length, link_width)
+            self.full_north_patch(link_length, link_width, self.location)
+            self.half_south_patch(link_length, link_width, self.location)
+            self.half_east_patch(link_length, link_width, self.location)
+            self.full_west_patch(link_length, link_width, self.location)
 
         if self.vertex_at_boundry_question() == "left":
-            self.full_north_patch(link_length, link_width)
-            self.full_south_patch(link_length, link_width)
-            self.full_east_patch(link_length, link_width)
-            self.half_west_patch(link_length, link_width)
+            self.full_north_patch(link_length, link_width, self.location)
+            self.full_south_patch(link_length, link_width, self.location)
+            self.full_east_patch(link_length, link_width, self.location)
+            self.half_west_patch(link_length, link_width, self.location)
+
+        if "left" in self.vertex_at_boundry_question():
+            other_location = Point(self.size.x - 1, self.location.y)
+            self.half_east_patch(link_length, link_width, other_location, flip_direction=True)
 
         if self.vertex_at_boundry_question() == "right":
-            self.full_north_patch(link_length, link_width)
-            self.full_south_patch(link_length, link_width)
-            self.half_east_patch(link_length, link_width)
-            self.full_west_patch(link_length, link_width)
+            self.full_north_patch(link_length, link_width, self.location)
+            self.full_south_patch(link_length, link_width, self.location)
+            self.half_east_patch(link_length, link_width, self.location)
+            self.full_west_patch(link_length, link_width, self.location)
+
+        if "right" in self.vertex_at_boundry_question():
+            other_location = Point(0, self.location.y)
+            self.half_west_patch(link_length, link_width, other_location, flip_direction=True)
 
         if self.vertex_at_boundry_question() == "down":
-            self.full_north_patch(link_length, link_width)
-            self.half_south_patch(link_length, link_width)
-            self.full_east_patch(link_length, link_width)
-            self.full_west_patch(link_length, link_width)
+            self.full_north_patch(link_length, link_width, self.location)
+            self.half_south_patch(link_length, link_width, self.location)
+            self.full_east_patch(link_length, link_width, self.location)
+            self.full_west_patch(link_length, link_width, self.location)
+
+        if "down" in self.vertex_at_boundry_question():
+            other_location = Point(self.location.x, self.size.y-1)
+            self.half_north_patch(link_length, link_width, other_location, flip_direction=True)
 
         if self.vertex_at_boundry_question() == "up":
-            self.half_north_patch(link_length, link_width)
-            self.full_south_patch(link_length, link_width)
-            self.full_east_patch(link_length, link_width)
-            self.full_west_patch(link_length, link_width)
+            self.half_north_patch(link_length, link_width, self.location)
+            self.full_south_patch(link_length, link_width, self.location)
+            self.full_east_patch(link_length, link_width, self.location)
+            self.full_west_patch(link_length, link_width, self.location)
+
+        if "up" in self.vertex_at_boundry_question():
+            other_location = Point(self.location.x, 0)
+            self.half_south_patch(link_length, link_width, other_location, flip_direction=True)
 
     def vertex_at_boundry_question(self):
         """
