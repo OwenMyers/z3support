@@ -1,9 +1,9 @@
 x,y,N,E,S,W
-0,0,Out,Blank,Blank,In
+0,0,Blank,Out,Blank,In
 2,0,Blank,Out,Blank,In
-1,1,Blank,Out,Out,Out
-3,1,Blank,Out,Blank,In
-0,2,Blank,Out,Blank,In
+1,1,Blank,Out,Blank,In
+3,1,Out,Blank,Blank,In
+0,2,Blank,Out,Out,Out
 2,2,Blank,Out,Blank,In
 1,3,Blank,Out,Blank,In
 3,3,Blank,Out,Blank,In

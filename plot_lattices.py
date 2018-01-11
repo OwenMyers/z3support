@@ -14,10 +14,6 @@ LINE_SIZE = 0.05
 # link length 
 LINK_LENGTH = 1.0
 
-def plot_vertex(x, y, row, ax):
-    vertex = Vertex(x, y)
-    vertex.fill_from_csv_row(row)
-    vertex.get_patches_to_plot(LINK_LENGTH)
 
 def draw_lattice_backround(ax):
     patches = []
@@ -37,6 +33,7 @@ def draw_lattice_backround(ax):
     collection = PatchCollection(patches)
     collection.set_color('k')
     ax.add_collection(collection)
+
 
 def plot_test_points(ax, lat_size):
     rect_patches = []
@@ -79,15 +76,14 @@ def plot_test_points(ax, lat_size):
 
 def main():
     lat_size = Point(4, 4)
-    
-    rect_patches = []
-    tri_patches = []
 
-    testing = True 
+    testing = False
 
     lattice_files = os.listdir('lattices')
 
     for cur_f in lattice_files:
+        rect_patches = []
+        tri_patches = []
         if '.csv' not in cur_f:
             continue
         
@@ -107,29 +103,29 @@ def main():
             
                 vert = Vertex(lat_size)
                 vert.fill_from_csv_row(row)
-                vert.make_patches_to_plot(LINK_LENGTH)
+                vert.make_patches_to_plot(LINK_LENGTH, link_width_factor=0.15)
 
                 rect_patches += vert.rect_patches
                 tri_patches += vert.tri_patches
 
-        collection = PatchCollection(rect_patches)
-        collection.set_color('grey')
-        ax.add_collection(collection)
+            collection = PatchCollection(rect_patches)
+            collection.set_color('grey')
+            ax.add_collection(collection)
+
+            collection = PatchCollection(tri_patches)
+            collection.set_color('black')
+            ax.add_collection(collection)
 
         draw_lattice_backround(ax)
 
-        collection = PatchCollection(tri_patches)
-        collection.set_color('black')
-        ax.add_collection(collection)
-
-
         plt.axis('equal')
-        #plt.axis('off')
+        plt.axis('off')
         #plt.tight_layout()
 
         #plt.show()
         full_fig_name = os.path.join('figures', 'lattices', cur_f.split('.')[0] + '.png')
         plt.savefig(full_fig_name )
+        plt.close(fig)
 
     if testing:
         plt.axis('equal')
