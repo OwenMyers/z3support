@@ -1,6 +1,5 @@
 #!/bin/bash
 
-
 cd figures/lattices;
 
 ffmpeg -start_number 0\
