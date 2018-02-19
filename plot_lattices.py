@@ -9,6 +9,13 @@ from z3support.datamodel.point import Point
 import os
 import csv
 
+import matplotlib.pyplot as plt
+plt.style.use('aps')
+import matplotlib
+pgf_with_rc_fonts = {"pgf.texsystem": "pdflatex"}
+matplotlib.rcParams.update(pgf_with_rc_fonts)
+
+
 L = 4
 LINE_SIZE = 0.05
 # link length 
@@ -88,6 +95,8 @@ def main():
             continue
         
         fig = plt.figure()
+        #fig.subplots_adjust(bottom=0.14,left=0.135,right=0.98,top=0.97)
+        fig.subplots_adjust(bottom=0.05,left=0.05,right=0.99,top=0.95)
         ax = fig.add_subplot(111)
 
         if testing:
@@ -120,7 +129,11 @@ def main():
 
         plt.axis('equal')
         plt.axis('off')
-        #plt.tight_layout()
+        #ax.set_aspect(1.0)
+
+
+        ax.set_xlim([-0.5, float(L) - 0.5])
+        ax.set_ylim([-0.5, float(L) - 0.5])
 
         #plt.show()
         full_fig_name = os.path.join('figures', 'lattices', cur_f.split('.')[0] + '.png')
