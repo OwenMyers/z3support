@@ -8,6 +8,7 @@ from z3support.datamodel.vertex import Vertex
 from z3support.datamodel.point import Point
 import os
 import csv
+from tqdm import tqdm
 
 import matplotlib.pyplot as plt
 plt.style.use('aps')
@@ -16,7 +17,7 @@ pgf_with_rc_fonts = {"pgf.texsystem": "pdflatex"}
 matplotlib.rcParams.update(pgf_with_rc_fonts)
 
 
-L = 4
+L = 8
 LINE_SIZE = 0.05
 # link length 
 LINK_LENGTH = 1.0
@@ -82,13 +83,13 @@ def plot_test_points(ax, lat_size):
 
 
 def main():
-    lat_size = Point(4, 4)
+    lat_size = Point(L, L)
 
     testing = False
 
     lattice_files = os.listdir('lattices')
 
-    for cur_f in lattice_files:
+    for cur_f in tqdm(lattice_files):
         rect_patches = []
         tri_patches = []
         if '.csv' not in cur_f:
@@ -137,7 +138,7 @@ def main():
 
         #plt.show()
         full_fig_name = os.path.join('figures', 'lattices', cur_f.split('.')[0] + '.png')
-        plt.savefig(full_fig_name )
+        plt.savefig(full_fig_name, dpi=300)
         plt.close(fig)
 
     if testing:
