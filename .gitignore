@@ -4,3 +4,4 @@ build/
 dist/
 z3support.egg-info/
 .idea/
+._*
