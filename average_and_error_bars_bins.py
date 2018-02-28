@@ -1,9 +1,7 @@
 import numpy as np
 import argparse
-
-
-def find_root_path(full_path_in):
-    assert 'data' in full_path_in
+import os
+from z3support.datamodel.general_info import GeneralInformation
 
 
 # We are going to assume a structure to the data:
@@ -16,10 +14,9 @@ def main():
     args = parser.parse_args()
 
     file_and_path_string = args.f
+    assert 'data' in file_and_path_string
 
-    # Find the directory that the `data` folder is in.
-    root_path = find_root_path()
-
+    general_information = GeneralInformation.from_file_path(file_and_path_string)
 
 if __name__ == '__main__':
     main()
