@@ -2,12 +2,32 @@ from .point import Point
 import os
 from datetime import datetime
 
+class GeneralInformation:
 
-class GeneralInformation():
-    def __init__(self, system_size, file_and_path, date):
-        self.system_size = Point(0, 0)
-        self.file_and_path = ''
-        self.date = None
+    def __init__(self,
+                 system_size,
+                 file_and_path,
+                 date,
+                 lattice_size_path,
+                 lattice_size):
+        """
+        :param system_size:
+        :type system_size: Point object
+        :param file_and_path:
+        :type file_and_path: string
+        :param date:
+        :type date: datetime datetime
+        :param lattice_size_path:
+        :type lattice_size_path: string
+        """
+
+        self.system_size = system_size
+        self.file_and_path = file_and_path
+        self.date = date
+        self.lattice_size_path = lattice_size_path
+
+    def date_as_string(self):
+        return self.date.strftime("%Y-%m-%d_%H:%M:%S")
 
     @classmethod
     def from_file_path(cls, file_and_path):
@@ -21,5 +41,8 @@ class GeneralInformation():
         lattice_size_x = int(lattice_size.split('_')[-2])
         system_size = Point(lattice_size_x, lattice_size_y)
 
-        return cls(system_size, file_and_path, date)
+        return cls(system_size,
+                   file_and_path,
+                   date,
+                   lattice_size_path)
 
