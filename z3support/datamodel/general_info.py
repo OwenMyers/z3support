@@ -9,7 +9,7 @@ class GeneralInformation:
                  file_and_path,
                  date,
                  lattice_size_path,
-                 lattice_size):
+                 ):
         """
         :param system_size:
         :type system_size: Point object

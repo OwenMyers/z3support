@@ -5,6 +5,40 @@ from z3support.datamodel.general_info import GeneralInformation
 from z3support import data_tools
 
 
+def average_and_error_data(data, number_of_real_vertices):
+    """
+    From the correctly shaped data find the average and the error.
+
+    Average over the bins and also find the error bars for each. Pay careful attention to the shape
+    of the data and make sure you don't forget your factor of 1/sqrt(N)
+
+    :param data: numpy array with shape (N bins, N real vertices, 6) where 6 is for
+        x loc, y loc, North, East, South, West.
+    :param number_of_real_vertices: an unnecessary parameter because it can be found from
+        len(data[0,:,0]) but it makes things more readable.
+    :return: two 2D arrays: one of the averages, the other of the error bars. shape of
+        each is (N real vertices, 6) because we are keeping the x, y locations for
+        convenience.
+    """
+
+    averages = np.zeros([number_of_real_vertices, 6])
+    error_bars = np.zeros([number_of_real_vertices, 6])
+
+    number_of_bins = data.shape[0]
+
+    for i in range(number_of_real_vertices):
+        for j in range(6):
+            current_average = data[:, i, j].mean()
+            averages[i, j] = current_average
+
+            current_error_bar = data[:, i, j].std() / np.sqrt(float(number_of_bins))
+            error_bars[i, j] = current_error_bar
+            if j < 2:
+                assert current_error_bar < data_tools.EPSILON
+
+    return averages, error_bars
+
+
 def create_if_necessary_analysis_path(general_information):
 
     analysis_path = os.path.join(general_information.lattice_size_path,
@@ -41,10 +75,10 @@ def main():
 
     general_information = GeneralInformation.from_file_path(file_and_path_string)
     analysis_path = create_if_necessary_analysis_path(general_information)
-    dated_path = create_if_necessary_dated_path(analysis_path)
+    dated_path = create_if_necessary_dated_path(analysis_path, general_information)
 
     f = open(file_and_path_string, "r")
-    header_line = f.readline()
+    header_line = f.readline().rstrip()
     data = np.genfromtxt(f, delimiter=',')
 
     data_tools.check_data(data)
@@ -55,8 +89,13 @@ def main():
 
     data = data.reshape(-1, number_of_real_vertices, 6)
 
-    for d in data:
-        print(d)
+    averages, error_bars = average_and_error_data(data, number_of_real_vertices)
+
+    averages_file_and_path = os.path.join(dated_path, "averages_over_bins.csv")
+    error_bars_file_and_path = os.path.join(dated_path, "error_bars.csv")
+
+    np.savetxt(averages_file_and_path, averages, delimiter=",", header=header_line, comments='')
+    np.savetxt(error_bars_file_and_path, error_bars, delimiter=",", header=header_line, comments='')
 
     print("Done")
 
