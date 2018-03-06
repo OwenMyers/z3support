@@ -15,23 +15,64 @@ class Vertex:
         self.location = None
         self.size = size
 
+        # "Blank" "In" or "Out"
         self.N = None
         self.E = None
         self.S = None
         self.W = None
 
-        # rectangular patces list
+        # numeric value
+        self.N_value = None
+        self.E_value = None
+        self.S_value = None
+        self.W_value = None
+
+        # rectangular patches list
         self.rect_patches = []
         # triangles which show the direction of links
         self.tri_patches = []
 
+        # If we are looking at an estimator with values we need to store those values.
+        self.values = []
+
     def fill_from_csv_row(self, row):
+        """
+        Assign attributes from row of csv.
+
+        This function assumes row will contain values of "Blank", "In", "out".
+        This is just for plotting a sample of the lattice.
+
+        :param row: csv DictReader row
+        """
         self.N = row['N']
         self.E = row['E']
         self.S = row['S']
         self.W = row['W']
         self.location = Point(float(row['x']),
                               float(row['y']))
+
+    def estimator_fill_from_csv_row(self, row):
+        """
+        Assign values (and blank for directions) to links from row of csv.
+
+        This is used for plotting a 2D rendition of the lattice where links will
+        be colored based on the value of the estimator value at that link.
+        Really this just makes a blank lattice and stores the estimator values
+        appropriately.
+
+        :param row: csv DictReader row -> contains values of estimator.
+        """
+        self.N = "no orientation"
+        self.E = "no orientation"
+        self.S = "no orientation"
+        self.W = "no orientation"
+        self.location = Point(float(row['x']),
+                              float(row['y']))
+        self.N_value = row['N']
+        self.E_value = row['E']
+        self.S_value = row['S']
+        self.W_value = row['W']
+
 
     def full_north_patch(self, link_length, link_width, location, direction):
         if direction == 'Blank':
@@ -40,10 +81,15 @@ class Vertex:
             orientation = 0.0
         elif direction == 'In':
             orientation = np.pi
-        # Triangle stuff
-        center_x = location.x
-        center_y = location.y + link_length / 2.0
-        triangle = mpatches.RegularPolygon((center_x, center_y), 3, radius=link_width / 2.0, orientation=orientation)
+
+        if not (direction == "no orientation"):
+            # Triangle stuff
+            center_x = location.x
+            center_y = location.y + link_length / 2.0
+            triangle = mpatches.RegularPolygon((center_x, center_y), 3, radius=link_width / 2.0, orientation=orientation)
+            self.tri_patches.append(triangle)
+        else:
+            self.values.append(self.N_value)
 
         # Rectangle stuff
         lower_left_x = location.x - link_width / 2.0
@@ -51,7 +97,6 @@ class Vertex:
         p = rounded_rect_patch(lower_left_x, lower_left_y, link_width, link_length)
 
         self.rect_patches.append(p)
-        self.tri_patches.append(triangle)
 
     def half_north_patch(self, link_length, link_width, location, direction):
         if direction == 'Blank':
@@ -60,10 +105,15 @@ class Vertex:
             orientation = 0.0
         elif direction == 'In':
             orientation = np.pi
-        # Triangle stuff
-        center_x = location.x
-        center_y = location.y + link_length / 2.0
-        triangle = mpatches.RegularPolygon((center_x, center_y), 3, radius=link_width / 2.0, orientation=orientation)
+
+        if not (direction == "no orientation"):
+            # Triangle stuff
+            center_x = location.x
+            center_y = location.y + link_length / 2.0
+            triangle = mpatches.RegularPolygon((center_x, center_y), 3, radius=link_width / 2.0, orientation=orientation)
+            self.tri_patches.append(triangle)
+        else:
+            self.values.append(self.N_value)
 
         # Rectangle stuff
         lower_left_x = location.x - link_width / 2.0
@@ -71,7 +121,6 @@ class Vertex:
         p = rounded_rect_patch(lower_left_x, lower_left_y, link_width, link_length / 2.0)
 
         self.rect_patches.append(p)
-        self.tri_patches.append(triangle)
 
     def full_south_patch(self, link_length, link_width, location, direction):
         if direction == 'Blank':
@@ -80,10 +129,15 @@ class Vertex:
             orientation = np.pi
         elif direction == 'In':
             orientation = 0.0
-        # Triangle stuff
-        center_x = location.x
-        center_y = location.y - link_length / 2.0
-        triangle = mpatches.RegularPolygon((center_x, center_y), 3, radius=link_width / 2.0, orientation=orientation)
+
+        if not (direction == "no orientation"):
+            # Triangle stuff
+            center_x = location.x
+            center_y = location.y - link_length / 2.0
+            triangle = mpatches.RegularPolygon((center_x, center_y), 3, radius=link_width / 2.0, orientation=orientation)
+            self.tri_patches.append(triangle)
+        else:
+            self.values.append(self.S_value)
 
         # Rectangle stuff
         lower_left_x = location.x - link_width / 2.0
@@ -91,7 +145,6 @@ class Vertex:
         p = rounded_rect_patch(lower_left_x, lower_left_y, link_width, link_length)
 
         self.rect_patches.append(p)
-        self.tri_patches.append(triangle)
 
     def half_south_patch(self, link_length, link_width, location, direction):
         if direction == 'Blank':
@@ -100,10 +153,15 @@ class Vertex:
             orientation = np.pi
         elif direction == 'In':
             orientation = 0.0
-        # Triangle stuff
-        center_x = location.x
-        center_y = location.y - link_length / 2.0
-        triangle = mpatches.RegularPolygon((center_x, center_y), 3, radius=link_width / 2.0, orientation=orientation)
+
+        if not (direction == "no orientation"):
+            # Triangle stuff
+            center_x = location.x
+            center_y = location.y - link_length / 2.0
+            triangle = mpatches.RegularPolygon((center_x, center_y), 3, radius=link_width / 2.0, orientation=orientation)
+            self.tri_patches.append(triangle)
+        else:
+            self.values.append(self.S_value)
 
         # Rectangle stuff
         lower_left_x = location.x - link_width / 2.0
@@ -111,7 +169,6 @@ class Vertex:
         p = rounded_rect_patch(lower_left_x, lower_left_y, link_width, link_length / 2.0)
 
         self.rect_patches.append(p)
-        self.tri_patches.append(triangle)
 
     def full_east_patch(self, link_length, link_width, location, direction):
         if direction == 'Blank':
@@ -120,10 +177,15 @@ class Vertex:
             orientation = -np.pi / 2.0
         elif direction == 'In':
             orientation = np.pi / 2.0
-        # Triangle stuff
-        center_x = location.x + link_length / 2.0
-        center_y = location.y
-        triangle = mpatches.RegularPolygon((center_x, center_y), 3, radius=link_width / 2.0, orientation=orientation)
+
+        if not (direction == "no orientation"):
+            # Triangle stuff
+            center_x = location.x + link_length / 2.0
+            center_y = location.y
+            triangle = mpatches.RegularPolygon((center_x, center_y), 3, radius=link_width / 2.0, orientation=orientation)
+            self.tri_patches.append(triangle)
+        else:
+            self.values.append(self.E_value)
 
         # Rectangle stuff
         lower_left_x = location.x
@@ -131,7 +193,6 @@ class Vertex:
         p = rounded_rect_patch(lower_left_x, lower_left_y, link_length, link_width)
 
         self.rect_patches.append(p)
-        self.tri_patches.append(triangle)
 
     def half_east_patch(self, link_length, link_width, location, direction):
         if direction == 'Blank':
@@ -140,10 +201,15 @@ class Vertex:
             orientation = -np.pi / 2.0
         elif direction == 'In':
             orientation = np.pi / 2.0
-        # Triangle stuff
-        center_x = location.x + link_length / 2.0
-        center_y = location.y
-        triangle = mpatches.RegularPolygon((center_x, center_y), 3, radius=link_width / 2.0, orientation=orientation)
+
+        if not (direction == "no orientation"):
+            # Triangle stuff
+            center_x = location.x + link_length / 2.0
+            center_y = location.y
+            triangle = mpatches.RegularPolygon((center_x, center_y), 3, radius=link_width / 2.0, orientation=orientation)
+            self.tri_patches.append(triangle)
+        else:
+            self.values.append(self.E_value)
 
         # Rectangle stuff
         lower_left_x = location.x
@@ -151,7 +217,6 @@ class Vertex:
         p = rounded_rect_patch(lower_left_x, lower_left_y, link_length / 2.0, link_width)
 
         self.rect_patches.append(p)
-        self.tri_patches.append(triangle)
 
     def full_west_patch(self, link_length, link_width, location, direction):
         if direction == 'Blank':
@@ -160,10 +225,15 @@ class Vertex:
             orientation = np.pi / 2.0
         elif direction == 'In':
             orientation = -np.pi / 2.0
-        # Triangle stuff
-        center_x = location.x - link_length / 2.0
-        center_y = location.y
-        triangle = mpatches.RegularPolygon((center_x, center_y), 3, radius=link_width / 2.0, orientation=orientation)
+
+        if not (direction == "no orientation"):
+            # Triangle stuff
+            center_x = location.x - link_length / 2.0
+            center_y = location.y
+            triangle = mpatches.RegularPolygon((center_x, center_y), 3, radius=link_width / 2.0, orientation=orientation)
+            self.tri_patches.append(triangle)
+        else:
+            self.values.append(self.W_value)
 
         # Rectangle stuff
         lower_left_x = location.x - link_length
@@ -171,7 +241,6 @@ class Vertex:
         p = rounded_rect_patch(lower_left_x, lower_left_y, link_length, link_width)
 
         self.rect_patches.append(p)
-        self.tri_patches.append(triangle)
 
     def half_west_patch(self, link_length, link_width, location, direction):
         if direction == 'Blank':
@@ -180,10 +249,15 @@ class Vertex:
             orientation = np.pi / 2.0
         elif direction == 'In':
             orientation = -np.pi / 2.0
-        # Triangle stuff
-        center_x = location.x - link_length / 2.0
-        center_y = location.y
-        triangle = mpatches.RegularPolygon((center_x, center_y), 3, radius=link_width / 2.0, orientation=orientation)
+
+        if not (direction == "no orientation"):
+            # Triangle stuff
+            center_x = location.x - link_length / 2.0
+            center_y = location.y
+            triangle = mpatches.RegularPolygon((center_x, center_y), 3, radius=link_width / 2.0, orientation=orientation)
+            self.tri_patches.append(triangle)
+        else:
+            self.values.append(self.W_value)
 
         # Rectangle stuff
         lower_left_x = location.x - link_length / 2.0
@@ -191,7 +265,6 @@ class Vertex:
         p = rounded_rect_patch(lower_left_x, lower_left_y, link_length / 2.0, link_width)
 
         self.rect_patches.append(p)
-        self.tri_patches.append(triangle)
 
     def make_patches_to_plot(self, link_length, link_width_factor=0.2):
         link_width = float(link_length) * link_width_factor

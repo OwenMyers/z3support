@@ -1,7 +1,3 @@
-import matplotlib as mpl
-import matplotlib.pyplot as plt
-#from matplotlib.gridspec import GridSpec
-from matplotlib.patches import FancyBboxPatch
 from matplotlib.patches import Rectangle
 from matplotlib.collections import PatchCollection
 from z3support.datamodel.vertex import Vertex
@@ -9,10 +5,10 @@ from z3support.datamodel.point import Point
 import os
 import csv
 from tqdm import tqdm
-
 import matplotlib.pyplot as plt
-plt.style.use('aps')
 import matplotlib
+
+plt.style.use('aps')
 pgf_with_rc_fonts = {"pgf.texsystem": "pdflatex"}
 matplotlib.rcParams.update(pgf_with_rc_fonts)
 
@@ -21,6 +17,15 @@ L = 8
 LINE_SIZE = 0.05
 # link length 
 LINK_LENGTH = 1.0
+
+
+def adjusted_figure():
+    fig = plt.figure()
+    #fig.subplots_adjust(bottom=0.14,left=0.135,right=0.98,top=0.97)
+    fig.subplots_adjust(bottom=0.05,left=0.05,right=0.99,top=0.95)
+    ax = fig.add_subplot(111)
+
+    return fig, ax
 
 
 def draw_lattice_backround(ax):
@@ -94,11 +99,8 @@ def main():
         tri_patches = []
         if '.csv' not in cur_f:
             continue
-        
-        fig = plt.figure()
-        #fig.subplots_adjust(bottom=0.14,left=0.135,right=0.98,top=0.97)
-        fig.subplots_adjust(bottom=0.05,left=0.05,right=0.99,top=0.95)
-        ax = fig.add_subplot(111)
+
+        fig, ax = adjusted_figure()
 
         if testing:
             plot_test_points(ax, lat_size)
