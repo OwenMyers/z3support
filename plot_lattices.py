@@ -53,28 +53,28 @@ def plot_test_points(ax, lat_size):
     tri_patches = []
 
     location = Point(0, 1)
-    vert = Vertex(lat_size)
-    vert.location = location
-    vert.N = 'Out'
-    vert.E = 'Out'
-    vert.S = 'Out'
-    vert.W = 'Out'
-    vert.make_patches_to_plot(LINK_LENGTH)
+    vertex = Vertex(lat_size)
+    vertex.location = location
+    vertex.N = 'Out'
+    vertex.E = 'Out'
+    vertex.S = 'Out'
+    vertex.W = 'Out'
+    vertex.make_patches_to_plot(LINK_LENGTH)
 
-    rect_patches += vert.rect_patches
-    tri_patches += vert.tri_patches
+    rect_patches += vertex.rect_patches
+    tri_patches += vertex.tri_patches
 
     location = Point(3, 3)
-    vert = Vertex(lat_size)
-    vert.location = location
-    vert.N = 'In'
-    vert.E = 'In'
-    vert.S = 'In'
-    vert.W = 'In'
-    vert.make_patches_to_plot(LINK_LENGTH)
+    vertex = Vertex(lat_size)
+    vertex.location = location
+    vertex.N = 'In'
+    vertex.E = 'In'
+    vertex.S = 'In'
+    vertex.W = 'In'
+    vertex.make_patches_to_plot(LINK_LENGTH)
 
-    rect_patches += vert.rect_patches
-    tri_patches += vert.tri_patches
+    rect_patches += vertex.rect_patches
+    tri_patches += vertex.tri_patches
     
     collection = PatchCollection(rect_patches)
     collection.set_color('grey')
@@ -113,12 +113,12 @@ def main():
             
             for row in reader:
             
-                vert = Vertex(lat_size)
-                vert.fill_from_csv_row(row)
-                vert.make_patches_to_plot(LINK_LENGTH, link_width_factor=0.15)
+                vertex = Vertex(lat_size)
+                vertex.fill_from_csv_row(row)
+                vertex.make_patches_to_plot(LINK_LENGTH, link_width_factor=0.15)
 
-                rect_patches += vert.rect_patches
-                tri_patches += vert.tri_patches
+                rect_patches += vertex.rect_patches
+                tri_patches += vertex.tri_patches
 
             collection = PatchCollection(rect_patches)
             collection.set_color('grey')

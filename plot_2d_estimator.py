@@ -35,12 +35,12 @@ def main():
         reader = csv.DictReader(f)
 
         for row in reader():
-            vert = Vertex(general_information.system_size)
-            vert.estimator_fill_from_csv_row(row)
-            vert.make_patches_to_plot(LINK_LENGTH, link_width_factor=0.15)
+            vertex = Vertex(general_information.system_size)
+            vertex.estimator_fill_from_csv_row(row)
+            vertex.make_patches_to_plot(LINK_LENGTH, link_width_factor=0.15)
 
-            rectangle_patches += vert.rect_patches
-            estimator_values += vert.values
+            rectangle_patches += vertex.rect_patches
+            estimator_values += vertex.values
 
     collection = PatchCollection(rectangle_patches)
     collection.set_color('grey')
