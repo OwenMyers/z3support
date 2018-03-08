@@ -8,7 +8,7 @@ from tqdm import tqdm
 import matplotlib.pyplot as plt
 import matplotlib
 
-plt.style.use('aps')
+#plt.style.use('aps')
 pgf_with_rc_fonts = {"pgf.texsystem": "pdflatex"}
 matplotlib.rcParams.update(pgf_with_rc_fonts)
 
@@ -28,18 +28,18 @@ def adjusted_figure():
     return fig, ax
 
 
-def draw_lattice_backround(ax):
+def draw_lattice_backround(square_lattice_size, ax):
     patches = []
 
     # horizontal lines
-    for i in range(L):
+    for i in range(square_lattice_size):
         loc = (-LINK_LENGTH/2.0,float(i) - LINE_SIZE/2.0)
-        cur_horz_rect = Rectangle(loc, L, LINE_SIZE, color='k')
+        cur_horz_rect = Rectangle(loc, square_lattice_size, LINE_SIZE, color='k')
         patches.append(cur_horz_rect) 
     # vertical lines
-    for i in range(L):
+    for i in range(square_lattice_size):
         loc = (i - LINE_SIZE/2.0, -LINK_LENGTH/2.0)
-        cur_vert_rect = Rectangle(loc, LINE_SIZE, L, color='k')
+        cur_vert_rect = Rectangle(loc, LINE_SIZE, square_lattice_size, color='k')
         patches.append(cur_vert_rect) 
 
 
@@ -80,7 +80,7 @@ def plot_test_points(ax, lat_size):
     collection.set_color('grey')
     ax.add_collection(collection)
 
-    draw_lattice_backround(ax)
+    draw_lattice_backround(L, ax)
 
     collection = PatchCollection(tri_patches)
     collection.set_color('black')

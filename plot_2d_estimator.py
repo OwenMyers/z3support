@@ -2,16 +2,16 @@ import argparse
 from z3support.datamodel.general_info import GeneralInformation
 from z3support.datamodel.vertex import Vertex
 import csv
-import matplotlib.pyplot as plt
-import matplotlib
-from .plot_lattices import draw_lattice_backround
-from .plot_lattices import LINK_LENGTH
-from .plot_lattices import L
-from .plot_lattices import adjusted_figure
+from plot_lattices import draw_lattice_backround
+from plot_lattices import LINK_LENGTH
+from plot_lattices import L
+from plot_lattices import adjusted_figure
 from matplotlib.collections import PatchCollection
 import os
+import matplotlib.pyplot as plt
+import matplotlib
 
-plt.style.use('aps')
+#plt.style.use('aps')
 pgf_with_rc_fonts = {"pgf.texsystem": "pdflatex"}
 matplotlib.rcParams.update(pgf_with_rc_fonts)
 
@@ -25,16 +25,18 @@ def main():
     assert 'data' in file_and_path_string
 
     general_information = GeneralInformation.from_file_path(file_and_path_string)
+    assert general_information.system_size.x == general_information.system_size.y,\
+        "Can't handel rectangular lattices right now."
 
     fig, ax = adjusted_figure()
-    draw_lattice_backround(ax)
+    draw_lattice_backround(general_information.system_size.x, ax)
 
     rectangle_patches = []
     estimator_values = []
     with open(file_and_path_string, "r") as f:
         reader = csv.DictReader(f)
 
-        for row in reader():
+        for row in reader:
             vertex = Vertex(general_information.system_size)
             vertex.estimator_fill_from_csv_row(row)
             vertex.make_patches_to_plot(LINK_LENGTH, link_width_factor=0.15)

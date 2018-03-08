@@ -91,8 +91,14 @@ def main():
 
     averages, error_bars = average_and_error_data(data, number_of_real_vertices)
 
-    averages_file_and_path = os.path.join(dated_path, "averages_over_bins.csv")
-    error_bars_file_and_path = os.path.join(dated_path, "error_bars.csv")
+    averages_file_and_path = os.path.join(dated_path,
+                                          general_information.file_name_no_extension
+                                            + "_averages_over_bins.csv"
+                                          )
+    error_bars_file_and_path = os.path.join(dated_path,
+                                            general_information.file_name_no_extension
+                                                + "_error_bars.csv"
+                                            )
 
     np.savetxt(averages_file_and_path, averages, delimiter=",", header=header_line, comments='')
     np.savetxt(error_bars_file_and_path, error_bars, delimiter=",", header=header_line, comments='')

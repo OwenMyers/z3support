@@ -7,3 +7,5 @@ def flip_inout(direction):
         return 'Out'
     if direction == 'Out':
         return 'In'
+    if direction == "no orientation":
+        return "no orientation"
