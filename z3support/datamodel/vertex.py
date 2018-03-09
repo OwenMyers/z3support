@@ -35,6 +35,11 @@ class Vertex:
         # If we are looking at an estimator with values we need to store those values.
         self.values = []
 
+        self.link_length_subtract = 0.0
+
+    def subtract_off_from_link(self, subtract_amount):
+        self.link_length_subtract = subtract_amount
+
     def fill_from_csv_row(self, row):
         """
         Assign attributes from row of csv.
@@ -92,8 +97,8 @@ class Vertex:
 
         # Rectangle stuff
         lower_left_x = location.x - link_width / 2.0
-        lower_left_y = location.y
-        p = rounded_rect_patch(lower_left_x, lower_left_y, link_width, link_length)
+        lower_left_y = location.y + self.link_length_subtract
+        p = rounded_rect_patch(lower_left_x, lower_left_y, link_width, link_length - 2*self.link_length_subtract)
 
         self.rect_patches.append(p)
 
@@ -116,8 +121,8 @@ class Vertex:
 
         # Rectangle stuff
         lower_left_x = location.x - link_width / 2.0
-        lower_left_y = location.y
-        p = rounded_rect_patch(lower_left_x, lower_left_y, link_width, link_length / 2.0)
+        lower_left_y = location.y + self.link_length_subtract
+        p = rounded_rect_patch(lower_left_x, lower_left_y, link_width, link_length / 2.0 - self.link_length_subtract)
 
         self.rect_patches.append(p)
 
@@ -140,8 +145,8 @@ class Vertex:
 
         # Rectangle stuff
         lower_left_x = location.x - link_width / 2.0
-        lower_left_y = location.y - link_length
-        p = rounded_rect_patch(lower_left_x, lower_left_y, link_width, link_length)
+        lower_left_y = location.y - link_length + self.link_length_subtract
+        p = rounded_rect_patch(lower_left_x, lower_left_y, link_width, link_length - 2*self.link_length_subtract)
 
         self.rect_patches.append(p)
 
@@ -165,7 +170,7 @@ class Vertex:
         # Rectangle stuff
         lower_left_x = location.x - link_width / 2.0
         lower_left_y = location.y - link_length / 2.0
-        p = rounded_rect_patch(lower_left_x, lower_left_y, link_width, link_length / 2.0)
+        p = rounded_rect_patch(lower_left_x, lower_left_y, link_width, link_length / 2.0 - self.link_length_subtract)
 
         self.rect_patches.append(p)
 
@@ -187,9 +192,9 @@ class Vertex:
             self.values.append(self.E_value)
 
         # Rectangle stuff
-        lower_left_x = location.x
+        lower_left_x = location.x + self.link_length_subtract
         lower_left_y = location.y - link_width / 2.0
-        p = rounded_rect_patch(lower_left_x, lower_left_y, link_length, link_width)
+        p = rounded_rect_patch(lower_left_x, lower_left_y, link_length - 2*self.link_length_subtract, link_width)
 
         self.rect_patches.append(p)
 
@@ -211,9 +216,9 @@ class Vertex:
             self.values.append(self.E_value)
 
         # Rectangle stuff
-        lower_left_x = location.x
+        lower_left_x = location.x + self.link_length_subtract
         lower_left_y = location.y - link_width / 2.0
-        p = rounded_rect_patch(lower_left_x, lower_left_y, link_length / 2.0, link_width)
+        p = rounded_rect_patch(lower_left_x, lower_left_y, link_length / 2.0 - self.link_length_subtract, link_width)
 
         self.rect_patches.append(p)
 
@@ -235,9 +240,9 @@ class Vertex:
             self.values.append(self.W_value)
 
         # Rectangle stuff
-        lower_left_x = location.x - link_length
+        lower_left_x = location.x - link_length + self.link_length_subtract
         lower_left_y = location.y - link_width / 2.0
-        p = rounded_rect_patch(lower_left_x, lower_left_y, link_length, link_width)
+        p = rounded_rect_patch(lower_left_x, lower_left_y, link_length - 2*self.link_length_subtract, link_width)
 
         self.rect_patches.append(p)
 
@@ -261,7 +266,7 @@ class Vertex:
         # Rectangle stuff
         lower_left_x = location.x - link_length / 2.0
         lower_left_y = location.y - link_width / 2.0
-        p = rounded_rect_patch(lower_left_x, lower_left_y, link_length / 2.0, link_width)
+        p = rounded_rect_patch(lower_left_x, lower_left_y, link_length / 2.0 - self.link_length_subtract, link_width)
 
         self.rect_patches.append(p)
 

@@ -128,7 +128,7 @@ def main():
             collection.set_color('black')
             ax.add_collection(collection)
 
-        draw_lattice_backround(ax)
+        draw_lattice_backround(L, ax)
 
         plt.axis('equal')
         plt.axis('off')
