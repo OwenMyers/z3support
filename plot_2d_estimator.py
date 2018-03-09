@@ -10,6 +10,7 @@ from matplotlib.collections import PatchCollection
 import os
 import matplotlib.pyplot as plt
 import matplotlib
+import numpy as np
 
 #plt.style.use('aps')
 pgf_with_rc_fonts = {"pgf.texsystem": "pdflatex"}
@@ -45,8 +46,11 @@ def main():
             estimator_values += vertex.values
 
     collection = PatchCollection(rectangle_patches)
-    collection.set_color('grey')
+    #collection.set_color('grey')estimator_values_as_array
+    estimator_values_as_array = np.array(estimator_values)
+    collection.set_array(estimator_values_as_array)
     ax.add_collection(collection)
+    fig.colorbar(collection, ax=ax)
 
     plt.axis('equal')
     plt.axis('off')

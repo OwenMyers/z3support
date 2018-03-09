@@ -68,11 +68,10 @@ class Vertex:
         self.W = "no orientation"
         self.location = Point(float(row['x']),
                               float(row['y']))
-        self.N_value = row['N']
-        self.E_value = row['E']
-        self.S_value = row['S']
-        self.W_value = row['W']
-
+        self.N_value = float(row['N'])
+        self.E_value = float(row['E'])
+        self.S_value = float(row['S'])
+        self.W_value = float(row['W'])
 
     def full_north_patch(self, link_length, link_width, location, direction):
         if direction == 'Blank':
