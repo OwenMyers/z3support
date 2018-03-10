@@ -50,7 +50,7 @@ def main():
     #collection.set_color('grey')estimator_values_as_array
     estimator_values_as_array = np.array(estimator_values)
     collection.set_array(estimator_values_as_array)
-    collection.set_cmap('Greys')
+    collection.set_cmap('Blues')
     ax.add_collection(collection)
     fig.colorbar(collection, ax=ax)
 
