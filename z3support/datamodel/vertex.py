@@ -7,12 +7,13 @@ import numpy as np
 class Vertex:
     def __init__(self, size):
         """
-        :param location: The cartesian location of the verx.
+        :param location: The cartesian location of the vertex.
         :type location: Point (see datamodel).
-        :param size: The size (width, height) of the lattic.
+        :param size: The size (width, height) of the lattice.
         :type size: Point (see datamodel).
         """
         self.location = None
+        self.int_location = None
         self.size = size
 
         # "Blank" "In" or "Out"
@@ -34,6 +35,8 @@ class Vertex:
 
         # If we are looking at an estimator with values we need to store those values.
         self.values = []
+        # Keep track of directions for other uses
+        self.directions = []
 
         self.link_length_subtract = 0.0
 
@@ -58,6 +61,8 @@ class Vertex:
         self.W = row['W']
         self.location = Point(float(row['x']),
                               float(row['y']))
+        self.int_location = Point(int(float(row['x'])),
+                                  int(float(row['y'])))
 
     def estimator_fill_from_csv_row(self, row):
         """
@@ -76,6 +81,8 @@ class Vertex:
         self.W = "no orientation"
         self.location = Point(float(row['x']),
                               float(row['y']))
+        self.int_location = Point(int(float(row['x'])),
+                                  int(float(row['y'])))
         self.N_value = float(row['N'])
         self.E_value = float(row['E'])
         self.S_value = float(row['S'])
@@ -106,6 +113,7 @@ class Vertex:
         p = rounded_rect_patch(lower_left_x, lower_left_y, link_width, link_length - 2*self.link_length_subtract)
 
         self.rect_patches.append(p)
+        self.directions.append("N")
 
     def half_north_patch(self, link_length, link_width, location, direction, link_value=None):
         """
@@ -150,6 +158,7 @@ class Vertex:
         p = rounded_rect_patch(lower_left_x, lower_left_y, link_width, link_length / 2.0 - self.link_length_subtract)
 
         self.rect_patches.append(p)
+        self.directions.append("N")
 
     def full_south_patch(self, link_length, link_width, location, direction):
         if self.ignore_vertical_links:
@@ -176,6 +185,7 @@ class Vertex:
         p = rounded_rect_patch(lower_left_x, lower_left_y, link_width, link_length - 2*self.link_length_subtract)
 
         self.rect_patches.append(p)
+        self.directions.append("S")
 
     def half_south_patch(self, link_length, link_width, location, direction, link_value=None):
         if self.ignore_vertical_links:
@@ -204,6 +214,7 @@ class Vertex:
         p = rounded_rect_patch(lower_left_x, lower_left_y, link_width, link_length / 2.0 - self.link_length_subtract)
 
         self.rect_patches.append(p)
+        self.directions.append("S")
 
     def full_east_patch(self, link_length, link_width, location, direction):
         if self.ignore_horizontal_links:
@@ -230,6 +241,7 @@ class Vertex:
         p = rounded_rect_patch(lower_left_x, lower_left_y, link_length - 2*self.link_length_subtract, link_width)
 
         self.rect_patches.append(p)
+        self.directions.append("E")
 
     def half_east_patch(self, link_length, link_width, location, direction, link_value=None):
         if self.ignore_horizontal_links:
@@ -258,6 +270,7 @@ class Vertex:
         p = rounded_rect_patch(lower_left_x, lower_left_y, link_length / 2.0 - self.link_length_subtract, link_width)
 
         self.rect_patches.append(p)
+        self.directions.append("E")
 
     def full_west_patch(self, link_length, link_width, location, direction):
         if self.ignore_horizontal_links:
@@ -284,6 +297,7 @@ class Vertex:
         p = rounded_rect_patch(lower_left_x, lower_left_y, link_length - 2*self.link_length_subtract, link_width)
 
         self.rect_patches.append(p)
+        self.directions.append("W")
 
     def half_west_patch(self, link_length, link_width, location, direction, link_value=None):
         if self.ignore_horizontal_links:
@@ -312,6 +326,7 @@ class Vertex:
         p = rounded_rect_patch(lower_left_x, lower_left_y, link_length / 2.0 - self.link_length_subtract, link_width)
 
         self.rect_patches.append(p)
+        self.directions.append("W")
 
     def make_patches_to_plot(self, link_length, link_width_factor=0.2):
         link_width = float(link_length) * link_width_factor
