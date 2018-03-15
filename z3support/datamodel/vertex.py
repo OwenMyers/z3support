@@ -37,6 +37,9 @@ class Vertex:
 
         self.link_length_subtract = 0.0
 
+        self.ignore_vertical_links = False
+        self.ignore_horizontal_links = False
+
     def subtract_off_from_link(self, subtract_amount):
         self.link_length_subtract = subtract_amount
 
@@ -79,6 +82,8 @@ class Vertex:
         self.W_value = float(row['W'])
 
     def full_north_patch(self, link_length, link_width, location, direction):
+        if self.ignore_vertical_links:
+            return
         if direction == 'Blank':
             return
         elif direction == 'Out':
@@ -102,7 +107,25 @@ class Vertex:
 
         self.rect_patches.append(p)
 
-    def half_north_patch(self, link_length, link_width, location, direction):
+    def half_north_patch(self, link_length, link_width, location, direction, link_value=None):
+        """
+        Make half link for boundaries of lattice.
+
+        This needs to be a little more flexible than the full link versions because
+        the half links will be made twice. Once for the lattice on one side and a gain for
+        the lattice on the other side. link_value can be assumed for the full ones but
+        when making the opposite side it requires the opposite direction link (E->W).
+
+        :param link_length:
+        :param link_width:
+        :param location:
+        :param direction:
+        :param link_value: In the case of plotting "heat map" of estimators you need to set
+            the value carefully (read above).
+        :return:
+        """
+        if self.ignore_vertical_links:
+            return
         if direction == 'Blank':
             return
         elif direction == 'Out':
@@ -117,7 +140,9 @@ class Vertex:
             triangle = mpatches.RegularPolygon((center_x, center_y), 3, radius=link_width / 2.0, orientation=orientation)
             self.tri_patches.append(triangle)
         else:
-            self.values.append(self.N_value)
+            if link_value is None:
+                link_value = self.N_value
+            self.values.append(link_value)
 
         # Rectangle stuff
         lower_left_x = location.x - link_width / 2.0
@@ -127,6 +152,8 @@ class Vertex:
         self.rect_patches.append(p)
 
     def full_south_patch(self, link_length, link_width, location, direction):
+        if self.ignore_vertical_links:
+            return
         if direction == 'Blank':
             return
         elif direction == 'Out':
@@ -150,7 +177,9 @@ class Vertex:
 
         self.rect_patches.append(p)
 
-    def half_south_patch(self, link_length, link_width, location, direction):
+    def half_south_patch(self, link_length, link_width, location, direction, link_value=None):
+        if self.ignore_vertical_links:
+            return
         if direction == 'Blank':
             return
         elif direction == 'Out':
@@ -165,7 +194,9 @@ class Vertex:
             triangle = mpatches.RegularPolygon((center_x, center_y), 3, radius=link_width / 2.0, orientation=orientation)
             self.tri_patches.append(triangle)
         else:
-            self.values.append(self.S_value)
+            if link_value is None:
+                link_value = self.S_value
+            self.values.append(link_value)
 
         # Rectangle stuff
         lower_left_x = location.x - link_width / 2.0
@@ -175,6 +206,8 @@ class Vertex:
         self.rect_patches.append(p)
 
     def full_east_patch(self, link_length, link_width, location, direction):
+        if self.ignore_horizontal_links:
+            return
         if direction == 'Blank':
             return
         elif direction == 'Out':
@@ -198,7 +231,9 @@ class Vertex:
 
         self.rect_patches.append(p)
 
-    def half_east_patch(self, link_length, link_width, location, direction):
+    def half_east_patch(self, link_length, link_width, location, direction, link_value=None):
+        if self.ignore_horizontal_links:
+            return
         if direction == 'Blank':
             return
         elif direction == 'Out':
@@ -213,7 +248,9 @@ class Vertex:
             triangle = mpatches.RegularPolygon((center_x, center_y), 3, radius=link_width / 2.0, orientation=orientation)
             self.tri_patches.append(triangle)
         else:
-            self.values.append(self.E_value)
+            if link_value is None:
+                link_value = self.E_value
+            self.values.append(link_value)
 
         # Rectangle stuff
         lower_left_x = location.x + self.link_length_subtract
@@ -223,6 +260,8 @@ class Vertex:
         self.rect_patches.append(p)
 
     def full_west_patch(self, link_length, link_width, location, direction):
+        if self.ignore_horizontal_links:
+            return
         if direction == 'Blank':
             return
         elif direction == 'Out':
@@ -246,7 +285,9 @@ class Vertex:
 
         self.rect_patches.append(p)
 
-    def half_west_patch(self, link_length, link_width, location, direction):
+    def half_west_patch(self, link_length, link_width, location, direction, link_value=None):
+        if self.ignore_horizontal_links:
+            return
         if direction == 'Blank':
             return
         elif direction == 'Out':
@@ -261,7 +302,9 @@ class Vertex:
             triangle = mpatches.RegularPolygon((center_x, center_y), 3, radius=link_width / 2.0, orientation=orientation)
             self.tri_patches.append(triangle)
         else:
-            self.values.append(self.W_value)
+            if link_value is None:
+                link_value = self.W_value
+            self.values.append(link_value)
 
         # Rectangle stuff
         lower_left_x = location.x - link_length / 2.0
@@ -311,7 +354,7 @@ class Vertex:
 
         if "left" in self.vertex_at_boundry_question():
             other_location = Point(self.size.x - 1, self.location.y)
-            self.half_east_patch(link_length, link_width, other_location, flip_inout(self.W))
+            self.half_east_patch(link_length, link_width, other_location, flip_inout(self.W), link_value=self.W_value)
 
         if self.vertex_at_boundry_question() == "right":
             self.full_north_patch(link_length, link_width, self.location, self.N)
@@ -321,7 +364,7 @@ class Vertex:
 
         if "right" in self.vertex_at_boundry_question():
             other_location = Point(0, self.location.y)
-            self.half_west_patch(link_length, link_width, other_location, flip_inout(self.E))
+            self.half_west_patch(link_length, link_width, other_location, flip_inout(self.E), link_value=self.E_value)
 
         if self.vertex_at_boundry_question() == "down":
             self.full_north_patch(link_length, link_width, self.location, self.N)
@@ -331,7 +374,7 @@ class Vertex:
 
         if "down" in self.vertex_at_boundry_question():
             other_location = Point(self.location.x, self.size.y - 1)
-            self.half_north_patch(link_length, link_width, other_location, flip_inout(self.S))
+            self.half_north_patch(link_length, link_width, other_location, flip_inout(self.S), link_value=self.S_value)
 
         if self.vertex_at_boundry_question() == "up":
             self.half_north_patch(link_length, link_width, self.location, self.N)
