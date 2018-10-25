@@ -5,11 +5,14 @@ In the Rust code this parameter is the "link_number_tuning" parameter.
 import os
 import pandas as pd
 import numpy as np
+from matplotlib import pyplot as plt
 
 
 def main():
+    lattice_size_dir = 'lattice_size_4_4'
     working_dir = os.path.join('data', 'variable_link_weights', 'lattice_size_4_4')
-    total_number_links = 4 * 4 * 2
+    split_num = lattice_size_dir.split('_')
+    total_number_links =  int(split_num[-1]) * int(split_num[-2]) * 2
     dir_list = os.listdir(working_dir)
 
     weights = []
@@ -30,10 +33,18 @@ def main():
         error = df['Average Total Link Counts'].std()/np.sqrt(len(df))
         density = average_count / float(total_number_links)
 
-        densities
+        densities.append(density)
+        errors.append(error)
 
         print("avg link count: {}".format(average_count))
         print("error: {}".format(error))
+
+    weights, densities, errors = zip(*sorted(zip(weights, densities, errors)))
+
+    plt.errorbar(weights, densities, errors, capsize=2)
+    plt.xlabel(r'$\alpha$')
+    plt.ylabel('Link Density')
+    plt.show()
 
 
 if __name__ == "__main__":
