@@ -4,7 +4,6 @@ from z3support.datamodel.vertex import Vertex
 from z3support.datamodel.point import Point
 import os
 import csv
-from tqdm import tqdm
 import matplotlib.pyplot as plt
 import matplotlib
 
@@ -13,7 +12,7 @@ pgf_with_rc_fonts = {"pgf.texsystem": "pdflatex"}
 matplotlib.rcParams.update(pgf_with_rc_fonts)
 
 
-L = 8
+L = 4
 LINE_SIZE = 0.05
 # link length 
 LINK_LENGTH = 1.0
@@ -94,7 +93,7 @@ def main():
 
     lattice_files = os.listdir('lattices')
 
-    for cur_f in tqdm(lattice_files):
+    for cur_f in lattice_files:
         rect_patches = []
         tri_patches = []
         if '.csv' not in cur_f:

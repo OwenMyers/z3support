@@ -19,6 +19,8 @@ def main():
     densities = []
     errors = []
     for cur_weight_dir in dir_list:
+        if 'weight' not in cur_weight_dir:
+            continue
 
         cur_weight_dir_full_path = os.path.join(working_dir, cur_weight_dir)
         print("Current working path: {}".format(cur_weight_dir_full_path))
