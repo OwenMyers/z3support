@@ -18,7 +18,7 @@ def main():
         if 'lattice_size' not in cur_lattice_size_dir:
             continue
         working_dir = os.path.join('data', 'variable_link_weights', cur_lattice_size_dir)
-        split_num = lattice_size_dir.split('_')
+        split_num = cur_lattice_size_dir.split('_')
         total_number_links =  int(split_num[-1]) * int(split_num[-2]) * 2
         dir_list = os.listdir(working_dir)
 
