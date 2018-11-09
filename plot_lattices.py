@@ -21,7 +21,7 @@ LINK_LENGTH = 1.0
 def adjusted_figure():
     fig = plt.figure()
     #fig.subplots_adjust(bottom=0.14,left=0.135,right=0.98,top=0.97)
-    fig.subplots_adjust(bottom=0.05,left=0.05,right=0.99,top=0.95)
+    fig.subplots_adjust(bottom=0.05, left=0.05, right=0.99, top=0.95)
     ax = fig.add_subplot(111)
 
     return fig, ax
@@ -32,7 +32,7 @@ def draw_lattice_backround(square_lattice_size, ax):
 
     # horizontal lines
     for i in range(square_lattice_size):
-        loc = (-LINK_LENGTH/2.0,float(i) - LINE_SIZE/2.0)
+        loc = (-LINK_LENGTH/2.0, float(i) - LINE_SIZE/2.0)
         cur_horz_rect = Rectangle(loc, square_lattice_size, LINE_SIZE, color='k')
         patches.append(cur_horz_rect) 
     # vertical lines
@@ -40,7 +40,6 @@ def draw_lattice_backround(square_lattice_size, ax):
         loc = (i - LINE_SIZE/2.0, -LINK_LENGTH/2.0)
         cur_vert_rect = Rectangle(loc, LINE_SIZE, square_lattice_size, color='k')
         patches.append(cur_vert_rect) 
-
 
     collection = PatchCollection(patches)
     collection.set_color('k')
