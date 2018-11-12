@@ -36,6 +36,10 @@ def main():
             weights.append(weight)
 
             total_counts_path = os.path.join(cur_weight_dir_full_path, 'total_link_count_estimator.csv')
+            winding_number_path = os.path.join(
+                cur_weight_dir_full_path,
+                'winding_number_count_estimator.csv'
+            )
 
             df = pd.read_csv(total_counts_path)
             average_count = df['Average Total Link Counts'].mean()

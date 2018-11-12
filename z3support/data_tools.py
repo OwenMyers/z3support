@@ -1,5 +1,23 @@
+import numpy as np
 
 EPSILON = 1e-5
+
+
+def variance(array_in):
+    """
+    Given a list of numbers find the variance:
+
+        <x^2> - <x>^2
+    """
+
+    assert isinstance(array_in, np.ndarray) or isinstance(array_in, list)
+
+    if not isinstance(array_in, np.ndarray):
+        array_in = np.array(array_in)
+
+    squared_array = array_in**2
+
+    return squared_array.mean() - array_in.mean()**2
 
 
 def find_number_of_real_vertices_from_data(data):
