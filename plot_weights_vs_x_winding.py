@@ -7,6 +7,7 @@ import pandas as pd
 import numpy as np
 from matplotlib import pyplot as plt
 from colors import color_list
+from z3support.data_tools import variance
 
 
 def main():
@@ -19,12 +20,10 @@ def main():
             continue
         working_dir = os.path.join('data', 'variable_link_weights', cur_lattice_size_dir)
         split_num = cur_lattice_size_dir.split('_')
-        total_number_links =  int(split_num[-1]) * int(split_num[-2]) * 2
         dir_list = os.listdir(working_dir)
 
         weights = []
-        densities = []
-        errors = []
+        variances = []
         for cur_weight_dir in dir_list:
             if 'weight' not in cur_weight_dir:
                 continue
@@ -35,36 +34,36 @@ def main():
             weight = float(cur_weight_dir.split('_')[1].replace('pt', '.'))
             weights.append(weight)
 
-            total_counts_path = os.path.join(cur_weight_dir_full_path, 'total_link_count_estimator.csv')
             winding_number_path = os.path.join(
                 cur_weight_dir_full_path,
                 'winding_number_count_estimator.csv'
             )
 
-            df = pd.read_csv(total_counts_path)
-            average_count = df['Average Total Link Counts'].mean()
-            error = df['Average Total Link Counts'].std()/np.sqrt(len(df))
-            density = average_count / float(total_number_links)
+            df = pd.read_csv(winding_number_path)
+            average_horz_winding = df['Horizontal'].mean()
+            average_vert_winding = df['Vertical'].mean()
+            print('average_horz_winding {}'.format(average_horz_winding))
+            print('average_vert_winding {}'.format(average_vert_winding))
+            horz_varience = variance(np.array(df['Horizontal']))
+            vert_varience = variance(np.array(df['Vertical']))
+            print('horz_varience {}'.format(horz_varience))
+            print('vert_varience {}'.format(vert_varience))
 
-            densities.append(density)
-            errors.append(error)
+            variances.append(vert_varience)
 
-            print("avg link count: {}".format(average_count))
-            print("error: {}".format(error))
+        if len(weights) == 0:
+            continue
+        weights, variances = zip(*sorted(zip(weights, variances)))
 
-        weights, densities, errors = zip(*sorted(zip(weights, densities, errors)))
-
-        plt.errorbar(
+        plt.plot(
             weights,
-            densities,
-            errors,
-            capsize=2,
+            variances,
             color=color_list[i],
             label=r'$' + split_num[-1] + r'\times' + split_num[-2] + r'$'
         )
 
     plt.xlabel(r'$\alpha$')
-    plt.ylabel('Link Density')
+    plt.ylabel('Winding Number Varience')
     plt.legend()
     plt.show()
 
