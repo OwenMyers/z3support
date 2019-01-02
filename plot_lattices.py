@@ -12,7 +12,7 @@ pgf_with_rc_fonts = {"pgf.texsystem": "pdflatex"}
 matplotlib.rcParams.update(pgf_with_rc_fonts)
 
 
-L = 4
+L = 6
 LINE_SIZE = 0.05
 # link length 
 LINK_LENGTH = 1.0
