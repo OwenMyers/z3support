@@ -1,10 +1,10 @@
 x,y,N,E,S,W
-0,0,Blank,In,Out,Blank
-2,0,Blank,Out,Blank,In
-4,0,Blank,In,Out,Blank
-1,1,Blank,In,Out,Blank
-3,1,In,Out,Out,In
-5,1,Blank,Out,Blank,In
+0,0,Out,In,Out,In
+2,0,Out,Blank,Out,Out
+4,0,Blank,Out,Blank,In
+1,1,Blank,Blank,In,Out
+3,1,In,Blank,Out,Blank
+5,1,Blank,In,Out,Blank
 0,2,In,In,In,Blank
 2,2,Blank,In,In,In
 4,2,Blank,In,Blank,Out
@@ -12,9 +12,9 @@ x,y,N,E,S,W
 3,3,Blank,Out,Out,Out
 5,3,Blank,Blank,Out,In
 0,4,In,Blank,Blank,Out
-2,4,Out,Out,Out,Blank
+2,4,Blank,In,Out,Blank
 4,4,In,In,Blank,In
 1,5,Out,Blank,Out,Out
-3,5,Out,Blank,Blank,In
-5,5,Out,In,Blank,Blank
+3,5,Blank,In,In,In
+5,5,In,In,Blank,In
 
