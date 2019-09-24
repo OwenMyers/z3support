@@ -37,3 +37,12 @@ and set the rest up for develop
 ```
 python setup.py develop
 ```
+
+# Plot Lattices
+
+* Place lattice files in the `lattices` directory
+* Run `python plot_lattices.py` with no arguments
+* You will find figures in the `figures/lattices`
+
+Note:
+You have to set the lattice size in the python script. Has to be hard coded.
