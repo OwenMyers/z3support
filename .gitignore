@@ -7,3 +7,5 @@ z3support.egg-info/
 ._*
 .DS_Store
 papers/
+.ipynb_checkpoints/
+*.pkl
