@@ -1,5 +1,6 @@
 *.pyc
 py-vrt-env/
+pythonenv
 build/
 dist/
 z3support.egg-info/
