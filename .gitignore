@@ -4,7 +4,6 @@ pythonenv
 build/
 dist/
 z3support.egg-info/
-.idea/
 ._*
 .DS_Store
 papers/
