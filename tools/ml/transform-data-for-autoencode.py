@@ -71,15 +71,14 @@ def create_full_numerical_representation(df_in, l, v=False):
     Checks for consistency in the plaquette representations of the configurations.
 
     Arguments:
-        df_in (DataFrame): is the dataframe of a plaquette representation of
-        a configuration for which you have run the ``string_to_number_directions``
-        on.
+        df_in (DataFrame): is the dataframe of a plaquette representation of a configuration for which you have run
+            the ``string_to_number_directions`` on.
         l (int): Lattice length or width (assumed square).
         v (bool): Verbose or not.
 
     Returns:
-        A numpy matrix with zeros representing the vertices and centers of
-        plaquetts and the number system as described by ``string_to_number_directions``
+        A numpy matrix with zeros representing the vertices and centers of plaquetts and the number system as described
+        by ``string_to_number_directions``
         representing the links.
     """
     df_working = df_in.copy()
@@ -91,34 +90,33 @@ def create_full_numerical_representation(df_in, l, v=False):
         for j in range(l):
             cur_row = df_working.loc[j, i]
 
-            # For all entries we will check for consistency between the plaquetts.
-            # E.g. bottom(top) of the previous row of plaquetts with the top(bottom)
-            # of the current row -> these need to be the same and if they are not their
-            # is either a problem with the way you are writing the plaquetts to file, or
-            # with the algorithm generating the configurations.
-            horz_index_x = j * 2 + 1
-            horz_index_y = -(i * 2) - 1
-            vert_index_x = j * 2
-            vert_index_y = -(i * 2 + 1) - 1
+            # For all entries we will check for consistency between the plaquetts. E.g. bottom(top) of the previous
+            # row of plaquetts with the top(bottom) of the current row -> these need to be the same and if they are not
+            # their is either a problem with the way you are writing the plaquetts to file, or with the algorithm
+            # generating the configurations.
+            horizontal_index_x = j * 2 + 1
+            horizontal_index_y = -(i * 2) - 1
+            vertical_index_x = j * 2
+            vertical_index_y = -(i * 2 + 1) - 1
             if v:
                 print(f'i (y): {i}')
                 print(f'j (x): {j}')
-                print(f'horz_index_x {horz_index_x}')
-                print(f'horz_index_y {horz_index_y}')
-                print(f'vert_index_x {vert_index_x}')
-                print(f'vert_index_y {vert_index_y}')
+                print(f'horizontal_index_x {horizontal_index_x}')
+                print(f'horizontal_index_y {horizontal_index_y}')
+                print(f'vertical_index_x {vertical_index_x}')
+                print(f'vertical_index_y {vertical_index_y}')
 
             # horizontal
-            check_if_exists(m[horz_index_y, horz_index_x], cur_row['s_number'], v=v)
-            m[horz_index_y, horz_index_x] = cur_row['s_number']
-            check_if_exists(m[-((-horz_index_y + 2) % (2 * l)), horz_index_x], cur_row['n_number'], v=v)
-            m[-((-horz_index_y + 2) % (2 * l)), horz_index_x] = cur_row['n_number']
+            check_if_exists(m[horizontal_index_y, horizontal_index_x], cur_row['s_number'], v=v)
+            m[horizontal_index_y, horizontal_index_x] = cur_row['s_number']
+            check_if_exists(m[-((-horizontal_index_y + 2) % (2 * l)), horizontal_index_x], cur_row['n_number'], v=v)
+            m[-((-horizontal_index_y + 2) % (2 * l)), horizontal_index_x] = cur_row['n_number']
 
             # vertical
-            check_if_exists(m[vert_index_y, vert_index_x], cur_row['w_number'], v=v)
-            m[vert_index_y, vert_index_x] = cur_row['w_number']
-            check_if_exists(m[vert_index_y, (vert_index_x + 2) % (2 * l)], cur_row['e_number'], v=v)
-            m[vert_index_y, (vert_index_x + 2) % (2 * l)] = cur_row['e_number']
+            check_if_exists(m[vertical_index_y, vertical_index_x], cur_row['w_number'], v=v)
+            m[vertical_index_y, vertical_index_x] = cur_row['w_number']
+            check_if_exists(m[vertical_index_y, (vertical_index_x + 2) % (2 * l)], cur_row['e_number'], v=v)
+            m[vertical_index_y, (vertical_index_x + 2) % (2 * l)] = cur_row['e_number']
             if v:
                 print('current m:\n')
                 print(m)
@@ -129,6 +127,7 @@ def parse_owen_z3():
     matrix_list = []
     file_list = os.listdir(SRC)
 
+    lattice_size = None
     for i, cur_file in enumerate(tqdm.tqdm(file_list)):
         if (TRUNCATE > 0) and (i > TRUNCATE):
             break
@@ -141,6 +140,8 @@ def parse_owen_z3():
         current_df.set_index(['x', 'y'], inplace=True)
         current_matrix = create_full_numerical_representation(current_df, lattice_size)
         matrix_list.append(current_matrix)
+
+    np.save(os.path.join(DESTINATION, 'z3_data.npy'), np.array(matrix_list))
 
 
 def main():
@@ -166,6 +167,7 @@ if __name__ == '__main__':
         raise ValueError('Invalid src destination')
 
     SRC = args.src
+    DESTINATION = args.destination
     TRUNCATE = args.truncate
 
     main()

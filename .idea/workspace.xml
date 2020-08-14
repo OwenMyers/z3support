@@ -20,9 +20,6 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="db9b798e-1fd9-4f05-a0e9-122ca50a1fc4" name="Default Changelist" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tools/ml/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/tools/ml/README.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tools/ml/grid_search.py" beforeDir="false" afterPath="$PROJECT_DIR$/tools/ml/grid_search.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/tools/ml/transform-data-for-autoencode.py" beforeDir="false" afterPath="$PROJECT_DIR$/tools/ml/transform-data-for-autoencode.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -112,9 +109,10 @@
     <option name="ADD_EXTERNAL_FILES_SILENTLY" value="true" />
   </component>
   <component name="WindowStateProjectService">
-    <state x="1811" y="598" width="1076" height="694" key="#com.intellij.execution.impl.EditConfigurationsDialog" timestamp="1597340690873">
-      <screen x="1080" y="348" width="1920" height="1080" />
+    <state x="271" y="348" width="739" height="1217" key="#com.intellij.execution.impl.EditConfigurationsDialog" timestamp="1597438321697">
+      <screen x="0" y="27" width="1080" height="1893" />
     </state>
+    <state x="271" y="348" width="739" height="1217" key="#com.intellij.execution.impl.EditConfigurationsDialog/0.27.1080.1893/1080.348.1920.1080@0.27.1080.1893" timestamp="1597438321697" />
     <state x="1811" y="598" width="1076" height="694" key="#com.intellij.execution.impl.EditConfigurationsDialog/0.27.1080.1893/1080.348.1920.1080@1080.348.1920.1080" timestamp="1597340690873" />
     <state x="1801" y="628" key="#xdebugger.evaluate" timestamp="1597323361812">
       <screen x="1080" y="348" width="1920" height="1080" />
