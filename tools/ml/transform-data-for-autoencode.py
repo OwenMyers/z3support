@@ -1,16 +1,172 @@
-import argparse
 import os
+import argparse
+import pandas as pd
+import tqdm
+import numpy as np
+
+
+def string_to_number_directions_1(r, column):
+    link_str = r[column]
+    if link_str == 'B':
+        return 1
+    elif link_str == 'N':
+        return 2
+    elif link_str == 'S':
+        return 3
+    elif link_str == 'E':
+        return 4
+    elif link_str == 'W':
+        return 5
+
+
+def string_to_number_directions_2(r, column):
+    link_str = r[column]
+    if link_str == 'B':
+        return 1
+    elif link_str == 'N':
+        return 2
+    elif link_str == 'S':
+        return 3
+    elif link_str == 'E':
+        return 2
+    elif link_str == 'W':
+        return 3
+
+
+def apply_string_to_number_all_directions(df_in):
+    df_copy = df_in.copy()
+    df_copy['n_number'] = df_copy.apply(lambda r: string_to_number_directions_2(r, 'N'), axis=1)
+    df_copy['e_number'] = df_copy.apply(lambda r: string_to_number_directions_2(r, 'E'), axis=1)
+    df_copy['s_number'] = df_copy.apply(lambda r: string_to_number_directions_2(r, 'S'), axis=1)
+    df_copy['w_number'] = df_copy.apply(lambda r: string_to_number_directions_2(r, 'W'), axis=1)
+    return df_copy
+
+
+def determine_lattice_size(df_in):
+    # Assume square lattice
+    max_x = df_in['x'].values().max()
+    max_y = df_in['y'].values().max()
+    if max_x != max_y:
+        raise ValueError('Expecting x==y dimensions')
+    return max_x
+
+
+def check_if_exists(cur_val, proposed_val, v=False):
+    if v:
+        print('  In check_if_exists\n')
+        print(f'    cur_val {cur_val}')
+        print(f'    proposed_val {proposed_val}')
+    if cur_val == 0:
+        pass
+    elif cur_val != proposed_val:
+        raise ValueError("Discovered inconsistency in representation.")
+
+
+def create_full_numerical_representation(df_in, l, v=False):
+    """
+    Creates a matrix of numbers that can be interpreted by a CNN auto encoder.
+
+    Requires running the ``string_to_number_directions`` function first.
+
+    Checks for consistency in the plaquette representations of the configurations.
+
+    Arguments:
+        df_in (DataFrame): is the dataframe of a plaquette representation of
+        a configuration for which you have run the ``string_to_number_directions``
+        on.
+        l (int): Lattice length or width (assumed square).
+        v (bool): Verbose or not.
+
+    Returns:
+        A numpy matrix with zeros representing the vertices and centers of
+        plaquetts and the number system as described by ``string_to_number_directions``
+        representing the links.
+    """
+    df_working = df_in.copy()
+
+    # l = determine_lattice_size(df_working)
+    # Will return this matrix
+    m = np.zeros([2 * l, 2 * l])
+    for i in range(l):
+        for j in range(l):
+            cur_row = df_working.loc[j, i]
+
+            # For all entries we will check for consistency between the plaquetts.
+            # E.g. bottom(top) of the previous row of plaquetts with the top(bottom)
+            # of the current row -> these need to be the same and if they are not their
+            # is either a problem with the way you are writing the plaquetts to file, or
+            # with the algorithm generating the configurations.
+            horz_index_x = j * 2 + 1
+            horz_index_y = -(i * 2) - 1
+            vert_index_x = j * 2
+            vert_index_y = -(i * 2 + 1) - 1
+            if v:
+                print(f'i (y): {i}')
+                print(f'j (x): {j}')
+                print(f'horz_index_x {horz_index_x}')
+                print(f'horz_index_y {horz_index_y}')
+                print(f'vert_index_x {vert_index_x}')
+                print(f'vert_index_y {vert_index_y}')
+
+            # horizontal
+            check_if_exists(m[horz_index_y, horz_index_x], cur_row['s_number'], v=v)
+            m[horz_index_y, horz_index_x] = cur_row['s_number']
+            check_if_exists(m[-((-horz_index_y + 2) % (2 * l)), horz_index_x], cur_row['n_number'], v=v)
+            m[-((-horz_index_y + 2) % (2 * l)), horz_index_x] = cur_row['n_number']
+
+            # vertical
+            check_if_exists(m[vert_index_y, vert_index_x], cur_row['w_number'], v=v)
+            m[vert_index_y, vert_index_x] = cur_row['w_number']
+            check_if_exists(m[vert_index_y, (vert_index_x + 2) % (2 * l)], cur_row['e_number'], v=v)
+            m[vert_index_y, (vert_index_x + 2) % (2 * l)] = cur_row['e_number']
+            if v:
+                print('current m:\n')
+                print(m)
+    return m
+
+
+def parse_owen_z3():
+    matrix_list = []
+    file_list = os.listdir(SRC)
+
+    for i, cur_file in enumerate(tqdm.tqdm(file_list)):
+        if (TRUNCATE > 0) and (i > TRUNCATE):
+            break
+        if '.csv' != cur_file[-4:]:
+            continue
+        current_df = pd.read_csv(os.path.join(SRC, cur_file))
+        if i == 0:
+            lattice_size = determine_lattice_size(current_df)
+        current_df = apply_string_to_number_all_directions(current_df)
+        current_df.set_index(['x', 'y'], inplace=True)
+        current_matrix = create_full_numerical_representation(current_df, lattice_size)
+        matrix_list.append(current_matrix)
 
 
 def main():
+    if PARSE_TYPE == 'owen_z3':
+        parse_owen_z3()
+
+
+if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('--src', required=True)
+    parser.add_argument('--src', type=str, help='Path to directory containing configuration files', required=True)
+    parser.add_argument('--parse-type', type=str, help='What system configurations are you parsing', required=True)
+    parser.add_argument('--destination', type=str, help='Path to save transformed file', required=True)
+    parser.add_argument('--truncate', type=int, help="Number of files to process if you don't want all", default=0)
+
     args = parser.parse_args()
+
+    allowed_parse_type_list = ['owen_z3']
+    if args.parse_type not in allowed_parse_type_list:
+        raise ValueError("Don't know how to parse this type of file")
+    PARSE_TYPE = args.parse_type
 
     if not os.path.exists(args.src):
         raise ValueError('Invalid src destination')
 
+    SRC = args.src
+    TRUNCATE = args.truncate
 
-if __name__ == '__main__':
     main()
 

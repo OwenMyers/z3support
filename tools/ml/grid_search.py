@@ -144,8 +144,8 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Run a parameter sweep to find the best autoencoder.')
     parser.add_argument('--settings', type=str, help='Settings file location', required=True)
     parser.add_argument('--run-location', type=str, help='Path you want the run to be done at', default='./')
-    parser.add_argument('--data', type=str, help='Abs. path to pickle data (should eventually go in the settings file)',
-                        required=True)
+    parser.add_argument('--data', type=str,
+                        help='Abs. path to data (should eventually go in the settings file)', required=True)
     args = parser.parse_args()
 
     # Make sure the required subdirectories are present

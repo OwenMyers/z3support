@@ -20,7 +20,10 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="db9b798e-1fd9-4f05-a0e9-122ca50a1fc4" name="Default Changelist" comment="">
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tools/ml/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/tools/ml/README.md" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/tools/ml/grid_search.py" beforeDir="false" afterPath="$PROJECT_DIR$/tools/ml/grid_search.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tools/ml/transform-data-for-autoencode.py" beforeDir="false" afterPath="$PROJECT_DIR$/tools/ml/transform-data-for-autoencode.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -153,9 +156,10 @@
       <screen x="1080" y="348" width="1920" height="1080" />
     </state>
     <state width="1897" height="351" key="GridCell.Tab.1.right/0.27.1080.1893/1080.348.1920.1080@1080.348.1920.1080" timestamp="1597323434534" />
-    <state x="1430" y="490" width="762" height="628" key="com.intellij.openapi.editor.actions.MultiplePasteAction$ClipboardContentChooser" timestamp="1596919328348">
-      <screen x="1080" y="348" width="1920" height="1080" />
+    <state x="197" y="226" width="762" height="670" key="com.intellij.openapi.editor.actions.MultiplePasteAction$ClipboardContentChooser" timestamp="1597435959307">
+      <screen x="0" y="27" width="1080" height="1893" />
     </state>
+    <state x="197" y="226" width="762" height="670" key="com.intellij.openapi.editor.actions.MultiplePasteAction$ClipboardContentChooser/0.27.1080.1893/1080.348.1920.1080@0.27.1080.1893" timestamp="1597435959307" />
     <state x="1430" y="490" width="762" height="628" key="com.intellij.openapi.editor.actions.MultiplePasteAction$ClipboardContentChooser/0.27.1080.1893/1080.348.1920.1080@1080.348.1920.1080" timestamp="1596919328348" />
   </component>
   <component name="XDebuggerManager">
@@ -163,7 +167,7 @@
       <breakpoints>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/tools/ml/grid_search.py</url>
-          <line>156</line>
+          <line>160</line>
           <option name="timeStamp" value="1" />
         </line-breakpoint>
       </breakpoints>
