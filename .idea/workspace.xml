@@ -20,7 +20,8 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="db9b798e-1fd9-4f05-a0e9-122ca50a1fc4" name="Default Changelist" comment="">
-      <change beforePath="$PROJECT_DIR$/tools/ml/transform-data-for-autoencode.py" beforeDir="false" afterPath="$PROJECT_DIR$/tools/ml/transform-data-for-autoencode.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tools/ml/transform-data-for-autoencode.py" beforeDir="false" afterPath="$PROJECT_DIR$/tools/ml/transform_data_for_autoencoder.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -48,7 +49,7 @@
   <component name="PropertiesComponent">
     <property name="ASKED_ADD_EXTERNAL_FILES" value="true" />
     <property name="RunOnceActivity.OpenProjectViewOnStart" value="true" />
-    <property name="last_opened_file_path" value="$PROJECT_DIR$/tools/ml/grid_search.py" />
+    <property name="last_opened_file_path" value="$PROJECT_DIR$/tools/ml/transform-data-for-autoencode.py" />
   </component>
   <component name="RecentsManager">
     <key name="MoveFile.RECENT_KEYS">
@@ -59,7 +60,7 @@
       <recent name="$PROJECT_DIR$/tools" />
     </key>
   </component>
-  <component name="RunManager">
+  <component name="RunManager" selected="Python.transform_data_autoencoder">
     <configuration name="grid_search_autoencoder" type="PythonConfigurationType" factoryName="Python">
       <module name="z3support" />
       <option name="INTERPRETER_OPTIONS" value="" />
@@ -81,6 +82,31 @@
       <option name="INPUT_FILE" value="" />
       <method v="2" />
     </configuration>
+    <configuration name="transform_data_autoencoder" type="PythonConfigurationType" factoryName="Python">
+      <module name="z3support" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="$PROJECT_DIR$/pythonenv/bin/python" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/tools/ml" />
+      <option name="IS_MODULE_SDK" value="false" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/tools/ml/transform_data_for_autoencoder.py" />
+      <option name="PARAMETERS" value="--src ~/repos/z3support/data/lattice_size_4_4/raw/ --parse-type owen_z3 --destination ~/repos/z3support/data/lattice_size_4_4/raw/ --truncate 10" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
+    <list>
+      <item itemvalue="Python.grid_search_autoencoder" />
+      <item itemvalue="Python.transform_data_autoencoder" />
+    </list>
   </component>
   <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
   <component name="TaskManager">
@@ -109,18 +135,19 @@
     <option name="ADD_EXTERNAL_FILES_SILENTLY" value="true" />
   </component>
   <component name="WindowStateProjectService">
-    <state x="271" y="348" width="739" height="1217" key="#com.intellij.execution.impl.EditConfigurationsDialog" timestamp="1597438321697">
+    <state x="69" y="315" width="941" height="1255" key="#com.intellij.execution.impl.EditConfigurationsDialog" timestamp="1597440768505">
       <screen x="0" y="27" width="1080" height="1893" />
     </state>
-    <state x="271" y="348" width="739" height="1217" key="#com.intellij.execution.impl.EditConfigurationsDialog/0.27.1080.1893/1080.348.1920.1080@0.27.1080.1893" timestamp="1597438321697" />
+    <state x="69" y="315" width="941" height="1255" key="#com.intellij.execution.impl.EditConfigurationsDialog/0.27.1080.1893/1080.348.1920.1080@0.27.1080.1893" timestamp="1597440768505" />
     <state x="1811" y="598" width="1076" height="694" key="#com.intellij.execution.impl.EditConfigurationsDialog/0.27.1080.1893/1080.348.1920.1080@1080.348.1920.1080" timestamp="1597340690873" />
     <state x="1801" y="628" key="#xdebugger.evaluate" timestamp="1597323361812">
       <screen x="1080" y="348" width="1920" height="1080" />
     </state>
     <state x="1801" y="628" key="#xdebugger.evaluate/0.27.1080.1893/1080.348.1920.1080@1080.348.1920.1080" timestamp="1597323361812" />
-    <state x="2207" y="799" width="424" height="496" key="FileChooserDialogImpl" timestamp="1597322708130">
-      <screen x="1080" y="348" width="1920" height="1080" />
+    <state x="634" y="813" width="376" height="870" key="FileChooserDialogImpl" timestamp="1597440357035">
+      <screen x="0" y="27" width="1080" height="1893" />
     </state>
+    <state x="634" y="813" width="376" height="870" key="FileChooserDialogImpl/0.27.1080.1893/1080.348.1920.1080@0.27.1080.1893" timestamp="1597440357035" />
     <state x="2207" y="799" width="424" height="496" key="FileChooserDialogImpl/0.27.1080.1893/1080.348.1920.1080@1080.348.1920.1080" timestamp="1597322708130" />
     <state width="1897" height="351" key="GridCell.Tab.0.bottom" timestamp="1597323434534">
       <screen x="1080" y="348" width="1920" height="1080" />
