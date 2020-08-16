@@ -44,11 +44,11 @@ def apply_string_to_number_all_directions(df_in):
 
 def determine_lattice_size(df_in):
     # Assume square lattice
-    max_x = df_in['x'].values().max()
-    max_y = df_in['y'].values().max()
+    max_x = df_in['x'].values.max()
+    max_y = df_in['y'].values.max()
     if max_x != max_y:
         raise ValueError('Expecting x==y dimensions')
-    return max_x
+    return max_x + 1
 
 
 def check_if_exists(cur_val, proposed_val, v=False):
@@ -62,7 +62,7 @@ def check_if_exists(cur_val, proposed_val, v=False):
         raise ValueError("Discovered inconsistency in representation.")
 
 
-def create_full_numerical_representation(df_in, l, v=False):
+def create_full_numerical_representation(df_in, lattice_size, v=False):
     """
     Creates a matrix of numbers that can be interpreted by a CNN auto encoder.
 
@@ -73,7 +73,7 @@ def create_full_numerical_representation(df_in, l, v=False):
     Arguments:
         df_in (DataFrame): is the dataframe of a plaquette representation of a configuration for which you have run
             the ``string_to_number_directions`` on.
-        l (int): Lattice length or width (assumed square).
+        lattice_size (int): Lattice length or width (assumed square).
         v (bool): Verbose or not.
 
     Returns:
@@ -85,9 +85,9 @@ def create_full_numerical_representation(df_in, l, v=False):
 
     # l = determine_lattice_size(df_working)
     # Will return this matrix
-    m = np.zeros([2 * l, 2 * l])
-    for i in range(l):
-        for j in range(l):
+    m = np.zeros([2 * lattice_size, 2 * lattice_size])
+    for i in range(lattice_size):
+        for j in range(lattice_size):
             cur_row = df_working.loc[j, i]
 
             # For all entries we will check for consistency between the plaquetts. E.g. bottom(top) of the previous
@@ -109,14 +109,15 @@ def create_full_numerical_representation(df_in, l, v=False):
             # horizontal
             check_if_exists(m[horizontal_index_y, horizontal_index_x], cur_row['s_number'], v=v)
             m[horizontal_index_y, horizontal_index_x] = cur_row['s_number']
-            check_if_exists(m[-((-horizontal_index_y + 2) % (2 * l)), horizontal_index_x], cur_row['n_number'], v=v)
-            m[-((-horizontal_index_y + 2) % (2 * l)), horizontal_index_x] = cur_row['n_number']
+            check_if_exists(m[-((-horizontal_index_y + 2) % (2 * lattice_size)), horizontal_index_x],
+                            cur_row['n_number'], v=v)
+            m[-((-horizontal_index_y + 2) % (2 * lattice_size)), horizontal_index_x] = cur_row['n_number']
 
             # vertical
             check_if_exists(m[vertical_index_y, vertical_index_x], cur_row['w_number'], v=v)
             m[vertical_index_y, vertical_index_x] = cur_row['w_number']
-            check_if_exists(m[vertical_index_y, (vertical_index_x + 2) % (2 * l)], cur_row['e_number'], v=v)
-            m[vertical_index_y, (vertical_index_x + 2) % (2 * l)] = cur_row['e_number']
+            check_if_exists(m[vertical_index_y, (vertical_index_x + 2) % (2 * lattice_size)], cur_row['e_number'], v=v)
+            m[vertical_index_y, (vertical_index_x + 2) % (2 * lattice_size)] = cur_row['e_number']
             if v:
                 print('current m:\n')
                 print(m)
@@ -141,6 +142,8 @@ def parse_owen_z3():
         current_matrix = create_full_numerical_representation(current_df, lattice_size)
         matrix_list.append(current_matrix)
 
+    if len(matrix_list) == 0:
+        raise ValueError('No files successfully transformed. Check src directory.')
     np.save(os.path.join(DESTINATION, 'z3_data.npy'), np.array(matrix_list))
 
 
