@@ -6,7 +6,6 @@ from keras.callbacks import TensorBoard, ModelCheckpoint
 from tensorboard.plugins.hparams import api as hp
 import tensorflow as tf
 import numpy as np
-import pickle
 import configparser
 import argparse
 
@@ -92,8 +91,7 @@ def run(run_dir, hparams, x_test, x_train):
 
 
 def main():
-    with open(DATA, 'rb') as f:
-        all_data = pickle.load(f)
+    all_data = np.load(DATA)
 
     all_data = all_data.astype('float32') / 5.0
     n_records = len(all_data)

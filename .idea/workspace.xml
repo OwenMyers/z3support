@@ -20,8 +20,17 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="db9b798e-1fd9-4f05-a0e9-122ca50a1fc4" name="Default Changelist" comment="">
+      <change afterPath="$PROJECT_DIR$/.idea/runConfigurations/transform_data_for_autoencoder.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tests/__init__.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tests/test_transform_data_for_autoencoder.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tools/ml/checkpoint_2020-08-08T16:21:45.693965.hdf5" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tools/ml/models/best_hparam_autoencoder.h5" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/runConfigurations/grid_search_autoencoder.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/runConfigurations/grid_search_autoencoder.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/runConfigurations/transform_data_autoencoder.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/runConfigurations/transform_data_autoencoder.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tools/ml/transform-data-for-autoencode.py" beforeDir="false" afterPath="$PROJECT_DIR$/tools/ml/transform_data_for_autoencoder.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/z3support.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/z3support.iml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tools/ml/grid_search.py" beforeDir="false" afterPath="$PROJECT_DIR$/tools/ml/grid_search.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tools/ml/transform_data_for_autoencoder.py" beforeDir="false" afterPath="$PROJECT_DIR$/tools/ml/transform_data_for_autoencoder.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -49,63 +58,24 @@
   <component name="PropertiesComponent">
     <property name="ASKED_ADD_EXTERNAL_FILES" value="true" />
     <property name="RunOnceActivity.OpenProjectViewOnStart" value="true" />
-    <property name="last_opened_file_path" value="$PROJECT_DIR$/tools/ml/transform-data-for-autoencode.py" />
+    <property name="SHARE_PROJECT_CONFIGURATION_FILES" value="true" />
+    <property name="last_opened_file_path" value="$PROJECT_DIR$/tests/test_transform_data_for_autoencoder.py" />
+    <property name="settings.editor.selected.configurable" value="com.jetbrains.python.configuration.PyIntegratedToolsModulesConfigurable" />
   </component>
   <component name="RecentsManager">
     <key name="MoveFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$/data/z2_lattice_size_8_8/raw" />
       <recent name="$PROJECT_DIR$/tools/ml" />
       <recent name="$PROJECT_DIR$/tools/general" />
       <recent name="$PROJECT_DIR$/z3support" />
       <recent name="$PROJECT_DIR$/src" />
-      <recent name="$PROJECT_DIR$/tools" />
     </key>
   </component>
-  <component name="RunManager" selected="Python.transform_data_autoencoder">
-    <configuration name="grid_search_autoencoder" type="PythonConfigurationType" factoryName="Python">
-      <module name="z3support" />
-      <option name="INTERPRETER_OPTIONS" value="" />
-      <option name="PARENT_ENVS" value="true" />
-      <envs>
-        <env name="PYTHONUNBUFFERED" value="1" />
-      </envs>
-      <option name="SDK_HOME" value="$PROJECT_DIR$/pythonenv/bin/python" />
-      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/tools/ml" />
-      <option name="IS_MODULE_SDK" value="false" />
-      <option name="ADD_CONTENT_ROOTS" value="true" />
-      <option name="ADD_SOURCE_ROOTS" value="true" />
-      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/tools/ml/grid_search.py" />
-      <option name="PARAMETERS" value="--settings $PROJECT_DIR$/tools/ml/settings/2020-08-08T16:21:45.693965.conf --run-location $PROJECT_DIR$/tools/ml/ --data $PROJECT_DIR$/notebooks/pickle_data.pkl" />
-      <option name="SHOW_COMMAND_LINE" value="false" />
-      <option name="EMULATE_TERMINAL" value="false" />
-      <option name="MODULE_MODE" value="false" />
-      <option name="REDIRECT_INPUT" value="false" />
-      <option name="INPUT_FILE" value="" />
-      <method v="2" />
-    </configuration>
-    <configuration name="transform_data_autoencoder" type="PythonConfigurationType" factoryName="Python">
-      <module name="z3support" />
-      <option name="INTERPRETER_OPTIONS" value="" />
-      <option name="PARENT_ENVS" value="true" />
-      <envs>
-        <env name="PYTHONUNBUFFERED" value="1" />
-      </envs>
-      <option name="SDK_HOME" value="$PROJECT_DIR$/pythonenv/bin/python" />
-      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/tools/ml" />
-      <option name="IS_MODULE_SDK" value="false" />
-      <option name="ADD_CONTENT_ROOTS" value="true" />
-      <option name="ADD_SOURCE_ROOTS" value="true" />
-      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/tools/ml/transform_data_for_autoencoder.py" />
-      <option name="PARAMETERS" value="--src ~/repos/z3support/data/lattice_size_4_4/raw/ --parse-type owen_z3 --destination ~/repos/z3support/data/lattice_size_4_4/raw/ --truncate 10" />
-      <option name="SHOW_COMMAND_LINE" value="false" />
-      <option name="EMULATE_TERMINAL" value="false" />
-      <option name="MODULE_MODE" value="false" />
-      <option name="REDIRECT_INPUT" value="false" />
-      <option name="INPUT_FILE" value="" />
-      <method v="2" />
-    </configuration>
+  <component name="RunManager" selected="Python tests.transform_data_for_autoencoder">
     <list>
       <item itemvalue="Python.grid_search_autoencoder" />
       <item itemvalue="Python.transform_data_autoencoder" />
+      <item itemvalue="Python tests.transform_data_for_autoencoder" />
     </list>
   </component>
   <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
@@ -135,67 +105,112 @@
     <option name="ADD_EXTERNAL_FILES_SILENTLY" value="true" />
   </component>
   <component name="WindowStateProjectService">
-    <state x="69" y="315" width="941" height="1255" key="#com.intellij.execution.impl.EditConfigurationsDialog" timestamp="1597440768505">
-      <screen x="0" y="27" width="1080" height="1893" />
+    <state x="3622" y="696" width="941" height="1080" key="#com.intellij.execution.impl.EditConfigurationsDialog" timestamp="1597769509204">
+      <screen x="2160" y="696" width="3840" height="2160" />
     </state>
-    <state x="69" y="315" width="941" height="1255" key="#com.intellij.execution.impl.EditConfigurationsDialog/0.27.1080.1893/1080.348.1920.1080@0.27.1080.1893" timestamp="1597440768505" />
-    <state x="1811" y="598" width="1076" height="694" key="#com.intellij.execution.impl.EditConfigurationsDialog/0.27.1080.1893/1080.348.1920.1080@1080.348.1920.1080" timestamp="1597340690873" />
-    <state x="1801" y="628" key="#xdebugger.evaluate" timestamp="1597323361812">
-      <screen x="1080" y="348" width="1920" height="1080" />
+    <state x="1255" y="343" width="941" height="1080" key="#com.intellij.execution.impl.EditConfigurationsDialog/0.27.1080.1893/1080.348.1920.1080@0.27.1080.1893" timestamp="1597441065887" />
+    <state x="1811" y="563" width="1076" height="694" key="#com.intellij.execution.impl.EditConfigurationsDialog/0.27.1080.1893/1080.348.1920.1080@1080.348.1920.1080" timestamp="1597692658895" />
+    <state x="3622" y="696" key="#com.intellij.execution.impl.EditConfigurationsDialog/0.27.2160.3813/2160.696.3840.2160@2160.696.3840.2160" timestamp="1597769509204" />
+    <state x="3852" y="1640" key="#xdebugger.evaluate" timestamp="1597770847133">
+      <screen x="2160" y="696" width="3840" height="2160" />
     </state>
-    <state x="1801" y="628" key="#xdebugger.evaluate/0.27.1080.1893/1080.348.1920.1080@1080.348.1920.1080" timestamp="1597323361812" />
-    <state x="634" y="813" width="376" height="870" key="FileChooserDialogImpl" timestamp="1597440357035">
-      <screen x="0" y="27" width="1080" height="1893" />
+    <state x="406" y="513" key="#xdebugger.evaluate/0.27.1080.1893/1080.348.1920.1080@0.27.1080.1893" timestamp="1597441529792" />
+    <state x="1926" y="820" key="#xdebugger.evaluate/0.27.1080.1893/1080.348.1920.1080@1080.348.1920.1080" timestamp="1597692685367" />
+    <state x="3852" y="1640" key="#xdebugger.evaluate/0.27.2160.3813/2160.696.3840.2160@2160.696.3840.2160" timestamp="1597770847133" />
+    <state x="4414" y="1593" width="376" height="870" key="FileChooserDialogImpl" timestamp="1597769482540">
+      <screen x="2160" y="696" width="3840" height="2160" />
     </state>
     <state x="634" y="813" width="376" height="870" key="FileChooserDialogImpl/0.27.1080.1893/1080.348.1920.1080@0.27.1080.1893" timestamp="1597440357035" />
     <state x="2207" y="799" width="424" height="496" key="FileChooserDialogImpl/0.27.1080.1893/1080.348.1920.1080@1080.348.1920.1080" timestamp="1597322708130" />
-    <state width="1897" height="351" key="GridCell.Tab.0.bottom" timestamp="1597323434534">
-      <screen x="1080" y="348" width="1920" height="1080" />
+    <state x="4414" y="1593" key="FileChooserDialogImpl/0.27.2160.3813/2160.696.3840.2160@2160.696.3840.2160" timestamp="1597769482540" />
+    <state width="3794" height="782" key="GridCell.Tab.0.bottom" timestamp="1597771915685">
+      <screen x="2160" y="696" width="3840" height="2160" />
     </state>
-    <state width="1897" height="351" key="GridCell.Tab.0.bottom/0.27.1080.1893/1080.348.1920.1080@1080.348.1920.1080" timestamp="1597323434534" />
-    <state width="1897" height="351" key="GridCell.Tab.0.center" timestamp="1597323434534">
-      <screen x="1080" y="348" width="1920" height="1080" />
+    <state width="1897" height="351" key="GridCell.Tab.0.bottom/0.27.1080.1893/1080.348.1920.1080@0.27.1080.1893" timestamp="1597441701781" />
+    <state width="1897" height="351" key="GridCell.Tab.0.bottom/0.27.1080.1893/1080.348.1920.1080@1080.348.1920.1080" timestamp="1597692801953" />
+    <state width="3794" height="782" key="GridCell.Tab.0.bottom/0.27.2160.3813/2160.696.3840.2160@2160.696.3840.2160" timestamp="1597771915685" />
+    <state width="3794" height="782" key="GridCell.Tab.0.center" timestamp="1597771915685">
+      <screen x="2160" y="696" width="3840" height="2160" />
     </state>
-    <state width="1897" height="351" key="GridCell.Tab.0.center/0.27.1080.1893/1080.348.1920.1080@1080.348.1920.1080" timestamp="1597323434534" />
-    <state width="1897" height="351" key="GridCell.Tab.0.left" timestamp="1597323434534">
-      <screen x="1080" y="348" width="1920" height="1080" />
+    <state width="1897" height="351" key="GridCell.Tab.0.center/0.27.1080.1893/1080.348.1920.1080@0.27.1080.1893" timestamp="1597441701781" />
+    <state width="1897" height="351" key="GridCell.Tab.0.center/0.27.1080.1893/1080.348.1920.1080@1080.348.1920.1080" timestamp="1597692801953" />
+    <state width="3794" height="782" key="GridCell.Tab.0.center/0.27.2160.3813/2160.696.3840.2160@2160.696.3840.2160" timestamp="1597771915685" />
+    <state width="3794" height="782" key="GridCell.Tab.0.left" timestamp="1597771915685">
+      <screen x="2160" y="696" width="3840" height="2160" />
     </state>
-    <state width="1897" height="351" key="GridCell.Tab.0.left/0.27.1080.1893/1080.348.1920.1080@1080.348.1920.1080" timestamp="1597323434534" />
-    <state width="1897" height="351" key="GridCell.Tab.0.right" timestamp="1597323434534">
-      <screen x="1080" y="348" width="1920" height="1080" />
+    <state width="1897" height="351" key="GridCell.Tab.0.left/0.27.1080.1893/1080.348.1920.1080@0.27.1080.1893" timestamp="1597441701781" />
+    <state width="1897" height="351" key="GridCell.Tab.0.left/0.27.1080.1893/1080.348.1920.1080@1080.348.1920.1080" timestamp="1597692801953" />
+    <state width="3794" height="782" key="GridCell.Tab.0.left/0.27.2160.3813/2160.696.3840.2160@2160.696.3840.2160" timestamp="1597771915685" />
+    <state width="3794" height="782" key="GridCell.Tab.0.right" timestamp="1597771915685">
+      <screen x="2160" y="696" width="3840" height="2160" />
     </state>
-    <state width="1897" height="351" key="GridCell.Tab.0.right/0.27.1080.1893/1080.348.1920.1080@1080.348.1920.1080" timestamp="1597323434534" />
-    <state width="1897" height="351" key="GridCell.Tab.1.bottom" timestamp="1597323434534">
-      <screen x="1080" y="348" width="1920" height="1080" />
+    <state width="1897" height="351" key="GridCell.Tab.0.right/0.27.1080.1893/1080.348.1920.1080@0.27.1080.1893" timestamp="1597441701781" />
+    <state width="1897" height="351" key="GridCell.Tab.0.right/0.27.1080.1893/1080.348.1920.1080@1080.348.1920.1080" timestamp="1597692801953" />
+    <state width="3794" height="782" key="GridCell.Tab.0.right/0.27.2160.3813/2160.696.3840.2160@2160.696.3840.2160" timestamp="1597771915685" />
+    <state width="3794" height="782" key="GridCell.Tab.1.bottom" timestamp="1597771915686">
+      <screen x="2160" y="696" width="3840" height="2160" />
     </state>
-    <state width="1897" height="351" key="GridCell.Tab.1.bottom/0.27.1080.1893/1080.348.1920.1080@1080.348.1920.1080" timestamp="1597323434534" />
-    <state width="1897" height="351" key="GridCell.Tab.1.center" timestamp="1597323434534">
-      <screen x="1080" y="348" width="1920" height="1080" />
+    <state width="1897" height="351" key="GridCell.Tab.1.bottom/0.27.1080.1893/1080.348.1920.1080@0.27.1080.1893" timestamp="1597441703501" />
+    <state width="1897" height="351" key="GridCell.Tab.1.bottom/0.27.1080.1893/1080.348.1920.1080@1080.348.1920.1080" timestamp="1597692801953" />
+    <state width="3794" height="782" key="GridCell.Tab.1.bottom/0.27.2160.3813/2160.696.3840.2160@2160.696.3840.2160" timestamp="1597771915686" />
+    <state width="3794" height="782" key="GridCell.Tab.1.center" timestamp="1597771915685">
+      <screen x="2160" y="696" width="3840" height="2160" />
     </state>
-    <state width="1897" height="351" key="GridCell.Tab.1.center/0.27.1080.1893/1080.348.1920.1080@1080.348.1920.1080" timestamp="1597323434534" />
-    <state width="1897" height="351" key="GridCell.Tab.1.left" timestamp="1597323434534">
-      <screen x="1080" y="348" width="1920" height="1080" />
+    <state width="1897" height="351" key="GridCell.Tab.1.center/0.27.1080.1893/1080.348.1920.1080@0.27.1080.1893" timestamp="1597441703501" />
+    <state width="1897" height="351" key="GridCell.Tab.1.center/0.27.1080.1893/1080.348.1920.1080@1080.348.1920.1080" timestamp="1597692801953" />
+    <state width="3794" height="782" key="GridCell.Tab.1.center/0.27.2160.3813/2160.696.3840.2160@2160.696.3840.2160" timestamp="1597771915685" />
+    <state width="3794" height="782" key="GridCell.Tab.1.left" timestamp="1597771915685">
+      <screen x="2160" y="696" width="3840" height="2160" />
     </state>
-    <state width="1897" height="351" key="GridCell.Tab.1.left/0.27.1080.1893/1080.348.1920.1080@1080.348.1920.1080" timestamp="1597323434534" />
-    <state width="1897" height="351" key="GridCell.Tab.1.right" timestamp="1597323434534">
-      <screen x="1080" y="348" width="1920" height="1080" />
+    <state width="1897" height="351" key="GridCell.Tab.1.left/0.27.1080.1893/1080.348.1920.1080@0.27.1080.1893" timestamp="1597441703501" />
+    <state width="1897" height="351" key="GridCell.Tab.1.left/0.27.1080.1893/1080.348.1920.1080@1080.348.1920.1080" timestamp="1597692801953" />
+    <state width="3794" height="782" key="GridCell.Tab.1.left/0.27.2160.3813/2160.696.3840.2160@2160.696.3840.2160" timestamp="1597771915685" />
+    <state width="3794" height="782" key="GridCell.Tab.1.right" timestamp="1597771915686">
+      <screen x="2160" y="696" width="3840" height="2160" />
     </state>
-    <state width="1897" height="351" key="GridCell.Tab.1.right/0.27.1080.1893/1080.348.1920.1080@1080.348.1920.1080" timestamp="1597323434534" />
+    <state width="1897" height="351" key="GridCell.Tab.1.right/0.27.1080.1893/1080.348.1920.1080@0.27.1080.1893" timestamp="1597441703501" />
+    <state width="1897" height="351" key="GridCell.Tab.1.right/0.27.1080.1893/1080.348.1920.1080@1080.348.1920.1080" timestamp="1597692801953" />
+    <state width="3794" height="782" key="GridCell.Tab.1.right/0.27.2160.3813/2160.696.3840.2160@2160.696.3840.2160" timestamp="1597771915686" />
+    <state x="3569" y="1411" width="1022" height="737" key="SettingsEditor" timestamp="1597768750412">
+      <screen x="2160" y="696" width="3840" height="2160" />
+    </state>
+    <state x="3569" y="1411" width="1022" height="737" key="SettingsEditor/0.27.2160.3813/2160.696.3840.2160@2160.696.3840.2160" timestamp="1597768750412" />
     <state x="197" y="226" width="762" height="670" key="com.intellij.openapi.editor.actions.MultiplePasteAction$ClipboardContentChooser" timestamp="1597435959307">
       <screen x="0" y="27" width="1080" height="1893" />
     </state>
     <state x="197" y="226" width="762" height="670" key="com.intellij.openapi.editor.actions.MultiplePasteAction$ClipboardContentChooser/0.27.1080.1893/1080.348.1920.1080@0.27.1080.1893" timestamp="1597435959307" />
     <state x="1430" y="490" width="762" height="628" key="com.intellij.openapi.editor.actions.MultiplePasteAction$ClipboardContentChooser/0.27.1080.1893/1080.348.1920.1080@1080.348.1920.1080" timestamp="1596919328348" />
+    <state x="4048" y="891" width="1258" height="2116" key="dock-window-1" timestamp="1597769509658">
+      <screen x="2160" y="696" width="3840" height="2160" />
+    </state>
+    <state x="4048" y="891" width="1258" height="2116" key="dock-window-1/0.27.2160.3813/2160.696.3840.2160@2160.696.3840.2160" timestamp="1597769509658" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
       <breakpoints>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/tools/ml/grid_search.py</url>
-          <line>160</line>
-          <option name="timeStamp" value="1" />
+          <url>file://$PROJECT_DIR$/tools/ml/transform_data_for_autoencoder.py</url>
+          <line>61</line>
+          <option name="timeStamp" value="6" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/tools/ml/transform_data_for_autoencoder.py</url>
+          <line>109</line>
+          <option name="timeStamp" value="7" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/tests/test_transform_data_for_autoencoder.py</url>
+          <line>16</line>
+          <option name="timeStamp" value="10" />
         </line-breakpoint>
       </breakpoints>
+      <default-breakpoints>
+        <breakpoint type="python-exception">
+          <properties notifyOnTerminate="true" exception="BaseException">
+            <option name="notifyOnTerminate" value="true" />
+          </properties>
+        </breakpoint>
+      </default-breakpoints>
     </breakpoint-manager>
   </component>
 </project>

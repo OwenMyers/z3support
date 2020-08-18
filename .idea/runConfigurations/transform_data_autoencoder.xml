@@ -12,7 +12,7 @@
     <option name="ADD_CONTENT_ROOTS" value="true" />
     <option name="ADD_SOURCE_ROOTS" value="true" />
     <option name="SCRIPT_NAME" value="$PROJECT_DIR$/tools/ml/transform_data_for_autoencoder.py" />
-    <option name="PARAMETERS" value="--src $PROJECT_DIR$/data/lattice_size_4_4/raw/ --parse-type owen_z3 --destination $PROJECT_DIR$/data/lattice_size_4_4/raw/ --truncate 10" />
+    <option name="PARAMETERS" value="--src $PROJECT_DIR$/data/z2_lattice_size_8_8/raw/ --parse-type as_rows_z2 --destination $PROJECT_DIR$/data/lattice_size_4_4/raw/ --truncate 10" />
     <option name="SHOW_COMMAND_LINE" value="false" />
     <option name="EMULATE_TERMINAL" value="false" />
     <option name="MODULE_MODE" value="false" />

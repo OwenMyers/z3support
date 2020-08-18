@@ -132,7 +132,8 @@ def parse_owen_z3():
     for i, cur_file in enumerate(tqdm.tqdm(file_list)):
         if (TRUNCATE > 0) and (i > TRUNCATE):
             break
-        if '.csv' != cur_file[-4:]:
+        # noinspection SpellCheckingInspection
+        if ('.csv' != cur_file[-4:]) or ('plaquett' not in cur_file):
             continue
         current_df = pd.read_csv(os.path.join(SRC, cur_file))
         if i == 0:
@@ -147,9 +148,58 @@ def parse_owen_z3():
     np.save(os.path.join(DESTINATION, 'z3_data.npy'), np.array(matrix_list))
 
 
+def z2_row_to_matrix(row, lattice_size):
+    cur_transformed_matrix = np.zeros([lattice_size * 2, lattice_size * 2])
+    count = 0
+    for k in range(lattice_size):
+        for l in range(lattice_size):
+            raw_horizontal_index = count
+            raw_vertical_index = count + 1
+            transformed_horizontal_index_y = 2 * l + 1
+            transformed_horizontal_index_x = k * 2
+
+            transformed_vertical_index_y = 2 * l
+            transformed_vertical_index_x = k * 2 + 1
+
+            cur_transformed_matrix[transformed_horizontal_index_x, transformed_horizontal_index_y] = \
+                row[raw_horizontal_index]
+            cur_transformed_matrix[transformed_vertical_index_x, transformed_vertical_index_y] = \
+                row[raw_vertical_index]
+
+            count += 2
+    return cur_transformed_matrix
+
+
+def parse_as_rows_z2():
+    matrix_list = []
+    file_list = os.listdir(SRC)
+    lattice_size = None
+    for i, cur_file in enumerate(tqdm.tqdm(file_list)):
+        if (TRUNCATE > 0) and (i > TRUNCATE):
+            break
+        if '.txt' != cur_file[-4:]:
+            continue
+        current_df = pd.read_csv(os.path.join(SRC, cur_file), delimiter=' ')
+        if i == 0:
+            lattice_size = np.sqrt((current_df.shape[1] - 1) / 2)
+        for j in range(current_df.shape[0]):
+            cur_transformed_matrix = np.zeros([lattice_size * 2, lattice_size * 2])
+            count = 0
+            for k in range(lattice_size):
+                for l in range(lattice_size):
+                    raw_horizontal_index = count
+                    raw_vertical_index = count + 1
+                    transformed_horizontal_index = 2 * l + 1
+                    transformed_vertical_index = k * 2
+
+                    count += 2
+
+
 def main():
     if PARSE_TYPE == 'owen_z3':
         parse_owen_z3()
+    if PARSE_TYPE == 'as_rows_z2':
+        parse_as_rows_z2()
 
 
 if __name__ == '__main__':
@@ -161,7 +211,7 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
 
-    allowed_parse_type_list = ['owen_z3']
+    allowed_parse_type_list = ['owen_z3', 'as_rows_z2']
     if args.parse_type not in allowed_parse_type_list:
         raise ValueError("Don't know how to parse this type of file")
     PARSE_TYPE = args.parse_type
@@ -174,4 +224,3 @@ if __name__ == '__main__':
     TRUNCATE = args.truncate
 
     main()
-
