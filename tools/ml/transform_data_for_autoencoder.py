@@ -3,6 +3,7 @@ import argparse
 import pandas as pd
 import tqdm
 import numpy as np
+import logging
 
 
 def string_to_number_directions_1(r, column):
@@ -124,6 +125,23 @@ def create_full_numerical_representation(df_in, lattice_size, v=False):
     return m
 
 
+def final_output(func):
+    def wrapper_final_output():
+        logging.info("In final output decorator")
+        save_file_name, matrix_list = func()
+        logging.info(f"    Save file name: {save_file_name}")
+        logging.info(f"    Number of matrices in output: {len(matrix_list)}")
+        if len(matrix_list) == 0:
+            raise ValueError('No files successfully transformed. Check src directory.')
+        full_save_path = os.path.join(DESTINATION, save_file_name + '.npy')
+        logging.info(f"    Trying to save to {full_save_path}\n...")
+        np.save(full_save_path, np.array(matrix_list))
+        logging.info("    Done saving and done in decorator wrapper")
+
+    return wrapper_final_output
+
+
+@final_output
 def parse_owen_z3():
     matrix_list = []
     file_list = os.listdir(SRC)
@@ -143,9 +161,7 @@ def parse_owen_z3():
         current_matrix = create_full_numerical_representation(current_df, lattice_size)
         matrix_list.append(current_matrix)
 
-    if len(matrix_list) == 0:
-        raise ValueError('No files successfully transformed. Check src directory.')
-    np.save(os.path.join(DESTINATION, 'z3_data.npy'), np.array(matrix_list))
+    return 'z3_data', matrix_list
 
 
 def z2_row_to_matrix(row, lattice_size):
@@ -170,22 +186,26 @@ def z2_row_to_matrix(row, lattice_size):
     return cur_transformed_matrix
 
 
+@final_output
 def parse_as_rows_z2():
     matrix_list = []
     file_list = os.listdir(SRC)
+
     lattice_size = None
     for i, cur_file in enumerate(tqdm.tqdm(file_list)):
         if (TRUNCATE > 0) and (i > TRUNCATE):
             break
         if '.txt' != cur_file[-4:]:
             continue
-        current_df = pd.read_csv(os.path.join(SRC, cur_file), delimiter=' ')
+        current_df = pd.read_csv(os.path.join(SRC, cur_file), delimiter=' ', header=None)
         if i == 0:
-            lattice_size = np.sqrt((current_df.shape[1] - 1) / 2)
+            lattice_size = int(np.sqrt((current_df.shape[1] - 1) / 2))
         for j in range(current_df.shape[0]):
             row = current_df.iloc[j]
             matrix = z2_row_to_matrix(row, lattice_size)
             matrix_list.append(matrix)
+
+    return 'z2_data', matrix_list
 
 
 def main():
@@ -196,6 +216,7 @@ def main():
 
 
 if __name__ == '__main__':
+    logging.basicConfig(level=logging.INFO)
     parser = argparse.ArgumentParser()
     parser.add_argument('--src', type=str, help='Path to directory containing configuration files', required=True)
     parser.add_argument('--parse-type', type=str, help='What system configurations are you parsing', required=True)

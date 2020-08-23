@@ -138,12 +138,26 @@ def main():
     # activations = activation_model.predict(x_test)
 
 
+def get_all_data_sources(settings_file_parser):
+    """
+    Arguments:
+        settings_file_parser (ConfigParser): The config parser instance containing ``DATA1, DATA2, ..., DATA<N>``
+
+    Returns:
+        A list of the full paths to all ``.npy`` files. Remember that each file contains the full list of configurations
+        for that type (e.g. Z2, Z3, High temp, etc) transformed and ready for the neural network.
+    """
+    path_list = []
+    for k, v in settings_file_parser['Data']:
+        if 'DATA' in k:
+            path_list.append(v)
+    return path_list
+
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Run a parameter sweep to find the best autoencoder.')
     parser.add_argument('--settings', type=str, help='Settings file location', required=True)
     parser.add_argument('--run-location', type=str, help='Path you want the run to be done at', default='./')
-    parser.add_argument('--data', type=str,
-                        help='Abs. path to data (should eventually go in the settings file)', required=True)
     args = parser.parse_args()
 
     # Make sure the required subdirectories are present
@@ -167,6 +181,8 @@ if __name__ == "__main__":
         args.run_location,
         'checkpoint_{}.hdf5'.format(config['Settings']['timestamp'])
     )
+    # This will be a list of the different sources, e.g. path to transformed Z3 data, and path to transformed Z2 data.
+    DATA = get_all_data_sources(config)
     CHECKPOINTER = ModelCheckpoint(
         filepath=CHECKPOINT_FILE,
         monitor='val_loss',
