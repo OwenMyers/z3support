@@ -152,13 +152,13 @@ def z2_row_to_matrix(row, lattice_size):
     cur_transformed_matrix = np.zeros([lattice_size * 2, lattice_size * 2])
     count = 0
     for k in range(lattice_size):
-        for l in range(lattice_size):
+        for j in range(lattice_size):
             raw_horizontal_index = count
             raw_vertical_index = count + 1
-            transformed_horizontal_index_y = 2 * l + 1
+            transformed_horizontal_index_y = 2 * j + 1
             transformed_horizontal_index_x = k * 2
 
-            transformed_vertical_index_y = 2 * l
+            transformed_vertical_index_y = 2 * j
             transformed_vertical_index_x = k * 2 + 1
 
             cur_transformed_matrix[transformed_horizontal_index_x, transformed_horizontal_index_y] = \
@@ -183,16 +183,9 @@ def parse_as_rows_z2():
         if i == 0:
             lattice_size = np.sqrt((current_df.shape[1] - 1) / 2)
         for j in range(current_df.shape[0]):
-            cur_transformed_matrix = np.zeros([lattice_size * 2, lattice_size * 2])
-            count = 0
-            for k in range(lattice_size):
-                for l in range(lattice_size):
-                    raw_horizontal_index = count
-                    raw_vertical_index = count + 1
-                    transformed_horizontal_index = 2 * l + 1
-                    transformed_vertical_index = k * 2
-
-                    count += 2
+            row = current_df.iloc[j]
+            matrix = z2_row_to_matrix(row, lattice_size)
+            matrix_list.append(matrix)
 
 
 def main():
