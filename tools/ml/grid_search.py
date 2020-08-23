@@ -8,6 +8,7 @@ import tensorflow as tf
 import numpy as np
 import configparser
 import argparse
+import logging
 
 
 def train_test_model(hparams, x_test, x_train):
@@ -90,10 +91,72 @@ def run(run_dir, hparams, x_test, x_train):
     return autoencoder
 
 
-def main():
-    all_data = np.load(DATA)
+def import_data():
+    """
+    Get all the data from different systems into one place to be passed into the machine learning algorithm.
 
-    all_data = all_data.astype('float32') / 5.0
+    (We will want to expand and test this if we have time or if we start doing more than just the z2 and z3 data)
+
+    No arguments but requires the ``DATA`` global variable containing the list of ``.npy`` files.
+
+    This function will load ALL of the data into memory. If the data sets get too large this will be a breaking point.
+
+    Steps:
+        * Load all data into memory
+        * Find what the maximum and minimum values of each are. Check equivalency
+        * Normalize all data (divide by max)
+        * Balance the data sets (under sample to the lowest number of configurations)
+        * Put together into a single entity
+        * Scramble but keep original labels in separate list
+        * Return both the scrambled data set and the separate list... separately.
+    """
+    logging.info("Starting data import")
+    logging.info("    Loading data")
+    # * Load all data into memory
+    loaded_data_list = []
+    length_list = []
+    for current_data_path in DATA:
+        logging.debug(f"        Current path to data being loaded {current_data_path}")
+        current_loaded = np.load(current_data_path)
+        loaded_data_list.append(current_loaded)
+        length_list.append(len(current_loaded))
+    logging.info("    Data loaded")
+    # * Find what the maximum and minimum values of each are. Check equivalency
+    max_list = []
+    min_list = []
+    for current_dataset in loaded_data_list:
+        max_list.append(current_dataset.max())
+        min_list.append(current_dataset.min())
+    logging.debug(f"    Max values in data: {max_list}")
+    logging.debug(f"    Min values in data: {min_list}")
+    for current_max in max_list:
+        for second_max in max_list:
+            if current_max != second_max:
+                raise ValueError("Different maximums")
+    for current_min in min_list:
+        for second_min in min_list:
+            if current_min != second_min:
+                raise ValueError("Different minimums")
+
+    # * Normalize all data (divide by max)
+    for current_dataset in loaded_data_list:
+        current_dataset /= max_list[0]
+
+    # * Balance the data sets (under sample to the lowest number of configurations)
+    # TODO
+
+    # * Put together into a single entity
+    # * Scramble but keep original labels in separate list
+    # * Return both the scrambled data set and the separate list... separately.
+
+def main():
+    # DATA will contain a list of the paths to different binary data files. There should be one for each of the
+    # "different types of systems" (e.g. z3, z2, high temp, etc). There is no guarantee that there are the same number
+    # of configurations in each file though but the function below takes care of all of that for us to make sure we
+    # get a balanced dataset and that it meets some basic requirements.
+    #all_data = np.load(DATA)
+
+    all_data = all_data.astype('float32') / max(all_data)
     n_records = len(all_data)
     x_train = all_data[: n_records - int(n_records / 4)]
     x_test = all_data[int(n_records / 4):]
@@ -150,11 +213,14 @@ def get_all_data_sources(settings_file_parser):
     path_list = []
     for k, v in settings_file_parser['Data']:
         if 'DATA' in k:
+            if not os.path.exists(v):
+                raise ValueError(f'Data path {v} does not exist.')
             path_list.append(v)
     return path_list
 
 
 if __name__ == "__main__":
+    logging.basicConfig(level=logging.INFO)
     parser = argparse.ArgumentParser(description='Run a parameter sweep to find the best autoencoder.')
     parser.add_argument('--settings', type=str, help='Settings file location', required=True)
     parser.add_argument('--run-location', type=str, help='Path you want the run to be done at', default='./')
@@ -190,7 +256,6 @@ if __name__ == "__main__":
         save_best_only=True,
         mode='auto'
     )
-    DATA = args.data
     RUN_LOCATION = args.run_location
 
     if not QUICK_RUN:
