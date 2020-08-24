@@ -143,11 +143,19 @@ def import_data():
         current_dataset /= max_list[0]
 
     # * Balance the data sets (under sample to the lowest number of configurations)
-    # TODO
+    balanced_dataset = []
+    for current_dataset in loaded_data_list:
+        if len(current_dataset) > min(length_list):
+            random_indicies = np.random.choice(current_dataset.shape[0], min(length_list), replace=False)
+            balanced_dataset.append(current_dataset[random_indicies, :])
 
     # * Put together into a single entity
+    concatinated = np.array(balanced_dataset)
     # * Scramble but keep original labels in separate list
+    # TODO
+    concatinated
     # * Return both the scrambled data set and the separate list... separately.
+
 
 def main():
     # DATA will contain a list of the paths to different binary data files. There should be one for each of the

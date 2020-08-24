@@ -20,12 +20,8 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="db9b798e-1fd9-4f05-a0e9-122ca50a1fc4" name="Default Changelist" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/runConfigurations/transform_data_autoencoder.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/runConfigurations/transform_data_autoencoder.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/data/lattice_size_4_4/analysis/.gitignore" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/data/lattice_size_4_4/raw/.gitignore" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/tools/ml/grid_search.py" beforeDir="false" afterPath="$PROJECT_DIR$/tools/ml/grid_search.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tools/ml/settings/2020-08-08T16:21:45.693965.conf" beforeDir="false" afterPath="$PROJECT_DIR$/tools/ml/settings/2020-08-08T16:21:45.693965.conf" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -68,9 +64,9 @@
   </component>
   <component name="RunManager" selected="Python.transform_data_autoencoder">
     <list>
+      <item itemvalue="Python tests.transform_data_for_autoencoder" />
       <item itemvalue="Python.grid_search_autoencoder" />
       <item itemvalue="Python.transform_data_autoencoder" />
-      <item itemvalue="Python tests.transform_data_for_autoencoder" />
     </list>
   </component>
   <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
