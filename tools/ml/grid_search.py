@@ -91,13 +91,14 @@ def run(run_dir, hparams, x_test, x_train):
     return autoencoder
 
 
-def import_data():
+def import_data(list_data):
     """
     Get all the data from different systems into one place to be passed into the machine learning algorithm.
 
     (We will want to expand and test this if we have time or if we start doing more than just the z2 and z3 data)
 
-    No arguments but requires the ``DATA`` global variable containing the list of ``.npy`` files.
+    Arguments:
+        Requires list of ``.npy`` files.
 
     This function will load ALL of the data into memory. If the data sets get too large this will be a breaking point.
 
@@ -115,7 +116,7 @@ def import_data():
     # * Load all data into memory
     loaded_data_list = []
     length_list = []
-    for current_data_path in DATA:
+    for current_data_path in list_data:
         logging.debug(f"        Current path to data being loaded {current_data_path}")
         current_loaded = np.load(current_data_path)
         loaded_data_list.append(current_loaded)
@@ -139,22 +140,26 @@ def import_data():
                 raise ValueError("Different minimums")
 
     # * Normalize all data (divide by max)
+    normalized_data_list = []
     for current_dataset in loaded_data_list:
-        current_dataset /= max_list[0]
+        normalized_data_list.append(current_dataset / max_list[0])
 
     # * Balance the data sets (under sample to the lowest number of configurations)
     balanced_dataset = []
-    for current_dataset in loaded_data_list:
+    for current_dataset in normalized_data_list:
         if len(current_dataset) > min(length_list):
-            random_indicies = np.random.choice(current_dataset.shape[0], min(length_list), replace=False)
-            balanced_dataset.append(current_dataset[random_indicies, :])
+            random_indices = np.random.choice(current_dataset.shape[0], min(length_list), replace=False)
+            balanced_dataset.append(current_dataset[random_indices, :])
+        else:
+            balanced_dataset.append(current_dataset)
 
     # * Put together into a single entity
-    concatinated = np.array(balanced_dataset)
+    data_set_with_indices = list(zip(balanced_dataset, range(0, len(balanced_dataset))))
     # * Scramble but keep original labels in separate list
-    # TODO
-    concatinated
+    np.random.shuffle(data_set_with_indices)
     # * Return both the scrambled data set and the separate list... separately.
+    balanced_dataset, indices = zip(*data_set_with_indices)
+    return balanced_dataset, indices
 
 
 def main():
@@ -162,7 +167,8 @@ def main():
     # "different types of systems" (e.g. z3, z2, high temp, etc). There is no guarantee that there are the same number
     # of configurations in each file though but the function below takes care of all of that for us to make sure we
     # get a balanced dataset and that it meets some basic requirements.
-    #all_data = np.load(DATA)
+    # all_data = np.load(DATA)
+    all_data = import_data(DATA)
 
     all_data = all_data.astype('float32') / max(all_data)
     n_records = len(all_data)
@@ -219,11 +225,18 @@ def get_all_data_sources(settings_file_parser):
         for that type (e.g. Z2, Z3, High temp, etc) transformed and ready for the neural network.
     """
     path_list = []
-    for k, v in settings_file_parser['Data']:
-        if 'DATA' in k:
-            if not os.path.exists(v):
-                raise ValueError(f'Data path {v} does not exist.')
-            path_list.append(v)
+    got_all = False
+    c = 0
+    while not got_all:
+        try:
+            c += 1
+            current_data_path = settings_file_parser['Data'][f'DATA{c}']
+        except KeyError:
+            got_all = True
+
+        if not os.path.exists(current_data_path):
+            raise ValueError(f'Data path {current_data_path} does not exist.')
+        path_list.append(current_data_path)
     return path_list
 
 
@@ -239,7 +252,6 @@ if __name__ == "__main__":
     assert os.path.exists(args.run_location + 'models')
     assert os.path.exists(args.run_location + 'settings')
     assert os.path.exists(args.run_location + 'tensorboard_raw')
-    assert os.path.exists(args.data)
 
     config = configparser.ConfigParser()
     config.read(args.settings)
