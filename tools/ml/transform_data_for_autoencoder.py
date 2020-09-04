@@ -177,10 +177,34 @@ def z2_row_to_matrix(row, lattice_size):
             transformed_vertical_index_y = 2 * j
             transformed_vertical_index_x = k * 2 + 1
 
+            # Transformed value notes
+            # Input data will have a blank or spin down as -1. spit up or not blank will be 1
+            # For CNN rep. of data 0s are centers of plaquetts and vertices so we can use zero. We want it to be
+            # commensurate with string_to_number_directions_2 so
+            # if -1 -> 1
+            # if 1 -> 3 (the max representation in z3. this at least gets you the max difference though we probably
+            # need to re-think it...
+            # ^ TODO
+            to_set_horizontal = None
+            if row[raw_horizontal_index] < 0:
+                to_set_horizontal = 1
+            elif row[raw_horizontal_index] > 0:
+                to_set_horizontal = 3
+            else:
+                # we get zero
+                raise ValueError('Got unexpected 0 in horizontal z2 data')
+            to_set_vertical = None
+            if row[raw_vertical_index] < 0:
+                to_set_vertical = 1
+            elif row[raw_vertical_index] > 0:
+                to_set_vertical = 3
+            else:
+                # we get zero
+                raise ValueError('Got unexpected 0 in vertical z2 data')
             cur_transformed_matrix[transformed_horizontal_index_x, transformed_horizontal_index_y] = \
-                row[raw_horizontal_index]
+                to_set_horizontal
             cur_transformed_matrix[transformed_vertical_index_x, transformed_vertical_index_y] = \
-                row[raw_vertical_index]
+                to_set_vertical
 
             count += 2
     return cur_transformed_matrix
