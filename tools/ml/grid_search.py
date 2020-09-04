@@ -168,7 +168,7 @@ def main():
     # of configurations in each file though but the function below takes care of all of that for us to make sure we
     # get a balanced dataset and that it meets some basic requirements.
     # all_data = np.load(DATA)
-    all_data = import_data(DATA)
+    all_data, indices = import_data(DATA)
 
     all_data = all_data.astype('float32') / max(all_data)
     n_records = len(all_data)
