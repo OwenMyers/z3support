@@ -110,6 +110,9 @@ def import_data(list_data):
         * Put together into a single entity
         * Scramble but keep original labels in separate list
         * Return both the scrambled data set and the separate list... separately.
+
+    Returns:
+        Array of all configurations. numpy, float32 as first element. Original indices of the data as the second.
     """
     logging.info("Starting data import")
     logging.info("    Loading data")
@@ -159,7 +162,7 @@ def import_data(list_data):
     np.random.shuffle(data_set_with_indices)
     # * Return both the scrambled data set and the separate list... separately.
     balanced_dataset, indices = zip(*data_set_with_indices)
-    return balanced_dataset, indices
+    return np.array(balanced_dataset).astype('float32'), indices
 
 
 def main():
@@ -170,7 +173,6 @@ def main():
     # all_data = np.load(DATA)
     all_data, indices = import_data(DATA)
 
-    all_data = all_data.astype('float32') / max(all_data)
     n_records = len(all_data)
     x_train = all_data[: n_records - int(n_records / 4)]
     x_test = all_data[int(n_records / 4):]
@@ -226,17 +228,18 @@ def get_all_data_sources(settings_file_parser):
     """
     path_list = []
     got_all = False
-    c = 0
+    c = 1
+    current_data_path = settings_file_parser['Data'][f'DATA{c}']
     while not got_all:
+        if not os.path.exists(current_data_path):
+            raise ValueError(f'Data path {current_data_path} does not exist.')
+        path_list.append(current_data_path)
         try:
             c += 1
             current_data_path = settings_file_parser['Data'][f'DATA{c}']
         except KeyError:
             got_all = True
 
-        if not os.path.exists(current_data_path):
-            raise ValueError(f'Data path {current_data_path} does not exist.')
-        path_list.append(current_data_path)
     return path_list
 
 
