@@ -11,37 +11,37 @@ import argparse
 import logging
 
 
-def train_test_model(hparams, x_test, x_train):
+def train_test_model(hyper_params, x_test, x_train):
 
     input_obj = Input(shape=(L * 2, L * 2, 1))
 
     x = Conv2D(
         FEATURE_MAP_START,
         (3, 3),
-        strides=hparams[HP_STRIDE_SIZE],
+        strides=hyper_params[HP_STRIDE_SIZE],
         activation='relu',
         padding='same',
         use_bias=True
     )(input_obj)
 
     fm = None
-    for i in range(hparams[HP_N_LAYERS] - 1):
-        fm = FEATURE_MAP_START + (i + 1) * hparams[HP_FEATURE_MAP_STEP]
+    for i in range(hyper_params[HP_N_LAYERS] - 1):
+        fm = FEATURE_MAP_START + (i + 1) * hyper_params[HP_FEATURE_MAP_STEP]
         x = Conv2D(
             fm,
             (3, 3),
-            strides=hparams[HP_STRIDE_SIZE],
+            strides=hyper_params[HP_STRIDE_SIZE],
             activation='relu',
             padding='same',
             use_bias=True
         )(x)
     max_fm = fm
-    for i in range(hparams[HP_N_LAYERS] - 1):
-        fm = max_fm - (i + 1) * hparams[HP_FEATURE_MAP_STEP]
+    for i in range(hyper_params[HP_N_LAYERS] - 1):
+        fm = max_fm - (i + 1) * hyper_params[HP_FEATURE_MAP_STEP]
         x = Conv2DTranspose(
             fm,
             (3, 3),
-            strides=hparams[HP_STRIDE_SIZE],
+            strides=hyper_params[HP_STRIDE_SIZE],
             activation='relu',
             padding='same',
             use_bias=True
@@ -50,7 +50,7 @@ def train_test_model(hparams, x_test, x_train):
     decoded = Conv2DTranspose(
         1,
         (3, 3),
-        strides=hparams[HP_STRIDE_SIZE],
+        strides=hyper_params[HP_STRIDE_SIZE],
         activation='relu',
         padding='same',
         use_bias=True
@@ -69,12 +69,12 @@ def train_test_model(hparams, x_test, x_train):
     autoencoder.fit(
         x_train, x_train,
         epochs=EPOCHS,
-        batch_size=hparams[HP_BATCH_SIZE],
+        batch_size=hyper_params[HP_BATCH_SIZE],
         shuffle=True,
         validation_data=(x_test, x_test),
         callbacks=[
             TensorBoard(log_dir=log_dir),
-            hp.KerasCallback(log_dir, hparams),
+            hp.KerasCallback(log_dir, hyper_params),
             CHECKPOINTER
         ]
     )
@@ -82,10 +82,10 @@ def train_test_model(hparams, x_test, x_train):
     return binary_crossentropy, autoencoder
 
 
-def run(run_dir, hparams, x_test, x_train):
+def run(run_dir, hyper_params, x_test, x_train):
     with tf.summary.create_file_writer(run_dir).as_default():
-        hp.hparams(hparams)
-        loss, autoencoder = train_test_model(hparams, x_test, x_train)
+        hp.hparams(hyper_params)
+        loss, autoencoder = train_test_model(hyper_params, x_test, x_train)
         tf.summary.scalar('binary_crossentropy', loss, step=1)
 
     return autoencoder
@@ -129,8 +129,8 @@ def import_data(list_data):
     max_list = []
     min_list = []
     for current_dataset in loaded_data_list:
-        max_list.append(current_dataset.max())
-        min_list.append(current_dataset.min())
+        max_list.append(np.max(current_dataset))
+        min_list.append(np.min(current_dataset))
     logging.debug(f"    Max values in data: {max_list}")
     logging.debug(f"    Min values in data: {min_list}")
     for current_max in max_list:
@@ -148,6 +148,8 @@ def import_data(list_data):
         normalized_data_list.append(current_dataset / max_list[0])
 
     # * Balance the data sets (under sample to the lowest number of configurations)
+    # At the end of this the balanced_dataset will be a list of the number of full data sets that have been passed in.
+    # These still need to be put together as a single entity.
     balanced_dataset = []
     for current_dataset in normalized_data_list:
         if len(current_dataset) > min(length_list):
@@ -157,12 +159,18 @@ def import_data(list_data):
             balanced_dataset.append(current_dataset)
 
     # * Put together into a single entity
-    data_set_with_indices = list(zip(balanced_dataset, range(0, len(balanced_dataset))))
+    data_labels = []
+    for i, current_data_path in enumerate(list_data):
+        current_label = os.path.basename(os.path.normpath(current_data_path))
+        data_labels += [current_label] * len(balanced_dataset[0])
+    concatenated = np.vstack(balanced_dataset)
+
+    data_set_with_indices = list(zip(concatenated, data_labels))
     # * Scramble but keep original labels in separate list
     np.random.shuffle(data_set_with_indices)
     # * Return both the scrambled data set and the separate list... separately.
-    balanced_dataset, indices = zip(*data_set_with_indices)
-    return np.array(balanced_dataset).astype('float32'), indices
+    concatenated, data_labels = zip(*data_set_with_indices)
+    return np.array(concatenated).astype('float32'), data_labels
 
 
 def main():
@@ -191,7 +199,7 @@ def main():
         for n_layers in HP_N_LAYERS.domain.values:
             for f_map_step in HP_FEATURE_MAP_STEP.domain.values:
                 for stride in HP_STRIDE_SIZE.domain.values:
-                    hparams = {
+                    hyper_params = {
                         HP_BATCH_SIZE: batch_size,
                         HP_N_LAYERS: n_layers,
                         HP_FEATURE_MAP_STEP: f_map_step,
@@ -200,12 +208,12 @@ def main():
                     c += 1
                     run_name = "run-%d" % c
                     print('--- Starting trial: %s' % run_name)
-                    print({h.name: hparams[h] for h in hparams})
-                    autoencoder = run(os.path.join('tensorboard_raw', TENSORBOARD_SUB_DIR, run_name), hparams, x_test,
-                                      x_train)
+                    print({h.name: hyper_params[h] for h in hyper_params})
+                    autoencoder = run(os.path.join('tensorboard_raw', TENSORBOARD_SUB_DIR, run_name), hyper_params,
+                                      x_test, x_train)
 
     autoencoder.load_weights(CHECKPOINT_FILE)
-    autoencoder.save('models/best_hparam_autoencoder.h5')
+    autoencoder.save('models/best_hyper_param_autoencoder.h5')
     layers_to_encoded = int(len(autoencoder.layers) / 2)
     print(layers_to_encoded)
     layer_activations = [layer.output for layer in autoencoder.layers[:layers_to_encoded]]
@@ -213,7 +221,7 @@ def main():
         inputs=autoencoder.input,
         outputs=layer_activations
     )
-    activation_model.save(os.path.join(RUN_LOCATION, 'models/best_hparam_autoencoder.h5'))
+    activation_model.save(os.path.join(RUN_LOCATION, 'models/best_hyper_param_autoencoder.h5'))
     # activations = activation_model.predict(x_test)
 
 
@@ -256,6 +264,8 @@ if __name__ == "__main__":
     assert os.path.exists(args.run_location + 'settings')
     assert os.path.exists(args.run_location + 'tensorboard_raw')
 
+    if not os.path.exists(args.settings):
+        raise ValueError(f"Can't find specified settings file {args.settings}")
     config = configparser.ConfigParser()
     config.read(args.settings)
 
