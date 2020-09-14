@@ -10,3 +10,4 @@ papers/
 .ipynb_checkpoints/
 *.pkl
 tensorboard_raw/
+workspace.xml
