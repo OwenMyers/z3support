@@ -1,4 +1,5 @@
 from matplotlib import pyplot as plt
+import numpy as np
 
 
 def get_current_layer_display_grid_size(images_per_row, matrix_in):
@@ -30,13 +31,13 @@ def fill_display_grid(to_fill, cur_image, cur_col, cur_row, cur_size):
     print(f'cur_image.shape {cur_image.shape}')
     try:
         to_fill[
-            cur_col * cur_size : (cur_col + 1) * cur_size, # Displays the grid
-            cur_row * cur_size : (cur_row + 1) * cur_size
+            cur_col * cur_size: (cur_col + 1) * cur_size, # Displays the grid
+            cur_row * cur_size: (cur_row + 1) * cur_size
         ] = cur_image
     except ValueError:
         to_fill[
-            cur_col * cur_size : (cur_col + 1) * cur_size, # Displays the grid
-            cur_row * cur_size : (cur_row + 1) * cur_size
+            cur_col * cur_size: (cur_col + 1) * cur_size, # Displays the grid
+            cur_row * cur_size: (cur_row + 1) * cur_size
         ] = cur_image
 
 
