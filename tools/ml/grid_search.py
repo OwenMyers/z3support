@@ -8,10 +8,10 @@ import tensorflow as tf
 import numpy as np
 import argparse
 import logging
-from .base import MLToolMixin
+from tools.ml.base import MLToolMixin
 
 
-class Tool(MLToolMixin):
+class SearchTool(MLToolMixin):
 
     def __init__(self, settings_file, working_location):
         super().__init__(settings_file, working_location)
@@ -100,13 +100,17 @@ class Tool(MLToolMixin):
         # number of configurations in each file though but the function below takes care of all of that for us to make
         # sure we get a balanced dataset and that it meets some basic requirements.
         # all_data = np.load(DATA)
-        all_data, indices = self.import_data(self.data)
+        all_data, data_labels = self.import_data(self.data)
 
         n_records = len(all_data)
         x_train = all_data[: n_records - int(n_records / 4)]
         x_test = all_data[int(n_records / 4):]
         x_train = np.reshape(x_train, (len(x_train), self.L * 2, self.L * 2, 1))
         x_test = np.reshape(x_test, (len(x_test), self.L * 2, self.L * 2, 1))
+
+        np.save(self.training_data_location, x_train)
+        np.save(self.testing_data_location, x_test)
+        np.save(self.data_label_location, data_labels)
 
         with tf.summary.create_file_writer(
                 os.path.join(self.run_location, 'tensorboard_raw', self.tensorboard_sub_dir)
@@ -136,7 +140,7 @@ class Tool(MLToolMixin):
                                                hyper_params, x_test, x_train)
 
         autoencoder.load_weights(self.checkpoint_file)
-        autoencoder.save('models/best_hyper_param_autoencoder.h5')
+        autoencoder.save(self.best_model_file)
         layers_to_encoded = int(len(autoencoder.layers) / 2)
         print(layers_to_encoded)
         layer_activations = [layer.output for layer in autoencoder.layers[:layers_to_encoded]]
@@ -144,8 +148,7 @@ class Tool(MLToolMixin):
             inputs=autoencoder.input,
             outputs=layer_activations
         )
-        activation_model.save(self.best_model_file)
-        # activations = activation_model.predict(x_test)
+        activation_model.save(self.best_activations_file)
 
 
 if __name__ == "__main__":
@@ -155,5 +158,5 @@ if __name__ == "__main__":
     parser.add_argument('--run-location', type=str, help='Path you want the run to be done at', default='./')
     args = parser.parse_args()
 
-    tool = Tool(args.settings, args.run_location)
+    tool = SearchTool(args.settings, args.run_location)
     tool.main()

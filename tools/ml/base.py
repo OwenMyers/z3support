@@ -3,6 +3,7 @@ import configparser
 import logging
 import numpy as np
 from keras.callbacks import ModelCheckpoint
+import keras
 from tensorboard.plugins.hparams import api as hp
 
 
@@ -11,16 +12,18 @@ class MLToolMixin:
     def __init__(self, settings_file, working_location):
 
         # Make sure the required subdirectories are present
-        assert os.path.exists(working_location + 'model_checkpoints')
-        assert os.path.exists(working_location + 'models')
-        assert os.path.exists(working_location + 'settings')
-        assert os.path.exists(working_location + 'tensorboard_raw')
+        assert os.path.exists(os.path.join(working_location, 'model_checkpoints'))
+        assert os.path.exists(os.path.join(working_location, 'models'))
+        assert os.path.exists(os.path.join(working_location, 'settings'))
+        assert os.path.exists(os.path.join(working_location, 'tensorboard_raw'))
+        assert os.path.exists(os.path.join(working_location, 'study_data'))
 
         if not os.path.exists(settings_file):
             raise ValueError(f"Can't find specified settings file {settings_file}")
         config = configparser.ConfigParser()
         config.read(settings_file)
 
+        self.timestamp = config['Settings']['timestamp']
         self.L = int(config['Settings']['L'])
         self.feature_map_start = int(config['Settings']['FEATURE_MAP_START'])
         self.epochs = int(config['Settings']['EPOCHS'])
@@ -32,6 +35,21 @@ class MLToolMixin:
                                             'checkpoint_{}.hdf5'.format(config['Settings']['timestamp']))
         self.best_model_file = os.path.join(working_location, 'models',
                                             'best_hyper_param_autoencoder_{}'.format(config['Settings']['timestamp']))
+        self.best_activations_file = os.path.join(
+            working_location,
+            'models',
+            'best_hyper_param_activations_{}'.format(config['Settings']['timestamp'])
+        )
+        self.study_data_location = os.path.join(
+            working_location,
+            'study_data',
+            config['Settings']['timestamp']
+        )
+        self.training_data_location = os.path.join(self.study_data_location, 'training_data.npy')
+        self.testing_data_location = os.path.join(self.study_data_location, 'testing_data.npy')
+        self.data_label_location = os.path.join(self.study_data_location, 'data_labels.npy')
+        if not os.path.exists(self.study_data_location):
+            os.mkdir(self.study_data_location)
         # This will be a list of the different sources, e.g. path to transformed Z3 data, and path to transformed Z2
         # data.
         self.data = self.get_all_data_sources(config)
@@ -54,6 +72,12 @@ class MLToolMixin:
             self.hp_n_layers = hp.HParam('n_layers', hp.Discrete([2, 3]))
             self.hp_feature_map_step = hp.HParam('feature_map_step', hp.Discrete([2, 8, 16]))
             self.hp_stride_size = hp.HParam('stride', hp.Discrete([1, 2]))
+
+    def get_best_autoencoder(self):
+        return keras.models.load_model(self.best_model_file)
+
+    def get_best_activations(self):
+        return keras.models.load_model(self.best_activations_file)
 
     @staticmethod
     def import_data(list_data):
