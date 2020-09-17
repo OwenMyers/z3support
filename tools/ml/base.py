@@ -62,16 +62,16 @@ class MLToolMixin:
         )
         self.run_location = working_location
 
-        self.hp_batch_size = hp.HParam('batch_size', hp.Discrete([50]))
-        self.hp_n_layers = hp.HParam('n_layers', hp.Discrete([3]))
-        self.hp_feature_map_step = hp.HParam('feature_map_step', hp.Discrete([16]))
-        self.hp_stride_size = hp.HParam('stride', hp.Discrete([1]))
-        self.tensorboard_sub_dir = 'quick_run'
-        if not self.quick_run:
-            self.hp_batch_size = hp.HParam('batch_size', hp.Discrete([15, 50]))
-            self.hp_n_layers = hp.HParam('n_layers', hp.Discrete([2, 3]))
-            self.hp_feature_map_step = hp.HParam('feature_map_step', hp.Discrete([2, 8, 16]))
-            self.hp_stride_size = hp.HParam('stride', hp.Discrete([1, 2]))
+        self.hp_batch_size = hp.HParam('batch_size', hp.Discrete([15, 50]))
+        self.hp_n_layers = hp.HParam('n_layers', hp.Discrete([2, 3]))
+        self.hp_feature_map_step = hp.HParam('feature_map_step', hp.Discrete([2, 8, 16]))
+        self.hp_stride_size = hp.HParam('stride', hp.Discrete([1, 2]))
+        if self.quick_run:
+            self.hp_batch_size = hp.HParam('batch_size', hp.Discrete([50]))
+            self.hp_n_layers = hp.HParam('n_layers', hp.Discrete([3]))
+            self.hp_feature_map_step = hp.HParam('feature_map_step', hp.Discrete([16]))
+            self.hp_stride_size = hp.HParam('stride', hp.Discrete([1]))
+            self.tensorboard_sub_dir = 'quick_run'
 
     def get_best_autoencoder(self):
         return keras.models.load_model(self.best_model_file)
