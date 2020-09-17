@@ -71,6 +71,7 @@ class VizTool(MLToolMixin):
         autoencoder = self.get_best_autoencoder()
         activation_model = self.get_best_activations()
 
+        x_test = self.get_testing_data()
         activations = activation_model.predict(x_test)
         images_per_row = 16
         layer_names = []
@@ -97,7 +98,7 @@ class VizTool(MLToolMixin):
             plt.grid(False)
             # noinspection SpellCheckingInspection
             plt.imshow(display_grid, aspect='auto', cmap='viridis')
-        plt.savefig(os.path.join(self.figures_project_dir, 'feature_map.png'))
+            plt.savefig(os.path.join(self.figures_project_dir, layer_name + 'feature_map.png'))
 
         neuron = 0
         for layer_name in layer_names:
@@ -128,7 +129,7 @@ class VizTool(MLToolMixin):
             plt.grid(False)
             # noinspection SpellCheckingInspection
             plt.imshow(display_grid, aspect='auto', cmap='viridis')
-        plt.savefig(os.path.join(self.figures_project_dir, 'layer_weights.png'))
+            plt.savefig(os.path.join(self.figures_project_dir, layer_name + 'layer_weights.png'))
 
 
 if __name__ == "__main__":

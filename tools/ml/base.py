@@ -79,6 +79,12 @@ class MLToolMixin:
     def get_best_activations(self):
         return keras.models.load_model(self.best_activations_file)
 
+    def get_testing_data(self):
+        return np.load(self.testing_data_location)
+
+    def get_training_data(self):
+        return np.load(self.training_data_location)
+
     @staticmethod
     def import_data(list_data):
         """
