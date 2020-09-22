@@ -28,7 +28,7 @@ class MLToolMixin:
         self.feature_map_start = int(config['Settings']['FEATURE_MAP_START'])
         self.epochs = int(config['Settings']['EPOCHS'])
         # quick run of single param or full param sweep. Use True for testing.
-        self.quick_run = config['Settings']['QUICK_RUN']
+        self.quick_run = bool(config['Settings']['QUICK_RUN'])
         self.verbose = config['Settings']['VERBOSE']
         self.tensorboard_sub_dir = config['Settings']['TENSORBOARD_SUB_DIR']
         self.checkpoint_file = os.path.join(working_location, 'model_checkpoints',
