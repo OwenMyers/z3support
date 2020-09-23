@@ -8,6 +8,7 @@ import tensorflow as tf
 import numpy as np
 import argparse
 import logging
+import keras
 from tools.ml.base import MLToolMixin
 
 
@@ -139,13 +140,15 @@ class SearchTool(MLToolMixin):
                         autoencoder = self.run(os.path.join('tensorboard_raw', self.tensorboard_sub_dir, run_name),
                                                hyper_params, x_test, x_train)
 
-        autoencoder.load_weights(self.checkpoint_file)
-        autoencoder.save(self.best_model_file)
-        layers_to_encoded = int(len(autoencoder.layers) / 2)
+        best_autoencoder = keras.models.load_model(self.checkpoint_file)
+        best_autoencoder.save(self.best_model_file)
+        # Get the encoder piece of the autoencoder. We call this the "activation model". This is the full model up to
+        # the bottle neck.
+        layers_to_encoded = int(len(best_autoencoder.layers) / 2)
         print(layers_to_encoded)
-        layer_activations = [layer.output for layer in autoencoder.layers[:layers_to_encoded]]
+        layer_activations = [layer.output for layer in best_autoencoder.layers[:layers_to_encoded]]
         activation_model = models.Model(
-            inputs=autoencoder.input,
+            inputs=best_autoencoder.input,
             outputs=layer_activations
         )
         activation_model.save(self.best_activations_file)
