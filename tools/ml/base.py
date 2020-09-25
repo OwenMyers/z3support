@@ -20,32 +20,40 @@ class MLToolMixin:
 
         if not os.path.exists(settings_file):
             raise ValueError(f"Can't find specified settings file {settings_file}")
-        config = configparser.ConfigParser()
-        config.read(settings_file)
+        self.config = configparser.ConfigParser()
+        self.config.read(settings_file)
 
-        self.timestamp = config['Settings']['timestamp']
-        self.L = int(config['Settings']['L'])
-        self.feature_map_start = int(config['Settings']['FEATURE_MAP_START'])
-        self.epochs = int(config['Settings']['EPOCHS'])
+        self.timestamp = self.config['Settings']['timestamp']
+        self.L = int(self.config['Settings']['L'])
+        self.feature_map_start = int(self.config['Settings']['FEATURE_MAP_START'])
+        self.epochs = int(self.config['Settings']['EPOCHS'])
+        batch_sizes = self.parse_int_list_from_config(self.config['Settings']['BATCH_SIZES'])
+        self.hp_batch_size = hp.HParam( 'batch_size', hp.Discrete(batch_sizes))
+        n_layers = self.parse_int_list_from_config(self.config['Settings']['N_LAYERS'])
+        self.hp_n_layers = hp.HParam('n_layers', hp.Discrete(n_layers))
+        feature_map_steps = self.parse_int_list_from_config(self.config['Settings']['FEATURE_MAP_STEPS'])
+        self.hp_feature_map_step = hp.HParam('feature_map_step', hp.Discrete(feature_map_steps))
+        stride_sizes = self.parse_int_list_from_config(self.config['Settings']['STRIDE_SIZES'])
+        self.hp_stride_size = hp.HParam('stride', hp.Discrete(stride_sizes))
         # quick run of single param or full param sweep. Use True for testing.
         self.quick_run = False
-        if 'true' in config['Settings']['QUICK_RUN'].lower():
+        if 'true' in self.config['Settings']['QUICK_RUN'].lower():
             self.quick_run = True
-        self.verbose = config['Settings']['VERBOSE']
-        self.tensorboard_sub_dir = config['Settings']['TENSORBOARD_SUB_DIR']
+        self.verbose = self.config['Settings']['VERBOSE']
+        self.tensorboard_sub_dir = self.config['Settings']['TENSORBOARD_SUB_DIR']
         self.checkpoint_file = os.path.join(working_location, 'model_checkpoints',
-                                            'checkpoint_{}.hdf5'.format(config['Settings']['timestamp']))
+                                            'checkpoint_{}.hdf5'.format(self.config['Settings']['timestamp']))
         self.best_model_file = os.path.join(working_location, 'models',
-                                            'best_hyper_param_autoencoder_{}'.format(config['Settings']['timestamp']))
+                                            'best_hyper_param_autoencoder_{}'.format(self.config['Settings']['timestamp']))
         self.best_activations_file = os.path.join(
             working_location,
             'models',
-            'best_hyper_param_activations_{}'.format(config['Settings']['timestamp'])
+            'best_hyper_param_activations_{}'.format(self.config['Settings']['timestamp'])
         )
         self.study_data_location = os.path.join(
             working_location,
             'study_data',
-            config['Settings']['timestamp']
+            self.config['Settings']['timestamp']
         )
         self.training_data_location = os.path.join(self.study_data_location, 'training_data.npy')
         self.testing_data_location = os.path.join(self.study_data_location, 'testing_data.npy')
@@ -54,7 +62,7 @@ class MLToolMixin:
             os.mkdir(self.study_data_location)
         # This will be a list of the different sources, e.g. path to transformed Z3 data, and path to transformed Z2
         # data.
-        self.data = self.get_all_data_sources(config)
+        self.data = self.get_all_data_sources(self.config)
         self.checkpointer = ModelCheckpoint(
             filepath=self.checkpoint_file,
             monitor='val_loss',
@@ -64,16 +72,17 @@ class MLToolMixin:
         )
         self.run_location = working_location
 
-        self.hp_batch_size = hp.HParam('batch_size', hp.Discrete([15, 50]))
-        self.hp_n_layers = hp.HParam('n_layers', hp.Discrete([2, 3]))
-        self.hp_feature_map_step = hp.HParam('feature_map_step', hp.Discrete([2, 8, 16]))
-        self.hp_stride_size = hp.HParam('stride', hp.Discrete([1, 2]))
         if self.quick_run:
             self.hp_batch_size = hp.HParam('batch_size', hp.Discrete([50]))
             self.hp_n_layers = hp.HParam('n_layers', hp.Discrete([3]))
             self.hp_feature_map_step = hp.HParam('feature_map_step', hp.Discrete([16]))
             self.hp_stride_size = hp.HParam('stride', hp.Discrete([1]))
             self.tensorboard_sub_dir = 'quick_run'
+
+    @staticmethod
+    def parse_int_list_from_config(string_in):
+        is_split = string_in.split(',')
+        return [int(i.strip()) for i in is_split]
 
     def get_best_autoencoder(self):
         return keras.models.load_model(self.best_model_file)

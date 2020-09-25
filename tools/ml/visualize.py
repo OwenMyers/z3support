@@ -1,4 +1,5 @@
 import logging
+import random
 from matplotlib import pyplot as plt
 import numpy as np
 from tools.ml.base import MLToolMixin
@@ -10,6 +11,7 @@ class VizTool(MLToolMixin):
     def __init__(self, settings_file, working_location):
         super().__init__(settings_file, working_location)
         assert os.path.exists(os.path.join(working_location, 'figures'))
+        self.n_feature_maps = int(self.config['Plotting']['N_FEATURE_MAPS'])
 
         self.figures_project_dir = os.path.join(working_location, 'figures', self.timestamp)
         if not os.path.exists(self.figures_project_dir):
@@ -67,45 +69,47 @@ class VizTool(MLToolMixin):
         # print(w.shape)
         return w
 
-    def main(self):
-        autoencoder = self.get_best_autoencoder()
-        activation_model = self.get_best_activations()
-
-        x_test = self.get_testing_data()
-        activations = activation_model.predict(x_test)
-        images_per_row = 16
-        layer_names = []
-        layers_to_encoded = int(len(autoencoder.layers) / 2)
-        for layer in autoencoder.layers[:layers_to_encoded]:
-            layer_names.append(layer.name)  # Names of the layers, so you can have them as part of your plot
-
-        for layer_name, layer_activation in zip(layer_names, activations):  # Displays the feature maps
-            if 'input' in layer_name:
+    def plot_feature_maps(self, autoencoder, activations, x_test, layer_names, images_per_row):
+        # List of the indices of the rows of data that will be used to display feature maps
+        feature_list = []
+        while len(feature_list) < self.n_feature_maps:
+            current_feature = random.randint(0, len(x_test) - 1)
+            if current_feature in feature_list:
                 continue
-            size, n_cols, grid_dimensions = self.get_current_layer_display_grid_size(images_per_row, layer_activation)
-            display_grid = np.zeros(grid_dimensions)
-            for col in range(n_cols):  # Tiles each filter into a big horizontal grid
-                for row in range(images_per_row):
-                    try:
-                        channel_image = layer_activation[0, :, :, col * images_per_row + row]
-                    except IndexError:
-                        continue
-                    self.fill_display_grid(display_grid, channel_image, col, row, size)
-            scale = 1. / size
-            plt.figure(figsize=(scale * display_grid.shape[1],
-                                scale * display_grid.shape[0]))
-            plt.title(layer_name)
-            plt.grid(False)
-            # noinspection SpellCheckingInspection
-            plt.imshow(display_grid, aspect='auto', cmap='viridis')
-            plt.savefig(os.path.join(self.figures_project_dir, layer_name + 'feature_map.png'))
+            feature_list.append(current_feature)
+            for layer_name, layer_activation in zip(layer_names, activations):  # Displays the feature maps
+                if 'input' in layer_name:
+                    continue
+                size, n_cols, grid_dimensions = self.get_current_layer_display_grid_size(images_per_row,
+                                                                                         layer_activation)
+                display_grid = np.zeros(grid_dimensions)
+                for col in range(n_cols):  # Tiles each filter into a big horizontal grid
+                    for row in range(images_per_row):
+                        try:
+                            channel_image = layer_activation[current_feature, :, :, col * images_per_row + row]
+                        except IndexError:
+                            continue
+                        self.fill_display_grid(display_grid, channel_image, col, row, size)
+                scale = 1. / size
+                plt.figure(figsize=(scale * display_grid.shape[1],
+                                    scale * display_grid.shape[0]))
+                plt.title(layer_name)
+                plt.grid(False)
+                # noinspection SpellCheckingInspection
+                plt.imshow(display_grid, aspect='auto', cmap='viridis')
+                plt.savefig(os.path.join(self.figures_project_dir,
+                                         layer_name + f'feature_map_{current_feature}.png'))
 
+    def plot_weights(self, autoencoder, layer_names, images_per_row):
         neuron = 0
         for layer_name in layer_names:
             print(layer_name)
             if 'conv2d' not in layer_name:
                 continue
 
+            # get_weights returns a list of length 2
+            #   0 -> weights
+            #   1 -> bias
             weights = autoencoder.get_layer(name=layer_name).get_weights()[0]
             for_plot = self.get_plottable_weights(weights)
 
@@ -130,6 +134,22 @@ class VizTool(MLToolMixin):
             # noinspection SpellCheckingInspection
             plt.imshow(display_grid, aspect='auto', cmap='viridis')
             plt.savefig(os.path.join(self.figures_project_dir, layer_name + 'layer_weights.png'))
+
+    def main(self):
+        autoencoder = self.get_best_autoencoder()
+        activation_model = self.get_best_activations()
+
+        x_test = self.get_testing_data()
+        activations = activation_model.predict(x_test)
+        images_per_row = 16
+        layer_names = []
+        layers_to_encoded = int(len(autoencoder.layers) / 2)
+        for layer in autoencoder.layers[:layers_to_encoded]:
+            # Names of the layers to include in plot
+            layer_names.append(layer.name)
+
+        self.plot_feature_maps(autoencoder, activations, x_test, layer_names, images_per_row)
+        self.plot_weights(autoencoder, layer_names, images_per_row)
 
 
 if __name__ == "__main__":
