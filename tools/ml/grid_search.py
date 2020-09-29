@@ -2,7 +2,7 @@ import os
 from keras.layers import Input, Conv2D, Conv2DTranspose
 from keras.models import Model
 from keras import models
-from keras.callbacks import TensorBoard
+from keras.callbacks import TensorBoard, EarlyStopping
 from tensorboard.plugins.hparams import api as hp
 import tensorflow as tf
 import numpy as np
@@ -16,6 +16,7 @@ class SearchTool(MLToolMixin):
 
     def __init__(self, settings_file, working_location):
         super().__init__(settings_file, working_location)
+        self.early_stopping_patience = int(self.config['Settings']['EARLY_STOPPING_PATIENCE'])
 
     def train_test_model(self, hyper_params, x_test, x_train):
         """
@@ -92,7 +93,8 @@ class SearchTool(MLToolMixin):
             callbacks=[
                 TensorBoard(log_dir=log_dir),
                 hp.KerasCallback(log_dir, hyper_params),
-                self.checkpointer
+                self.checkpointer,
+                EarlyStopping(monitor='loss', patience=self.early_stopping_patience)
             ]
         )
         _, binary_crossentropy = autoencoder.evaluate(x_test, x_test)
