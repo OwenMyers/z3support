@@ -1,4 +1,5 @@
 import os
+import datetime
 from keras.layers import Input, Conv2D, Conv2DTranspose
 from keras.models import Model
 from keras import models
@@ -104,7 +105,7 @@ class SearchTool(MLToolMixin):
         with tf.summary.create_file_writer(run_dir).as_default():
             hp.hparams(hyper_params)
             loss, autoencoder = self.train_test_model(hyper_params, x_test, x_train)
-            tf.summary.scalar('binary_crossentropy', loss, step=1)
+            tf.summary.scalar('binary_crossentropy', loss, step=5)
 
         return autoencoder
 
@@ -147,11 +148,11 @@ class SearchTool(MLToolMixin):
                             self.hp_stride_size: stride
                         }
                         c += 1
-                        run_name = "run-%d" % c
+                        run_name = f"run-{c}"
                         print('--- Starting trial: %s' % run_name)
                         print({h.name: hyper_params[h] for h in hyper_params})
-                        autoencoder = self.run(os.path.join('tensorboard_raw', self.tensorboard_sub_dir, run_name),
-                                               hyper_params, x_test, x_train)
+                        autoencoder = self.run(os.path.join(self.run_location, 'tensorboard_raw',
+                                               self.tensorboard_sub_dir, run_name), hyper_params, x_test, x_train)
 
         best_autoencoder = keras.models.load_model(self.checkpoint_file)
         best_autoencoder.save(self.best_model_file)
