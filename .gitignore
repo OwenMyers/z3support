@@ -11,3 +11,13 @@ papers/
 *.pkl
 tensorboard_raw/
 workspace.xml
+notebooks/model_checkpoit.hdf5
+notebooks/models/
+notebooks/play.ipynb
+tools/ml/figures/
+tools/ml/model_checkpoints/
+tools/ml/models/
+tools/ml/previous_runs/
+tools/ml/settings/tmp_docker.conf
+tools/ml/study_data/
+notebooks/logs/
