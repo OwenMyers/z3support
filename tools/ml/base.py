@@ -12,6 +12,7 @@ class MLToolMixin:
     def __init__(self, settings_file, working_location):
 
         # Make sure the required subdirectories are present
+        logging.info(f"Working Location: {working_location}")
         assert os.path.exists(os.path.join(working_location, 'model_checkpoints'))
         assert os.path.exists(os.path.join(working_location, 'models'))
         assert os.path.exists(os.path.join(working_location, 'settings'))

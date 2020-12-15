@@ -1,5 +1,4 @@
 import os
-import datetime
 from keras.layers import Input, Conv2D, Conv2DTranspose
 from keras.models import Model
 from keras import models
@@ -11,6 +10,8 @@ import argparse
 import logging
 import keras
 from tools.ml.base import MLToolMixin
+
+os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
 
 
 class SearchTool(MLToolMixin):

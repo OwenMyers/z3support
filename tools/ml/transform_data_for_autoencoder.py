@@ -201,10 +201,8 @@ def z2_row_to_matrix(row, lattice_size):
             else:
                 # we get zero
                 raise ValueError('Got unexpected 0 in vertical z2 data')
-            cur_transformed_matrix[transformed_horizontal_index_x, transformed_horizontal_index_y] = \
-                to_set_horizontal
-            cur_transformed_matrix[transformed_vertical_index_x, transformed_vertical_index_y] = \
-                to_set_vertical
+            cur_transformed_matrix[transformed_horizontal_index_x, transformed_horizontal_index_y] = to_set_horizontal
+            cur_transformed_matrix[transformed_vertical_index_x, transformed_vertical_index_y] = to_set_vertical
 
             count += 2
     return cur_transformed_matrix
