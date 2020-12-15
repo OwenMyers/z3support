@@ -27,3 +27,19 @@ thoughts.
   the first sub-bullet above and after I get something working try the second.
 * Working with second approach as of 2020/08/14
 * Transformed data is saved as a numpy file (pickle).
+
+# Directories
+
+* `tensorboard_raw` will have a subdirectories specified in the settings file.
+  This is so different runs can all keep their tensorboard log files in this
+  folder without conflicting
+* `study_data` will have subdirectories named with the timestamp of the settings
+  file also for keeping runs separate based on settings file. "Raw" data files
+  are specified in the settings file. These are loaded using
+  `MLToolMixin.import_data` in `base.py` and then saved to their training,
+  testing, and data labels in the `study_data` location. The use of
+  `import_data` and the same itself happens in the `grid_search`.
+* `model_checkpoints`: saves the hdf5 model checkpoints with the settings file
+  timestamp to distinguish
+* `models`: currently the place to save the best hyperparameters, or final
+  models. Also saved in a sub-dir with settings timestamp names.
