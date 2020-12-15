@@ -1,1 +1,1 @@
-tensorboard --logdir=tensorboard_raw/hp_autoencoder/
+tensorboard --logdir=tools/ml/tensorboard_raw/hp_autoencoder/

@@ -26,11 +26,11 @@ class SearchTool(MLToolMixin):
         architecture apriori so we will be searching across different architectures.
 
         Arguments:
-                hyper_params (Hparam): used to set the current hyper parameter that we are looping over. E.g.
-                ``hyper_params[self.hp_stride_size] will get the stride we currently want to build the model with
-                determined by where we are in the hyper parameter loop.
-                x_test: testing dataset
-                x_train: training dataset
+            hyper_params (Hparam): used to set the current hyper parameter that we are looping over. E.g.
+            ``hyper_params[self.hp_stride_size] will get the stride we currently want to build the model with
+            determined by where we are in the hyper parameter loop.
+            x_test: testing dataset
+            x_train: training dataset
         """
 
         input_obj = Input(shape=(self.L * 2, self.L * 2, 1))
