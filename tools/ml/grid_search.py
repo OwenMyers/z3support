@@ -110,8 +110,6 @@ class SearchTool(MLToolMixin):
             metrics=['accuracy']
         )
 
-        # log_dir='tensorboard_raw/hp_autoencoder/{}_{}'.format(datetime.now(), current_run_id)
-        # log_dir = os.path.join(self.run_location, 'tensorboard_raw', self.tensorboard_sub_dir)
         result = autoencoder.fit(
             x_train, x_train,
             epochs=self.epochs,
@@ -129,17 +127,9 @@ class SearchTool(MLToolMixin):
                 EarlyStopping(monitor='loss', patience=self.early_stopping_patience)
             ]
         )
-        #_, accuracy = autoencoder.evaluate(x_test, x_test)
-        #return accuracy, autoencoder
 
     def run(self, run_dir, hyper_params, x_test, x_train):
-        # with tf.summary.create_file_writer(run_dir).as_default():
-            # hp.hparams(hyper_params)
         self.train_test_model(run_dir, hyper_params, x_test, x_train)
-        # accuracy, autoencoder = self.train_test_model(run_dir, hyper_params, x_test, x_train)
-        #tf.summary.scalar(METRIC_ACCURACY, accuracy, step=1)
-
-        #return autoencoder
 
     def main(self):
         # DATA will contain a list of the paths to different binary data files. There should be one for each of the
