@@ -125,8 +125,8 @@ class SearchTool(MLToolMixin):
                     profile_batch=0,
                 ),
                 hp.KerasCallback(run_dir, hyper_params),
-                #self.checkpointer,
-                #EarlyStopping(monitor='loss', patience=self.early_stopping_patience)
+                self.checkpointer,
+                EarlyStopping(monitor='loss', patience=self.early_stopping_patience)
             ]
         )
         #_, accuracy = autoencoder.evaluate(x_test, x_test)
