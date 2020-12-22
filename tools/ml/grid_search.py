@@ -10,8 +10,34 @@ import argparse
 import logging
 import keras
 from tools.ml.base import MLToolMixin
+from absl import flags
+
 
 os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
+METRIC_ACCURACY = 'accuracy'
+UPDATE_FREQ = 600,
+METRICS = [
+    hp.Metric(
+        "epoch_accuracy",
+        group="validation",
+        display_name="accuracy (val.)",
+    ),
+    hp.Metric(
+        "epoch_loss",
+        group="validation",
+        display_name="loss (val.)",
+    ),
+    hp.Metric(
+        "batch_accuracy",
+        group="train",
+        display_name="accuracy (train)",
+    ),
+    hp.Metric(
+        "batch_loss",
+        group="train",
+        display_name="loss (train)",
+    ),
+]
 
 
 class SearchTool(MLToolMixin):
@@ -20,7 +46,7 @@ class SearchTool(MLToolMixin):
         super().__init__(settings_file, working_location)
         self.early_stopping_patience = int(self.config['Settings']['EARLY_STOPPING_PATIENCE'])
 
-    def train_test_model(self, hyper_params, x_test, x_train):
+    def train_test_model(self, run_dir, hyper_params, x_test, x_train):
         """
         This method constructs the model that will be trained and then trains it. We don't know the best model
         architecture apriori so we will be searching across different architectures.
@@ -81,34 +107,39 @@ class SearchTool(MLToolMixin):
         autoencoder.compile(
             optimizer='adadelta',
             loss='binary_crossentropy',
-            metrics=['binary_crossentropy']
+            metrics=['accuracy']
         )
 
         # log_dir='tensorboard_raw/hp_autoencoder/{}_{}'.format(datetime.now(), current_run_id)
-        log_dir = os.path.join(self.run_location, 'tensorboard_raw', self.tensorboard_sub_dir)
-        autoencoder.fit(
+        # log_dir = os.path.join(self.run_location, 'tensorboard_raw', self.tensorboard_sub_dir)
+        result = autoencoder.fit(
             x_train, x_train,
             epochs=self.epochs,
             batch_size=hyper_params[self.hp_batch_size],
             shuffle=True,
             validation_data=(x_test, x_test),
             callbacks=[
-                TensorBoard(log_dir=log_dir),
-                hp.KerasCallback(log_dir, hyper_params),
-                self.checkpointer,
-                EarlyStopping(monitor='loss', patience=self.early_stopping_patience)
+                TensorBoard(
+                    run_dir,
+                    update_freq=UPDATE_FREQ,
+                    profile_batch=0,
+                ),
+                hp.KerasCallback(run_dir, hyper_params),
+                #self.checkpointer,
+                #EarlyStopping(monitor='loss', patience=self.early_stopping_patience)
             ]
         )
-        _, binary_crossentropy = autoencoder.evaluate(x_test, x_test)
-        return binary_crossentropy, autoencoder
+        #_, accuracy = autoencoder.evaluate(x_test, x_test)
+        #return accuracy, autoencoder
 
     def run(self, run_dir, hyper_params, x_test, x_train):
-        with tf.summary.create_file_writer(run_dir).as_default():
-            hp.hparams(hyper_params)
-            loss, autoencoder = self.train_test_model(hyper_params, x_test, x_train)
-            tf.summary.scalar('binary_crossentropy', loss, step=5)
+        # with tf.summary.create_file_writer(run_dir).as_default():
+            # hp.hparams(hyper_params)
+        self.train_test_model(run_dir, hyper_params, x_test, x_train)
+        # accuracy, autoencoder = self.train_test_model(run_dir, hyper_params, x_test, x_train)
+        #tf.summary.scalar(METRIC_ACCURACY, accuracy, step=1)
 
-        return autoencoder
+        #return autoencoder
 
     def main(self):
         # DATA will contain a list of the paths to different binary data files. There should be one for each of the
@@ -129,11 +160,11 @@ class SearchTool(MLToolMixin):
         np.save(self.data_label_location, data_labels)
 
         with tf.summary.create_file_writer(
-                os.path.join(self.run_location, 'tensorboard_raw', self.tensorboard_sub_dir)
+            os.path.join(self.run_location, 'tensorboard_raw', self.tensorboard_sub_dir)
         ).as_default():
             hp.hparams_config(
                 hparams=[self.hp_batch_size, self.hp_n_layers, self.hp_feature_map_step, self.hp_stride_size],
-                metrics=[hp.Metric('binary_crossentropy', display_name='Loss')]
+                metrics=METRICS
             )
 
         c = 0
@@ -152,8 +183,12 @@ class SearchTool(MLToolMixin):
                         run_name = f"run-{c}"
                         print('--- Starting trial: %s' % run_name)
                         print({h.name: hyper_params[h] for h in hyper_params})
-                        autoencoder = self.run(os.path.join(self.run_location, 'tensorboard_raw',
-                                               self.tensorboard_sub_dir, run_name), hyper_params, x_test, x_train)
+                        self.run(
+                            os.path.join(self.run_location, 'tensorboard_raw', self.tensorboard_sub_dir, run_name),
+                            hyper_params,
+                            x_test,
+                            x_train
+                        )
 
         best_autoencoder = keras.models.load_model(self.checkpoint_file)
         best_autoencoder.save(self.best_model_file)
