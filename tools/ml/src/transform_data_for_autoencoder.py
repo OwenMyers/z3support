@@ -7,6 +7,12 @@ import logging
 
 
 def string_to_number_directions_1(r, column):
+    """
+
+    :param r:
+    :param column:
+    :return:
+    """
     link_str = r[column]
     if link_str == 'B':
         return 1
@@ -71,16 +77,16 @@ def create_full_numerical_representation(df_in, lattice_size, v=False):
 
     Checks for consistency in the plaquette representations of the configurations.
 
-    Arguments:
-        df_in (DataFrame): is the dataframe of a plaquette representation of a configuration for which you have run
-            the ``string_to_number_directions`` on.
-        lattice_size (int): Lattice length or width (assumed square).
-        v (bool): Verbose or not.
+    :param df_in: is the dataframe of a plaquette representation of a configuration for which you have run
+        the ``string_to_number_directions`` on
+    :type DataFrame:
+    :param lattice_size: Lattice length or width (assumed square)
+    :type int:
+    :param v: Verbose or not
+    :type bool:
 
-    Returns:
-        A numpy matrix with zeros representing the vertices and centers of plaquetts and the number system as described
-        by ``string_to_number_directions``
-        representing the links.
+    :return: A numpy matrix with zeros representing the vertices and centers of plaquetts and the number system as described
+        by ``string_to_number_directions`` representing the links.
     """
     df_working = df_in.copy()
 

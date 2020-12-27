@@ -7,8 +7,7 @@
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
   </component>
-  <component name="PyDocumentationSettings">
-    <option name="format" value="PLAIN" />
-    <option name="myDocStringFormat" value="Plain" />
+  <component name="ReSTService">
+    <option name="DOC_DIR" value="$MODULE_DIR$/tools/ml/source" />
   </component>
 </module>

@@ -11,6 +11,7 @@ Welcome to autoencode's documentation!
    :caption: Contents:
 
    usage/workflow
+   usage/prepare_data
 
 
 Indices and tables

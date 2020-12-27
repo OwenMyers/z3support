@@ -24,9 +24,9 @@ copyright = '2020, Owen Myers'
 author = 'Owen Myers'
 
 # The short X.Y version
-version = ''
+version = '0.0'
 # The full version, including alpha/beta/rc tags
-release = '0.1'
+release = '0.0.1'
 
 
 # -- General configuration ---------------------------------------------------
