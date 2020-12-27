@@ -30,6 +30,9 @@ thoughts.
 
 # Directories
 
+* `source` for sphinx documents source
+* `src` for source code
+* `scripts` the highest level run commands meant to be run from the directory of this README
 * `tensorboard_raw` will have a subdirectories specified in the settings file.
   This is so different runs can all keep their tensorboard log files in this
   folder without conflicting

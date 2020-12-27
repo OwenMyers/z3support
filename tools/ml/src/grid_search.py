@@ -10,7 +10,6 @@ import argparse
 import logging
 import keras
 from tools.ml.base import MLToolMixin
-from absl import flags
 
 
 os.environ["CUDA_VISIBLE_DEVICES"] = "-1"

@@ -1,6 +1,6 @@
 from unittest import TestCase
 import numpy as np
-from tools.ml.transform_data_for_autoencoder import z2_row_to_matrix
+from tools.ml.src.transform_data_for_autoencoder import z2_row_to_matrix
 
 
 class Test(TestCase):
