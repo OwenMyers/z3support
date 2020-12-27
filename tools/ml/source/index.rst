@@ -10,6 +10,7 @@ Welcome to autoencode's documentation!
    :maxdepth: 2
    :caption: Contents:
 
+   usage/workflow
 
 
 Indices and tables
