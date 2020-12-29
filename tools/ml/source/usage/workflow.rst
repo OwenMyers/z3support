@@ -12,3 +12,10 @@ metric, the entire grid search would have to be re-run
 
 Create Settings File
 --------------------
+
+:mod:`src.new_settings_file.main`
+---------------------------------
+
+.. automodule:: src.new_settings_file.main
+   :members:
+   :undoc-members:
