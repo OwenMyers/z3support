@@ -8,6 +8,7 @@ def main():
     Run this to create a timestamped settings file
 
     This settings file will have the following sections
+
     * ``[Settings]``
     * ``[Data]``
     * ``[Plotting]``
