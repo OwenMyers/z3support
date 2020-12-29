@@ -31,6 +31,8 @@ def main():
         STRIDE_SIZES=1
         EARLY_STOPPING_PATIENCE=5
 
+    Note that the ``timestamp`` is set by the script. Don't change this.
+
     In the ``[Data]`` sections the user will specify the different sources of data to inclucde in the training.
     See the "Transforming Data For Autoencoder" section for more details on options and what is done with the data.
     Example::
