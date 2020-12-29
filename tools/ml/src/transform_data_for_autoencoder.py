@@ -8,10 +8,14 @@ import logging
 
 def string_to_number_directions_1(r, column):
     """
+    If this function is being used then the data has strings representing directions in each element of the "image"
+    matrix. This is one way of converting those strings to numbers for the CNN
 
-    :param r:
-    :param column:
-    :return:
+    Also, this is supposed to be used in a pandas apply; useful context for the arguments.
+
+    :param r: a row from a pandas ``apply``
+    :param column: The column of the data to work on
+    :return: integer of the string to int map
     """
     link_str = r[column]
     if link_str == 'B':
@@ -27,6 +31,16 @@ def string_to_number_directions_1(r, column):
 
 
 def string_to_number_directions_2(r, column):
+    """
+    If this function is being used then the data has strings representing directions in each element of the "image"
+    matrix. This is one way of converting those strings to numbers for the CNN
+
+    Also, this is supposed to be used in a pandas apply; useful context for the arguments.
+
+    :param r: a row from a pandas ``apply``
+    :param column: The column of the data to work on
+    :return: integer of the string to int map
+    """
     link_str = r[column]
     if link_str == 'B':
         return 1
@@ -41,6 +55,14 @@ def string_to_number_directions_2(r, column):
 
 
 def apply_string_to_number_all_directions(df_in):
+    """
+    This function uses the string-to-number mapping functions to convert a matrix with string elements to a matrix
+    with number elements. Strings represent some direction in a lattice but we need to represent them numerically
+    for the CNN
+
+    :param df_in: the dataframe containing the matrix with string elements
+    :return: Returns a copy of the dataframe after the string-to-int mapping has been made
+    """
     df_copy = df_in.copy()
     df_copy['n_number'] = df_copy.apply(lambda r: string_to_number_directions_2(r, 'N'), axis=1)
     df_copy['e_number'] = df_copy.apply(lambda r: string_to_number_directions_2(r, 'E'), axis=1)
@@ -50,6 +72,12 @@ def apply_string_to_number_all_directions(df_in):
 
 
 def determine_lattice_size(df_in):
+    """
+    Using the input data, determine the size of the lattice.
+
+    :param df_in: dataframe containing the data (representation of a lattice configuration.
+    :return: ``int`` of the lattice size (assuming square lattice)
+    """
     # Assume square lattice
     max_x = df_in['x'].values.max()
     max_y = df_in['y'].values.max()
@@ -59,6 +87,17 @@ def determine_lattice_size(df_in):
 
 
 def check_if_exists(cur_val, proposed_val, v=False):
+    """
+    Helper function to help check if there are any inconsistencies in the lattice "description".
+    For context A data file that comes from the z3 work will have rows that correspond to a vertex. That means that in
+    the data file a given link will be represented in 2 rows, one for each vertex on either side of the link. This
+    function helps us check that a links representation is consistent.
+
+    :param cur_val: The established (previous) vertex's notion of this links value
+    :param proposed_val: The current "working" vertex's notion of this links value
+    :param v: verbose or not boolean
+    :return: None, but will raise a ``ValueError`` if there is a problem.
+    """
     if v:
         print('  In check_if_exists\n')
         print(f'    cur_val {cur_val}')
@@ -90,8 +129,10 @@ def create_full_numerical_representation(df_in, lattice_size, v=False):
     """
     df_working = df_in.copy()
 
+    # We are currently setting this in the settings file so leave this line commented out for now.
     # l = determine_lattice_size(df_working)
-    # Will return this matrix
+
+    # This is the matrix that we will return this matrix
     m = np.zeros([2 * lattice_size, 2 * lattice_size])
     for i in range(lattice_size):
         for j in range(lattice_size):
@@ -132,6 +173,12 @@ def create_full_numerical_representation(df_in, lattice_size, v=False):
 
 
 def final_output(func):
+    """
+    A decorator to aid in final logging, simple sanity checks, and writing of the final matrix to file
+
+    :param func: The function that is being decorated
+    :return:
+    """
     def wrapper_final_output():
         logging.info("In final output decorator")
         save_file_name, matrix_list = func()
@@ -149,6 +196,10 @@ def final_output(func):
 
 @final_output
 def parse_owen_z3():
+    """
+    Function to parse z3 data
+    :return: <data name/type>, a list of all of the matrices to train on
+    """
     matrix_list = []
     file_list = os.listdir(SRC)
 
