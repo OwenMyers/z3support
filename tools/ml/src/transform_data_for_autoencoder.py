@@ -222,6 +222,14 @@ def parse_owen_z3():
 
 
 def z2_row_to_matrix(row, lattice_size):
+    """
+    Currently the z2 data is organized as a full configuration per line. One file contains multiple configurations
+    and each, as a line, can be transformed into a matrix. That transformation, from a row to a matrix is what we
+    do in this function.
+    :param row:
+    :param lattice_size:
+    :return:
+    """
     cur_transformed_matrix = np.zeros([lattice_size * 2, lattice_size * 2])
     count = 0
     for k in range(lattice_size):
