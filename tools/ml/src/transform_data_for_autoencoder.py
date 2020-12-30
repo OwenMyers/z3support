@@ -198,6 +198,7 @@ def final_output(func):
 def parse_owen_z3():
     """
     Function to parse z3 data
+
     :return: <data name/type>, a list of all of the matrices to train on
     """
     matrix_list = []
@@ -226,7 +227,8 @@ def z2_row_to_matrix(row, lattice_size):
     Currently the z2 data is organized as a full configuration per line. One file contains multiple configurations
     and each, as a line, can be transformed into a matrix. That transformation, from a row to a matrix is what we
     do in this function.
-    :param row:
+
+    :param row: row to be transformed into matrix
     :param lattice_size:
     :return:
     """
