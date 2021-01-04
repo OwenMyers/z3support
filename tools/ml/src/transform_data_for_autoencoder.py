@@ -277,6 +277,10 @@ def z2_row_to_matrix(row, lattice_size):
 
 @final_output
 def parse_as_rows_z2():
+    """
+    Parses the z2 data. Uses ``z2_row_to_matrix`` on each row. Each row represents a full configuration
+    :return:
+    """
     matrix_list = []
     file_list = os.listdir(SRC)
 

@@ -8,8 +8,23 @@ from tensorboard.plugins.hparams import api as hp
 
 
 class MLToolMixin:
+    """
+    Denotes settings and paths (some from the settings) for modeling of the CNN.
+    Currently it is specialized towards hyper-parameter searches to find the best configurations of an autoencoder.
+    Hope to generalize more and break the hyper parameter and autoencoder stuff into their own mixins.
+    """
 
     def __init__(self, settings_file, working_location):
+        """
+        Establishes the attributes needed for the run. Also checks that the required paths exist to store the models
+        and tensorboard logs
+
+        :param settings_file: path of the settings that contains paths to data and settings to determine search of
+            hyper params.
+        :param working_location: Consider this the root directory of the project. Paths to things like tensorboard logs
+            are taken for this point. Everything you need regarding the output of your run can be found in this
+            location.
+        """
 
         # Make sure the required subdirectories are present
         logging.info(f"Working Location: {working_location}")
@@ -82,13 +97,51 @@ class MLToolMixin:
 
     @staticmethod
     def parse_int_list_from_config(string_in):
+        """
+        A list of integers may be provided in the settings file. Create a python list of ``int``s from the supplied
+        numbers.
+
+        :param string_in: ``str`` containing the list of numbers.
+        :return: a ``list`` of ``int``s
+        """
         is_split = string_in.split(',')
         return [int(i.strip()) for i in is_split]
 
     def get_best_autoencoder(self):
+        """
+        Use this method to get the best performing model (CNN autoencoder)
+        This could be a property but I'm liking the "getter" paradigm right now.
+
+        :return: the keras model of the "best" model
+        """
         return keras.models.load_model(self.best_model_file)
 
     def get_best_activations(self):
+        """
+        Use this to get the activations for the best performing model.
+        This could be a property but I'm liking the "getter" paradigm right now.
+        
+        Example of use:
+        
+            Consider a class with the ``MLToolMixin``. Within some method of this class you may want to get the
+            activations for some set of inputs. AKA you may want to get the featur maps for some set of data.
+            You can use this to get the feature maps like::
+        
+                >>> activation_model = self.get_best_activations()
+                >>> activations = activation_model.predict(x_test)
+
+            where ``x_test`` is the testing data. What you will get is ``activations`` which are an array of all the
+            feature maps for eveyone of the "images" in x_test.
+
+            Depending on the shape of the model you could get a feature map for a layer like::
+
+                >>> for layer_activation in activations:
+                ...     channel_image = layer_activation[current_feature, :, :, col * images_per_row + row]
+
+            In this project we use the above in ``visualize.py``
+
+        :return: the keras activations for the "best" model
+        """
         return keras.models.load_model(self.best_activations_file)
 
     def get_testing_data(self):
