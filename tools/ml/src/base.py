@@ -84,7 +84,9 @@ class MLToolMixin:
             monitor='val_loss',
             verbose=1,
             save_best_only=True,
-            mode='auto'
+            mode='auto',
+            save_freq='epoch',
+            save_weights_only=False
         )
         self.run_location = working_location
 
@@ -115,6 +117,15 @@ class MLToolMixin:
         :return: the keras model of the "best" model
         """
         return keras.models.load_model(self.best_model_file)
+
+    def get_checkpoint_model(self):
+        """
+        Use to get the current checkpoint model. Probably for use when a parameter sweep is running.
+
+        :return: the keras checkpoint model in the ``model_checkpoints`` directory.
+        """
+
+        return keras.models.load_model(self.checkpoint_file)
 
     def get_best_activations(self):
         """

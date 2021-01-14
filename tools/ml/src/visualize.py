@@ -2,13 +2,13 @@ import logging
 import random
 from matplotlib import pyplot as plt
 import numpy as np
-from tools.ml.base import MLToolMixin
+from tools.ml.src.base import MLToolMixin
 import argparse
 import os
 
 
 class VizTool(MLToolMixin):
-    def __init__(self, settings_file, working_location):
+    def __init__(self, settings_file, working_location, use_current_checkpoint):
         super().__init__(settings_file, working_location)
         assert os.path.exists(os.path.join(working_location, 'figures'))
         self.n_feature_maps = int(self.config['Plotting']['N_FEATURE_MAPS'])
@@ -16,6 +16,8 @@ class VizTool(MLToolMixin):
         self.figures_project_dir = os.path.join(working_location, 'figures', self.timestamp)
         if not os.path.exists(self.figures_project_dir):
             os.mkdir(self.figures_project_dir)
+
+        self.use_current_checkpoint=use_current_checkpoint
 
     @staticmethod
     def get_current_layer_display_grid_size(images_per_row, matrix_in):
@@ -136,7 +138,10 @@ class VizTool(MLToolMixin):
             plt.savefig(os.path.join(self.figures_project_dir, layer_name + 'layer_weights.png'))
 
     def main(self):
-        autoencoder = self.get_best_autoencoder()
+        if self.use_current_checkpoint:
+            autoencoder = self.get_checkpoint_model()
+        else:
+            autoencoder = self.get_best_autoencoder()
         activation_model = self.get_best_activations()
 
         x_test = self.get_testing_data()
@@ -157,7 +162,11 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Run a parameter sweep to find the best autoencoder.')
     parser.add_argument('--settings', type=str, help='Settings file location', required=True)
     parser.add_argument('--run-location', type=str, help='Path you want the run to be done at', default='./')
+    parser.add_argument('--use-current-checkpoint', help='If this is used then the current checkpoint in'
+                                                         'model_checkpoints will be used instead of the best model.'
+                                                         'This is to be used for evaluating models mid run.',
+                                                         action='store_true')
     args = parser.parse_args()
 
-    tool = VizTool(args.settings, args.run_location)
+    tool = VizTool(args.settings, args.run_location, args.use_current_checkpoint)
     tool.main()

@@ -9,7 +9,7 @@ import numpy as np
 import argparse
 import logging
 import keras
-from tools.ml.base import MLToolMixin
+from tools.ml.src.base import MLToolMixin
 
 
 os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
