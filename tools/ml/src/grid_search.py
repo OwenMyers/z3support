@@ -10,6 +10,7 @@ import argparse
 import logging
 import keras
 from tools.ml.src.base import MLToolMixin
+from tools.ml.src.custom_callbacks import CustomCallbacks
 
 
 os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
@@ -123,7 +124,8 @@ class SearchTool(MLToolMixin):
                 ),
                 hp.KerasCallback(run_dir, hyper_params),
                 self.checkpointer,
-                EarlyStopping(monitor='loss', patience=self.early_stopping_patience)
+                EarlyStopping(monitor='loss', patience=self.early_stopping_patience),
+                CustomCallbacks(autoencoder.to_json(), self.run_location)
             ]
         )
 

@@ -106,7 +106,7 @@ class MLToolMixin:
         :param string_in: ``str`` containing the list of numbers.
         :return: a ``list`` of ``int``s
         """
-        is_split = string_in.split(',')
+        is_split = string_in.strip(',').split(',')
         return [int(i.strip()) for i in is_split]
 
     def get_best_autoencoder(self):
