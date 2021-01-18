@@ -59,6 +59,9 @@ class MLToolMixin:
         self.tensorboard_sub_dir = self.config['Settings']['TENSORBOARD_SUB_DIR']
         self.checkpoint_file = os.path.join(working_location, 'model_checkpoints',
                                             'checkpoint_{}.hdf5'.format(self.config['Settings']['timestamp']))
+        # We are saving the model as json so we have the proper structure to load the weights into. Weights come from
+        # self.checkpoint_file
+        self.checkpoint_json_file = os.path.join(working_location, 'model_checkpoints', 'pickled_compiled_model.pkl')
         self.best_model_file = os.path.join(working_location, 'models',
                                             'best_hyper_param_autoencoder_{}'.format(self.config['Settings']['timestamp']))
         self.best_activations_file = os.path.join(
@@ -86,7 +89,8 @@ class MLToolMixin:
             save_best_only=True,
             mode='auto',
             save_freq='epoch',
-            save_weights_only=False
+            # Want to use False but seems to be broken: https://github.com/tensorflow/tensorflow/issues/39679
+            save_weights_only=True
         )
         self.run_location = working_location
 
@@ -116,7 +120,8 @@ class MLToolMixin:
 
         :return: the keras model of the "best" model
         """
-        return keras.models.load_model(self.best_model_file)
+        model = keras.models.model_from_json(<json model file>)
+        return keras.models.model_from_json(self.best_model_file)
 
     def get_checkpoint_model(self):
         """
