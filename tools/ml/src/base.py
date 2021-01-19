@@ -1,4 +1,5 @@
 import os
+import pickle
 import configparser
 import logging
 import numpy as np
@@ -125,8 +126,7 @@ class MLToolMixin:
 
         :return: the keras model of the "best" model
         """
-        model = keras.models.model_from_json(<json model file>)
-        return keras.models.model_from_json(self.best_model_file)
+        return keras.models.load_model(self.best_model_file)
 
     def get_checkpoint_model(self):
         """
@@ -134,8 +134,10 @@ class MLToolMixin:
 
         :return: the keras checkpoint model in the ``model_checkpoints`` directory.
         """
-
-        return keras.models.load_model(self.checkpoint_file)
+        with open(self.checkpoint_json_file, 'rb') as f:
+            j = pickle.load(f)
+        model = keras.models.model_from_json(j)
+        return model.load_weights(self.checkpoint_file)
 
     def get_best_activations(self):
         """
