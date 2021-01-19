@@ -29,7 +29,5 @@ class CustomCallbacks(Callback):
         :return:
         """
         # TODO: Need to get this to save only for improved loss. Like the checkpointer itself.
-        if not os.path.exists(os.path.join(self.save_location, 'model_checkpoints')):
-            raise ValueError(f"Directory model_checkpoints must exist in {self.save_location}")
-        with open(os.path.join(self.save_location, 'model_checkpoints', 'pickled_compiled_model.pkl'), 'wb') as f:
+        with open(self.save_location, 'wb') as f:
             pickle.dump(self.working_model_as_json, f)

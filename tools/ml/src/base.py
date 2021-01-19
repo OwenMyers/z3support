@@ -61,9 +61,14 @@ class MLToolMixin:
                                             'checkpoint_{}.hdf5'.format(self.config['Settings']['timestamp']))
         # We are saving the model as json so we have the proper structure to load the weights into. Weights come from
         # self.checkpoint_file
-        self.checkpoint_json_file = os.path.join(working_location, 'model_checkpoints', 'pickled_compiled_model.pkl')
-        self.best_model_file = os.path.join(working_location, 'models',
-                                            'best_hyper_param_autoencoder_{}'.format(self.config['Settings']['timestamp']))
+        self.checkpoint_json_file = os.path.join(
+            working_location, 'model_checkpoints',
+            'pickled_compiled_model_{}.pkl'.format(self.config['Settings']['timestamp'])
+        )
+        self.best_model_file = os.path.join(
+            working_location, 'models',
+            'best_hyper_param_autoencoder_{}'.format(self.config['Settings']['timestamp'])
+        )
         self.best_activations_file = os.path.join(
             working_location,
             'models',

@@ -125,7 +125,7 @@ class SearchTool(MLToolMixin):
                 hp.KerasCallback(run_dir, hyper_params),
                 self.checkpointer,
                 EarlyStopping(monitor='loss', patience=self.early_stopping_patience),
-                CustomCallbacks(autoencoder.to_json(), self.run_location)
+                CustomCallbacks(autoencoder.to_json(), self.checkpoint_json_file)
             ]
         )
 
