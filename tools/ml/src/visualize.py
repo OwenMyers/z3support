@@ -17,7 +17,7 @@ class VizTool(MLToolMixin):
         if not os.path.exists(self.figures_project_dir):
             os.mkdir(self.figures_project_dir)
 
-        self.use_current_checkpoint=use_current_checkpoint
+        self.use_current_checkpoint = use_current_checkpoint
 
     @staticmethod
     def get_current_layer_display_grid_size(images_per_row, matrix_in):
@@ -72,6 +72,15 @@ class VizTool(MLToolMixin):
         return w
 
     def plot_feature_maps(self, autoencoder, activations, x_test, layer_names, images_per_row):
+        # Note: the `autoencoder` parameter is not currently used. We have it in here because it is required
+        # for the solution we are trying to build to plot information about checkpointed models, which requires
+        # information about the structure of the model being run. There is a known problem with the TF
+        # checkpointers, that you can not save the weights with the structure. It is an option but known not
+        # to work.
+        autoencoder = None
+        if autoencoder is None:
+            logging.debug("Autoencoder unused in plot_feature_maps method.")
+
         # List of the indices of the rows of data that will be used to display feature maps
         feature_list = []
         while len(feature_list) < self.n_feature_maps:
