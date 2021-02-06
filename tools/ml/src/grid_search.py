@@ -1,5 +1,5 @@
 import os
-from keras.layers import Input, Conv2D, Conv2DTranspose
+from keras.layers import Input, Conv2D, Conv2DTranspose, BatchNormalization, LeakyReLU
 from keras.models import Model
 from keras import models
 from keras.callbacks import TensorBoard, EarlyStopping
@@ -65,10 +65,10 @@ class SearchTool(MLToolMixin):
             self.feature_map_start,
             (3, 3),
             strides=hyper_params[self.hp_stride_size],
-            activation='relu',
             padding='same',
-            use_bias=True
         )(input_obj)
+        x = BatchNormalization()(x)
+        x = LeakyReLU()(x)
 
         fm = None
         for i in range(hyper_params[self.hp_n_layers] - 1):
@@ -77,10 +77,10 @@ class SearchTool(MLToolMixin):
                 fm,
                 (3, 3),
                 strides=hyper_params[self.hp_stride_size],
-                activation='relu',
                 padding='same',
-                use_bias=True
             )(x)
+            x = BatchNormalization()(x)
+            x = LeakyReLU()(x)
         max_fm = fm
         for i in range(hyper_params[self.hp_n_layers] - 1):
             fm = max_fm - (i + 1) * hyper_params[self.hp_feature_map_step]
