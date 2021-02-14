@@ -1,5 +1,5 @@
 import os
-from keras.layers import Input, Conv2D, Conv2DTranspose, BatchNormalization, LeakyReLU
+from keras.layers import Input, Conv2D, Conv2DTranspose, BatchNormalization, LeakyReLU, Dropout, Activation
 from keras.models import Model
 from keras import models
 from keras.callbacks import TensorBoard, EarlyStopping
@@ -67,7 +67,8 @@ class SearchTool(MLToolMixin):
             strides=hyper_params[self.hp_stride_size],
             padding='same',
         )(input_obj)
-        x = BatchNormalization()(x)
+        if hyper_params[self.hp_use_batch_normalization]:
+            x = BatchNormalization()(x)
         x = LeakyReLU()(x)
 
         fm = None
@@ -79,8 +80,11 @@ class SearchTool(MLToolMixin):
                 strides=hyper_params[self.hp_stride_size],
                 padding='same',
             )(x)
-            x = BatchNormalization()(x)
+            if hyper_params[self.hp_use_batch_normalization]:
+                x = BatchNormalization()(x)
             x = LeakyReLU()(x)
+            if hyper_params[self.hp_use_dropout]:
+                x = Dropout(rate=0.25)(x)
         max_fm = fm
         for i in range(hyper_params[self.hp_n_layers] - 1):
             fm = max_fm - (i + 1) * hyper_params[self.hp_feature_map_step]
@@ -92,6 +96,11 @@ class SearchTool(MLToolMixin):
                 padding='same',
                 use_bias=True
             )(x)
+            if hyper_params[self.hp_use_batch_normalization]:
+                x = BatchNormalization()(x)
+            x = LeakyReLU()(x)
+            if hyper_params[self.hp_use_dropout]:
+                x = Dropout(rate=0.25)(x)
 
         decoded = Conv2DTranspose(
             1,
@@ -101,6 +110,7 @@ class SearchTool(MLToolMixin):
             padding='same',
             use_bias=True
         )(x)
+        x = Activation('sigmoid')(x)
 
         autoencoder = Model(input_obj, decoded)
         # autoencoder.summary()
@@ -154,7 +164,7 @@ class SearchTool(MLToolMixin):
             os.path.join(self.run_location, 'tensorboard_raw', self.tensorboard_sub_dir)
         ).as_default():
             hp.hparams_config(
-                hparams=[self.hp_batch_size, self.hp_n_layers, self.hp_feature_map_step, self.hp_stride_size],
+                hparams=[self.hp_batch_size, self.hp_n_layers, self.hp_feature_map_step, self.hp_stride_size, self.hp_use_batch_normalization, self.hp_use_dropout],
                 metrics=METRICS
             )
 
@@ -164,22 +174,26 @@ class SearchTool(MLToolMixin):
             for n_layers in self.hp_n_layers.domain.values:
                 for f_map_step in self.hp_feature_map_step.domain.values:
                     for stride in self.hp_stride_size.domain.values:
-                        hyper_params = {
-                            self.hp_batch_size: batch_size,
-                            self.hp_n_layers: n_layers,
-                            self.hp_feature_map_step: f_map_step,
-                            self.hp_stride_size: stride
-                        }
-                        c += 1
-                        run_name = f"run-{c}"
-                        print('--- Starting trial: %s' % run_name)
-                        print({h.name: hyper_params[h] for h in hyper_params})
-                        self.run(
-                            os.path.join(self.run_location, 'tensorboard_raw', self.tensorboard_sub_dir, run_name),
-                            hyper_params,
-                            x_test,
-                            x_train
-                        )
+                        for use_batch_normalization in self.hp_use_batch_normalization.domain.values:
+                            for use_dropout in self.hp_use_dropout.domain.values:
+                                hyper_params = {
+                                    self.hp_batch_size: batch_size,
+                                    self.hp_n_layers: n_layers,
+                                    self.hp_feature_map_step: f_map_step,
+                                    self.hp_stride_size: stride,
+                                    self.hp_use_batch_normalization: use_batch_normalization,
+                                    self.hp_use_dropout: use_dropout
+                                }
+                                c += 1
+                                run_name = f"run-{c}"
+                                print('--- Starting trial: %s' % run_name)
+                                print({h.name: hyper_params[h] for h in hyper_params})
+                                self.run(
+                                    os.path.join(self.run_location, 'tensorboard_raw', self.tensorboard_sub_dir, run_name),
+                                    hyper_params,
+                                    x_test,
+                                    x_train
+                                )
 
         best_autoencoder = keras.models.load_model(self.checkpoint_file)
         best_autoencoder.save(self.best_model_file)
