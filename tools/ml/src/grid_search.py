@@ -27,11 +27,11 @@ METRICS = [
         group="validation",
         display_name="loss (val.)",
     ),
-    hp.Metric(
-        "batch_accuracy",
-        group="train",
-        display_name="accuracy (train)",
-    ),
+    #hp.Metric(
+    #    "batch_accuracy",
+    #    group="train",
+    #    display_name="accuracy (train)",
+    #),
     hp.Metric(
         "batch_loss",
         group="train",
@@ -110,7 +110,7 @@ class SearchTool(MLToolMixin):
             padding='same',
             use_bias=True
         )(x)
-        x = Activation('sigmoid')(x)
+        #x = Activation('sigmoid')(x)
 
         autoencoder = Model(input_obj, decoded)
         # autoencoder.summary()
@@ -119,6 +119,7 @@ class SearchTool(MLToolMixin):
             loss='binary_crossentropy',
             metrics=['accuracy']
         )
+        autoencoder.summary()
 
         result = autoencoder.fit(
             x_train, x_train,
@@ -131,6 +132,9 @@ class SearchTool(MLToolMixin):
                     run_dir,
                     update_freq=UPDATE_FREQ,
                     profile_batch=0,
+                    histogram_freq=2,
+                    embeddings_freq=2,
+                    write_images=True,
                 ),
                 hp.KerasCallback(run_dir, hyper_params),
                 self.checkpointer,
@@ -194,6 +198,7 @@ class SearchTool(MLToolMixin):
                                     x_test,
                                     x_train
                                 )
+                                # After each run lets attempt to log a sample of activations for the different layers
 
         best_autoencoder = keras.models.load_model(self.checkpoint_file)
         best_autoencoder.save(self.best_model_file)
