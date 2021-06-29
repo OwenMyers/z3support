@@ -134,7 +134,6 @@ class SearchTool(MLToolMixin):
                     profile_batch=0,
                     histogram_freq=2,
                     embeddings_freq=2,
-                    write_images=True,
                 ),
                 hp.KerasCallback(run_dir, hyper_params),
                 self.checkpointer,
