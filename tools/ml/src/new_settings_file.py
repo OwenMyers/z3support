@@ -34,11 +34,12 @@ def main():
 
     Note that the ``timestamp`` is set by the script. Don't change this.
 
-    In the ``[Data]`` sections the user will specify the different sources of data to inclucde in the training.
+    In the ``[Data]`` sections the user will specify the different sources of data to include in the training.
     See the "Transforming Data For Autoencoder" section for more details on options and what is done with the data.
     Example::
 
         [Data]
+        S3=False
         DATA1=/full/path/to/data1.npy
         DATA2=/full/path/to/data2.npy
 
@@ -49,7 +50,7 @@ def main():
 
     Which will plot 10 randomly selected feature maps in the final model when ``visualize.py`` is run
 
-    Examlple:
+    Example:
         Run::
 
             $ python src/new_setting_file.py -d settings

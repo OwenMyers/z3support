@@ -26,6 +26,10 @@ class MLToolMixin:
             are taken for this point. Everything you need regarding the output of your run can be found in this
             location.
         """
+        if not os.path.exists(settings_file):
+            raise ValueError(f"Can't find specified settings file {settings_file}")
+        self.config = configparser.ConfigParser()
+        self.config.read(settings_file)
 
         # Make sure the required subdirectories are present
         logging.info(f"Working Location: {working_location}")
@@ -35,10 +39,6 @@ class MLToolMixin:
         assert os.path.exists(os.path.join(working_location, 'tensorboard_raw'))
         assert os.path.exists(os.path.join(working_location, 'study_data'))
 
-        if not os.path.exists(settings_file):
-            raise ValueError(f"Can't find specified settings file {settings_file}")
-        self.config = configparser.ConfigParser()
-        self.config.read(settings_file)
 
         self.timestamp = self.config['Settings']['timestamp']
         self.L = int(self.config['Settings']['L'])
