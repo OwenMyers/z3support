@@ -1,5 +1,15 @@
 from matplotlib import pyplot as plt
 import numpy as np
+plt.style.use('ostyle')
+
+
+c_list = [
+    "#f26241",
+    "#f28444",
+    "#7abfb8",
+    "#205a8c",
+    "#133654",
+]
 
 
 def get_avgs_and_weights(l_in):
@@ -70,17 +80,22 @@ def main():
     ]
 
     w, a, e = get_avgs_and_weights(l4_file_list)
-    plt.errorbar(w, a, e, marker='o', c='r')
+    plt.errorbar(w, a, e, marker='o', c=c_list[0], label="L4")
     w, a, e = get_avgs_and_weights(l8_file_list)
-    plt.errorbar(w, a, e, marker='o', c='b')
+    plt.errorbar(w, a, e, marker='o', c=c_list[1], label="L8")
     w, a, e = get_avgs_and_weights(l16_file_list)
-    plt.errorbar(w, a, e, marker='o', c='g')
+    plt.errorbar(w, a, e, marker='o', c=c_list[2], label="L16")
     w, a, e = get_avgs_and_weights(l24_file_list)
-    plt.errorbar(w, a, e, marker='o', c='k')
+    plt.errorbar(w, a, e, marker='o', c=c_list[3], label="L24")
     w, a, e = get_avgs_and_weights(l32_file_list)
-    plt.errorbar(w, a, e, marker='o', c='k')
+    plt.errorbar(w, a, e, marker='o', c=c_list[4], label="L32")
     #plt.semilogy()
-    plt.show()
+    #plt.show()
+    plt.xlabel("Weights")
+    plt.legend(loc='upper left')
+    plt.ylabel("Size (In Number of Vertices)")
+    plt.savefig('w_and_s.png', dpi=300)
+    plt.tight_layout()
     exit()
 
     w_desired_list = [0.05, 0.1, 0.2, 0.3, 0.5, 0.6, 0.8, 0.9]
