@@ -12,7 +12,7 @@
     <option name="ADD_CONTENT_ROOTS" value="true" />
     <option name="ADD_SOURCE_ROOTS" value="true" />
     <option name="SCRIPT_NAME" value="$PROJECT_DIR$/tools/ml/src/grid_search.py" />
-    <option name="PARAMETERS" value="--settings $PROJECT_DIR$/tools/ml/settings/2020-08-08T16:21:45.693965.conf --run-location $PROJECT_DIR$/tools/ml/" />
+    <option name="PARAMETERS" value="--settings $PROJECT_DIR$/tools/ml/settings/2021-08-23T16:35:40.893219.conf --run-location $PROJECT_DIR$/tools/ml/" />
     <option name="SHOW_COMMAND_LINE" value="false" />
     <option name="EMULATE_TERMINAL" value="false" />
     <option name="MODULE_MODE" value="false" />

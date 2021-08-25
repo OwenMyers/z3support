@@ -1,4 +1,5 @@
 import os
+from abc import ABCMeta
 from keras.layers import Input, Conv2D, Conv2DTranspose, BatchNormalization, LeakyReLU, Dropout, Activation
 from keras.models import Model
 from keras import models
@@ -146,22 +147,26 @@ class SearchTool(MLToolMixin):
         self.train_test_model(run_dir, hyper_params, x_test, x_train)
 
     def main(self):
-        # DATA will contain a list of the paths to different binary data files. There should be one for each of the
-        # "different types of systems" (e.g. z3, z2, high temp, etc). There is no guarantee that there are the same
-        # number of configurations in each file though but the function below takes care of all of that for us to make
-        # sure we get a balanced dataset and that it meets some basic requirements.
-        # all_data = np.load(DATA)
-        all_data, data_labels = self.import_data(self.data)
 
-        n_records = len(all_data)
-        x_train = all_data[: n_records - int(n_records / 4)]
-        x_test = all_data[int(n_records / 4):]
-        x_train = np.reshape(x_train, (len(x_train), self.L * 2, self.L * 2, 1))
-        x_test = np.reshape(x_test, (len(x_test), self.L * 2, self.L * 2, 1))
+        if isinstance(self.data, ABCMeta):
+            all_data = self.data
+        else:
+            # DATA will contain a list of the paths to different binary data files. There should be one for each of the
+            # "different types of systems" (e.g. z3, z2, high temp, etc). There is no guarantee that there are the same
+            # number of configurations in each file though but the function below takes care of all of that for us to make
+            # sure we get a balanced dataset and that it meets some basic requirements.
+            # all_data = np.load(DATA)
+            all_data, data_labels = self.import_data(self.data)
 
-        np.save(self.training_data_location, x_train)
-        np.save(self.testing_data_location, x_test)
-        np.save(self.data_label_location, data_labels)
+            n_records = len(all_data)
+            x_train = all_data[: n_records - int(n_records / 4)]
+            x_test = all_data[int(n_records / 4):]
+            x_train = np.reshape(x_train, (len(x_train), self.L * 2, self.L * 2, 1))
+            x_test = np.reshape(x_test, (len(x_test), self.L * 2, self.L * 2, 1))
+
+            np.save(self.training_data_location, x_train)
+            np.save(self.testing_data_location, x_test)
+            np.save(self.data_label_location, data_labels)
 
         with tf.summary.create_file_writer(
             os.path.join(self.run_location, 'tensorboard_raw', self.tensorboard_sub_dir)

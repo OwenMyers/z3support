@@ -6,6 +6,7 @@ import numpy as np
 from keras.callbacks import ModelCheckpoint
 import keras
 from tensorboard.plugins.hparams import api as hp
+from tf_dataset.s3_image_dataset import ImageDataset
 
 
 class MLToolMixin:
@@ -87,9 +88,14 @@ class MLToolMixin:
         self.data_label_location = os.path.join(self.study_data_location, 'data_labels.npy')
         if not os.path.exists(self.study_data_location):
             os.mkdir(self.study_data_location)
-        # This will be a list of the different sources, e.g. path to transformed Z3 data, and path to transformed Z2
-        # data.
-        self.data = self.get_all_data_sources(self.config)
+
+        if 'generator-' in self.config['Data']['Data1']:
+            self.data = globals()[self.config['Data']['Data1'].split('-')[1]]
+            self.data.manual_init(self, batch_sizes)
+        else:
+            # This will be a list of the different sources, e.g. path to transformed Z3 data, and path to transformed Z2
+            # data.
+            self.data = self.get_all_data_sources(self.config)
         self.checkpointer = ModelCheckpoint(
             filepath=self.checkpoint_file,
             monitor='val_loss',
