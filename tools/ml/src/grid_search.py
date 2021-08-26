@@ -147,9 +147,10 @@ class SearchTool(MLToolMixin):
         self.train_test_model(run_dir, hyper_params, x_test, x_train)
 
     def main(self):
-
-        if isinstance(self.data, ABCMeta):
-            all_data = self.data
+        if hasattr(self, "data_train"):
+        #if isinstance(self.data, ABCMeta):
+            x_train = self.data_train
+            x_test = self.data_test
         else:
             # DATA will contain a list of the paths to different binary data files. There should be one for each of the
             # "different types of systems" (e.g. z3, z2, high temp, etc). There is no guarantee that there are the same

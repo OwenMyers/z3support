@@ -90,8 +90,8 @@ class MLToolMixin:
             os.mkdir(self.study_data_location)
 
         if 'generator-' in self.config['Data']['Data1']:
-            self.data = globals()[self.config['Data']['Data1'].split('-')[1]]
-            self.data.manual_init(self, batch_sizes)
+            self.data_train = globals()[self.config['Data']['Data1'].split('-')[1]](max(batch_sizes), train=True, train_percent=80)
+            self.data_test = globals()[self.config['Data']['Data1'].split('-')[1]](max(batch_sizes), train=False, train_percent=80)
         else:
             # This will be a list of the different sources, e.g. path to transformed Z3 data, and path to transformed Z2
             # data.
