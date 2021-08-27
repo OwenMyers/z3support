@@ -126,13 +126,22 @@ class SearchTool(MLToolMixin):
         autoencoder.summary()
         kwargs = {}
         if self.is_image:
-            kwargs.update({'validation_data': x_test})
+            # A possible workaround for breakage in shapes (but seems to currently be working) : https: // github.com / tensorflow / tensorflow / issues / 32912
+            x_train = x_train.batch(hyper_params[self.hp_batch_size], drop_remainder=True)
+
+            kwargs.update({
+                'generator': x_train,
+                #'validation_data': (x_test, x_test)
+            })
         else:
-            kwargs.update({'y': x_train, 'validation_data': (x_test, x_test)})
-        kwargs = {
-            'x': x_train,
+            kwargs.update({
+                'x': x_train,
+                'y': x_train,
+                'validation_data': (x_test, x_test),
+                'batch_size': hyper_params[self.hp_batch_size],
+            })
+        kwargs.update({
             'epochs':self.epochs,
-            'batch_size':hyper_params[self.hp_batch_size],
             'shuffle':True,
             'callbacks':[
                 TensorBoard(
@@ -147,8 +156,12 @@ class SearchTool(MLToolMixin):
                 EarlyStopping(monitor='loss', patience=self.early_stopping_patience),
                 CustomCallbacks(autoencoder.to_json(), self.checkpoint_json_file)
             ]
-        }
-        result = autoencoder.fit(**kwargs)
+        })
+
+        if self.is_image:
+            result = autoencoder.fit_generator(**kwargs)
+        else:
+            result = autoencoder.fit(**kwargs)
 
     def run(self, run_dir, hyper_params, x_test, x_train):
         self.train_test_model(run_dir, hyper_params, x_test, x_train)
