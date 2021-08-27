@@ -42,7 +42,8 @@ class MLToolMixin:
 
 
         self.timestamp = self.config['Settings']['timestamp']
-        self.L = int(self.config['Settings']['L'])
+        self.Lx = int(self.config['Settings']['Lx'])
+        self.Ly = int(self.config['Settings']['Ly'])
         self.feature_map_start = int(self.config['Settings']['FEATURE_MAP_START'])
         self.epochs = int(self.config['Settings']['EPOCHS'])
         batch_sizes = self.parse_int_list_from_config(self.config['Settings']['BATCH_SIZES'])
@@ -55,6 +56,7 @@ class MLToolMixin:
         self.hp_stride_size = hp.HParam('stride', hp.Discrete(stride_sizes))
         self.hp_use_batch_normalization = hp.HParam('use_batch_normalization', hp.Discrete([1, 0]))
         self.hp_use_dropout = hp.HParam('use_dropout', hp.Discrete([1, 0]))
+        self.is_image = bool(self.config['Settings']['IS_IMAGE'])
         # quick run of single param or full param sweep. Use True for testing.
         self.quick_run = False
         if 'true' in self.config['Settings']['QUICK_RUN'].lower():

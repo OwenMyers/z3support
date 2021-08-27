@@ -60,7 +60,10 @@ class SearchTool(MLToolMixin):
             x_train: training dataset
         """
 
-        input_obj = Input(shape=(self.L * 2, self.L * 2, 1))
+        if self.is_image:
+            input_obj = Input(shape=(self.Lx, self.Ly, 1))
+        else:
+            input_obj = Input(shape=(self.Lx * 2, self.Ly * 2, 1))
 
         x = Conv2D(
             self.feature_map_start,
@@ -121,14 +124,17 @@ class SearchTool(MLToolMixin):
             metrics=['accuracy']
         )
         autoencoder.summary()
-
-        result = autoencoder.fit(
-            x_train, x_train,
-            epochs=self.epochs,
-            batch_size=hyper_params[self.hp_batch_size],
-            shuffle=True,
-            validation_data=(x_test, x_test),
-            callbacks=[
+        kwargs = {}
+        if self.is_image:
+            kwargs.update({'validation_data': x_test})
+        else:
+            kwargs.update({'y': x_train, 'validation_data': (x_test, x_test)})
+        kwargs = {
+            'x': x_train,
+            'epochs':self.epochs,
+            'batch_size':hyper_params[self.hp_batch_size],
+            'shuffle':True,
+            'callbacks':[
                 TensorBoard(
                     run_dir,
                     update_freq=UPDATE_FREQ,
@@ -141,7 +147,8 @@ class SearchTool(MLToolMixin):
                 EarlyStopping(monitor='loss', patience=self.early_stopping_patience),
                 CustomCallbacks(autoencoder.to_json(), self.checkpoint_json_file)
             ]
-        )
+        }
+        result = autoencoder.fit(**kwargs)
 
     def run(self, run_dir, hyper_params, x_test, x_train):
         self.train_test_model(run_dir, hyper_params, x_test, x_train)

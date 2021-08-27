@@ -51,8 +51,10 @@ class ImageDataset(tf.data.Dataset):
             cur_file_name = file_name_list.pop()[0]
             cur_file_and_path = os.path.join('~/s3-bucket', cur_file_name)
             cur_data = tf.read_file(cur_file_and_path)
-            image = tf.to_float(tf.image.decode_jpeg(cur_data))
-            yield (sample_idx,)
+            cur_file = tf.io.read_file(cur_file_and_path)
+            image = tf.image.decode_jpeg(cur_file)
+            tf.image.convert_image_dtype(image, dtype=tf.float32)
+            yield image
 
     def __new__(cls, batch_size, train=True, train_percent=80):
         try:
@@ -70,7 +72,7 @@ class ImageDataset(tf.data.Dataset):
         num_samples = cls.get_num_samples(batch_size, data_set_size, train_percent, train)
         return tf.data.Dataset.from_generator(
             cls._generator,
-            output_shapes = (1,),#(432, 576, self.batch_size),
+            output_shapes = (None, 432, 576, 1),#(432, 576, self.batch_size),
             output_types = tf.int64,
             args=(num_samples, train, batch_size)
         )
