@@ -84,7 +84,8 @@ class VizTool(MLToolMixin):
         # List of the indices of the rows of data that will be used to display feature maps
         feature_list = []
         while len(feature_list) < self.n_feature_maps:
-            current_feature = random.randint(0, len(x_test) - 1)
+            #current_feature = random.randint(0, len(x_test) - 1)
+            current_feature = random.randint(0, 100)
             if current_feature in feature_list:
                 continue
             feature_list.append(current_feature)
@@ -146,6 +147,18 @@ class VizTool(MLToolMixin):
             plt.imshow(display_grid, aspect='auto', cmap='viridis')
             plt.savefig(os.path.join(self.figures_project_dir, layer_name + 'layer_weights.png'))
 
+    def plot_input_and_output(self, autoencoder, x_test):
+        (x1, y1) = next(iter(x_test))
+        (x2, y2) = next(iter(x_test))
+        x = np.array([x1, x2])
+        y = autoencoder.predict(x)
+        #y = np.array(y[:,:,0,:])
+        plt.imshow(x[0], aspect='auto', cmap='viridis')
+        plt.savefig(os.path.join(self.figures_project_dir, 'example_in.png'))
+        plt.imshow(y[0], aspect='auto', cmap='viridis')
+        plt.savefig(os.path.join(self.figures_project_dir, 'example_out.png'))
+        print("hi")
+
     def main(self):
         if self.use_current_checkpoint:
             autoencoder = self.get_checkpoint_model()
@@ -154,7 +167,7 @@ class VizTool(MLToolMixin):
         activation_model = self.get_best_activations()
 
         x_test = self.get_testing_data()
-        activations = activation_model.predict(x_test)
+        activations = activation_model.predict(x_test.take(100))
         images_per_row = 16
         layer_names = []
         layers_to_encoded = int(len(autoencoder.layers) / 2)
@@ -162,8 +175,9 @@ class VizTool(MLToolMixin):
             # Names of the layers to include in plot
             layer_names.append(layer.name)
 
-        self.plot_feature_maps(autoencoder, activations, x_test, layer_names, images_per_row)
-        self.plot_weights(autoencoder, layer_names, images_per_row)
+        #self.plot_feature_maps(autoencoder, activations, x_test, layer_names, images_per_row)
+        #self.plot_weights(autoencoder, layer_names, images_per_row)
+        self.plot_input_and_output(autoencoder, x_test)
 
 
 if __name__ == "__main__":

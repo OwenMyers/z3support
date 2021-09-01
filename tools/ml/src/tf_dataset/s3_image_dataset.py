@@ -32,9 +32,8 @@ class ImageDataset(tf.data.Dataset):
                     db_connection = psycopg2.connect(database='owen', user='owen', port='5432')
                     cursor = db_connection.cursor()
                     cursor.execute("""
-                        select key from image_meta 
-                        where dimension_x = 432 and dimension_y = 576
-                        and rand_int >= {} and rand_int < {}
+                        select key from train_test_set
+                        where rand_int >= {} and rand_int < {}
                         order by id {}
                     """.format(lower_bound, upper_bound, asc_or_desc))
                     file_name_list = cursor.fetchall()
@@ -48,9 +47,9 @@ class ImageDataset(tf.data.Dataset):
                 lower_bound = upper_bound
                 upper_bound += batch_size
 
+            print(f"------------------- {len(file_name_list)}")
             cur_file_name = file_name_list.pop()[0]
             cur_file_and_path = os.path.join('/home/owen/s3-bucket', cur_file_name)
-            cur_data = tf.io.read_file(cur_file_and_path)
             cur_file = tf.io.read_file(cur_file_and_path)
             image = tf.image.decode_jpeg(cur_file)
             image = tf.image.convert_image_dtype(image, dtype=tf.float32)
@@ -61,7 +60,7 @@ class ImageDataset(tf.data.Dataset):
         try:
             db_connection = psycopg2.connect( database='owen', user='owen', port= '5432' )
             cursor = db_connection.cursor()
-            cursor.execute("select count(*) from image_meta where dimension_x = 432 and dimension_y = 576")
+            cursor.execute("select count(*) from train_test_set")
             data_set_size = cursor.fetchall()[0][0]
         except (Exception, psycopg2.Error) as error:
             print("Error while fetching data from PostgreSQL", error)

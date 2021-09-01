@@ -28,11 +28,11 @@ METRICS = [
         group="validation",
         display_name="loss (val.)",
     ),
-    #hp.Metric(
-    #    "batch_accuracy",
-    #    group="train",
-    #    display_name="accuracy (train)",
-    #),
+    hp.Metric(
+        "batch_accuracy",
+        group="train",
+        display_name="accuracy (train)",
+    ),
     hp.Metric(
         "batch_loss",
         group="train",
@@ -127,6 +127,7 @@ class SearchTool(MLToolMixin):
         kwargs = {}
         if self.is_image:
             # A possible workaround for breakage in shapes (but seems to currently be working) : https: // github.com / tensorflow / tensorflow / issues / 32912
+            x_train = x_train.prefetch(tf.data.AUTOTUNE)
             x_train = x_train.batch(hyper_params[self.hp_batch_size], drop_remainder=True)
 
             kwargs.update({

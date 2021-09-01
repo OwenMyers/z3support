@@ -7,6 +7,7 @@ from keras.callbacks import ModelCheckpoint
 import keras
 from tensorboard.plugins.hparams import api as hp
 from tf_dataset.s3_image_dataset import ImageDataset
+from tf_dataset.minst_dataset import MnistDataset
 
 
 class MLToolMixin:
@@ -100,18 +101,18 @@ class MLToolMixin:
             self.data = self.get_all_data_sources(self.config)
         self.checkpointer = ModelCheckpoint(
             filepath=self.checkpoint_file,
-            monitor='val_loss',
+            monitor='loss',
             verbose=1,
             save_best_only=True,
             mode='auto',
             save_freq='epoch',
             # Want to use False but seems to be broken: https://github.com/tensorflow/tensorflow/issues/39679
-            save_weights_only=True
+            save_weights_only=False
         )
         self.run_location = working_location
 
         if self.quick_run:
-            self.hp_batch_size = hp.HParam('batch_size', hp.Discrete([50]))
+            self.hp_batch_size = hp.HParam('batch_size', hp.Discrete([5]))
             self.hp_n_layers = hp.HParam('n_layers', hp.Discrete([3]))
             self.hp_feature_map_step = hp.HParam('feature_map_step', hp.Discrete([16]))
             self.hp_stride_size = hp.HParam('stride', hp.Discrete([1]))
@@ -178,10 +179,16 @@ class MLToolMixin:
         return keras.models.load_model(self.best_activations_file)
 
     def get_testing_data(self):
-        return np.load(self.testing_data_location)
+        if self.is_image:
+            return self.data_test
+        else:
+            return np.load(self.testing_data_location)
 
     def get_training_data(self):
-        return np.load(self.training_data_location)
+        if self.is_image:
+            return self.data_train
+        else:
+            return np.load(self.training_data_location)
 
     @staticmethod
     def import_data(list_data):
