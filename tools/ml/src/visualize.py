@@ -157,7 +157,14 @@ class VizTool(MLToolMixin):
         plt.savefig(os.path.join(self.figures_project_dir, 'example_in.png'))
         plt.imshow(y[0], aspect='auto', cmap='viridis')
         plt.savefig(os.path.join(self.figures_project_dir, 'example_out.png'))
-        print("hi")
+
+    def plot_dense_layer(self, autoencoder, layer_names, activations):
+        #weights = autoencoder.get_layer(name='dense_encoder_output').get_weights()
+        for layer_name, layer_activation in zip(layer_names, activations):  # Displays the feature maps
+            if layer_name == 'dense_encoder_output':
+                print("hi")
+                plt.scatter(layer_activation[:, 0], layer_activation[:, 1], c='k')
+                plt.savefig(os.path.join(self.figures_project_dir, 'dense_layer.png'))
 
     def main(self):
         if self.use_current_checkpoint:
@@ -167,17 +174,23 @@ class VizTool(MLToolMixin):
         activation_model = self.get_best_activations()
 
         x_test = self.get_testing_data()
-        activations = activation_model.predict(x_test.take(100))
+
+        #activation_model.predict(np.zeros([5, 28, 28, 1]))
+        x_test = x_test.take(100)
+        input_for_act = list(x_test.as_numpy_iterator())
+        input_for_act = np.array(input_for_act)[:, 0, :, :]
+        activations = activation_model.predict(input_for_act)
         images_per_row = 16
         layer_names = []
         layers_to_encoded = int(len(autoencoder.layers) / 2)
-        for layer in autoencoder.layers[:layers_to_encoded]:
+        for layer in autoencoder.layers[:layers_to_encoded+1]:
             # Names of the layers to include in plot
             layer_names.append(layer.name)
 
         #self.plot_feature_maps(autoencoder, activations, x_test, layer_names, images_per_row)
         #self.plot_weights(autoencoder, layer_names, images_per_row)
-        self.plot_input_and_output(autoencoder, x_test)
+        self.plot_dense_layer(autoencoder, layer_names, activations)
+        #self.plot_input_and_output(autoencoder, x_test)
 
 
 if __name__ == "__main__":

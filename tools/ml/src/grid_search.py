@@ -1,6 +1,6 @@
 import os
 from abc import ABCMeta
-from keras.layers import Input, Conv2D, Conv2DTranspose, BatchNormalization, LeakyReLU, Dropout, Activation
+from keras.layers import Input, Conv2D, Conv2DTranspose, BatchNormalization, LeakyReLU, Dropout, Activation, Flatten, Dense, Reshape
 from keras.models import Model
 from keras import models
 from keras.callbacks import TensorBoard, EarlyStopping
@@ -84,12 +84,19 @@ class SearchTool(MLToolMixin):
                 strides=hyper_params[self.hp_stride_size],
                 padding='same',
             )(x)
+            x = LeakyReLU()(x)
             if hyper_params[self.hp_use_batch_normalization]:
                 x = BatchNormalization()(x)
-            x = LeakyReLU()(x)
             if hyper_params[self.hp_use_dropout]:
                 x = Dropout(rate=0.25)(x)
         max_fm = fm
+        #if hyper_params[self.use_dense]:
+        shape_before_flattening = keras.backend.int_shape(x)[1:]
+        x = Flatten()(x)
+        x = Dense(2, name='dense_encoder_output')(x)
+        x = Dense(np.prod(shape_before_flattening))(x)
+        x = Reshape(shape_before_flattening)(x)
+
         for i in range(hyper_params[self.hp_n_layers] - 1):
             fm = max_fm - (i + 1) * hyper_params[self.hp_feature_map_step]
             x = Conv2DTranspose(
@@ -100,9 +107,9 @@ class SearchTool(MLToolMixin):
                 padding='same',
                 use_bias=True
             )(x)
+            x = LeakyReLU()(x)
             if hyper_params[self.hp_use_batch_normalization]:
                 x = BatchNormalization()(x)
-            x = LeakyReLU()(x)
             if hyper_params[self.hp_use_dropout]:
                 x = Dropout(rate=0.25)(x)
 
@@ -230,7 +237,7 @@ class SearchTool(MLToolMixin):
         best_autoencoder.save(self.best_model_file)
         # Get the encoder piece of the autoencoder. We call this the "activation model". This is the full model up to
         # the bottle neck.
-        layers_to_encoded = int(len(best_autoencoder.layers) / 2)
+        layers_to_encoded = int(len(best_autoencoder.layers) / 2 + 1)
         print(layers_to_encoded)
         layer_activations = [layer.output for layer in best_autoencoder.layers[:layers_to_encoded]]
         activation_model = models.Model(
