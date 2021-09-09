@@ -55,8 +55,8 @@ class MLToolMixin:
         self.hp_feature_map_step = hp.HParam('feature_map_step', hp.Discrete(feature_map_steps))
         stride_sizes = self.parse_int_list_from_config(self.config['Settings']['STRIDE_SIZES'])
         self.hp_stride_size = hp.HParam('stride', hp.Discrete(stride_sizes))
-        self.hp_use_batch_normalization = hp.HParam('use_batch_normalization', hp.Discrete([1, 0]))
-        self.hp_use_dropout = hp.HParam('use_dropout', hp.Discrete([1, 0]))
+        self.hp_use_batch_normalization = hp.HParam('use_batch_normalization', hp.Discrete([0]))
+        self.hp_use_dropout = hp.HParam('use_dropout', hp.Discrete([0]))
         #self.hp_use_dense = hp.HParam('use_dropout', hp.Discrete([1, 0]))
         self.is_image = bool(self.config['Settings']['IS_IMAGE'])
         # quick run of single param or full param sweep. Use True for testing.

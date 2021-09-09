@@ -2,6 +2,7 @@ from keras.callbacks import Callback
 import os
 import pickle
 
+
 class CustomCallbacks(Callback):
     def __init__(self, model_as_json, save_location):
         """

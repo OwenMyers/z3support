@@ -68,7 +68,7 @@ class SearchTool(MLToolMixin):
         x = Conv2D(
             self.feature_map_start,
             (3, 3),
-            strides=hyper_params[self.hp_stride_size],
+            strides=1,
             padding='same',
         )(input_obj)
         if hyper_params[self.hp_use_batch_normalization]:
@@ -76,8 +76,11 @@ class SearchTool(MLToolMixin):
         x = LeakyReLU()(x)
 
         fm = None
-        for i in range(hyper_params[self.hp_n_layers] - 1):
-            fm = self.feature_map_start + (i + 1) * hyper_params[self.hp_feature_map_step]
+        for i in range(hyper_params[self.hp_n_layers]):
+            if i == hyper_params[self.hp_n_layers] - 1:
+                print("Done expanding feature map for now")
+            else:
+                fm = self.feature_map_start + (i + 1) * hyper_params[self.hp_feature_map_step]
             x = Conv2D(
                 fm,
                 (3, 3),
@@ -97,8 +100,24 @@ class SearchTool(MLToolMixin):
         x = Dense(np.prod(shape_before_flattening))(x)
         x = Reshape(shape_before_flattening)(x)
 
-        for i in range(hyper_params[self.hp_n_layers] - 1):
-            fm = max_fm - (i + 1) * hyper_params[self.hp_feature_map_step]
+        for i in range(hyper_params[self.hp_n_layers]):
+            if i == 0:
+                fm = max_fm
+                x = Conv2DTranspose(
+                    fm,
+                    (3, 3),
+                    strides=1,
+                    activation='relu',
+                    padding='same',
+                    use_bias=True
+                )(x)
+                x = LeakyReLU()(x)
+                if hyper_params[self.hp_use_batch_normalization]:
+                    x = BatchNormalization()(x)
+                if hyper_params[self.hp_use_dropout]:
+                    x = Dropout(rate=0.25)(x)
+            else:
+                fm = max_fm - i * hyper_params[self.hp_feature_map_step]
             x = Conv2DTranspose(
                 fm,
                 (3, 3),
@@ -116,7 +135,7 @@ class SearchTool(MLToolMixin):
         decoded = Conv2DTranspose(
             1,
             (3, 3),
-            strides=hyper_params[self.hp_stride_size],
+            strides=1,
             activation='relu',
             padding='same',
             use_bias=True

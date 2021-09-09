@@ -190,7 +190,7 @@ class VizTool(MLToolMixin):
         #self.plot_feature_maps(autoencoder, activations, x_test, layer_names, images_per_row)
         #self.plot_weights(autoencoder, layer_names, images_per_row)
         self.plot_dense_layer(autoencoder, layer_names, activations)
-        #self.plot_input_and_output(autoencoder, x_test)
+        self.plot_input_and_output(autoencoder, x_test)
 
 
 if __name__ == "__main__":
