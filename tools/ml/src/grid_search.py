@@ -140,12 +140,14 @@ class SearchTool(MLToolMixin):
             padding='same',
             use_bias=True
         )(x)
-        #x = Activation('sigmoid')(x)
+        x = Activation('sigmoid')(x)
 
         autoencoder = Model(input_obj, decoded)
         # autoencoder.summary()
+        optimizer = tf.keras.optimizers.Adam(learning_rate=0.0005)
         autoencoder.compile(
-            optimizer='adadelta',
+            #optimizer='adadelta',
+            optimizer=optimizer,
             loss='binary_crossentropy',
             metrics=['accuracy']
         )
