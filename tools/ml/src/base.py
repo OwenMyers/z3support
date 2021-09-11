@@ -59,7 +59,7 @@ class MLToolMixin:
         self.hp_use_batch_normalization = hp.HParam('use_batch_normalization', hp.Discrete([0]))
         self.hp_use_dropout = hp.HParam('use_dropout', hp.Discrete([0]))
         #self.hp_use_dense = hp.HParam('use_dropout', hp.Discrete([1, 0]))
-        self.is_image = bool(self.config['Settings']['IS_IMAGE'])
+        self.is_image = eval(self.config['Settings']['IS_IMAGE'].title())
         # quick run of single param or full param sweep. Use True for testing.
         self.quick_run = False
         if 'true' in self.config['Settings']['QUICK_RUN'].lower():

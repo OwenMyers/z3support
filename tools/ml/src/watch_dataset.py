@@ -4,6 +4,7 @@
 
 from tf_dataset.minst_dataset import MnistDataset
 import time
+import numpy as np
 
 
 def benchmark(dataset, num_epochs=2):
@@ -18,10 +19,16 @@ def benchmark(dataset, num_epochs=2):
 def show_data(dataset):
 
     print("Trying to plot dataset")
+    for k, l in dataset.take(5):
+        print('k.shape: ', k.shape)
+        print('l.shape: ', l.shape)
+        print('k average: ', np.mean(k))
+
 
 def main():
     benchmark(MnistDataset(batch_size=10).range(100))
-    show_data()
+    show_data(MnistDataset(100, train=True, train_percent=80))
+
 
 if __name__ == "__main__":
     main()

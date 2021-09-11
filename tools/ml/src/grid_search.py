@@ -1,17 +1,18 @@
 import os
 from abc import ABCMeta
-from keras.layers import Input, Conv2D, Conv2DTranspose, BatchNormalization, LeakyReLU, Dropout, Activation, Flatten, Dense, Reshape
-from keras.models import Model
-from keras import models
-from keras.callbacks import TensorBoard, EarlyStopping
+from tensorflow.keras.models import Model
+from tensorflow.keras import models
 from tensorboard.plugins.hparams import api as hp
 import tensorflow as tf
 import numpy as np
 import argparse
 import logging
 import keras
-from tools.ml.src.base import MLToolMixin
+from tools.ml.src.base import MLToolMixin, r_loss
 from tools.ml.src.custom_callbacks import CustomCallbacks, step_decay_schedule
+from keras.datasets import mnist
+from tensorflow.keras.layers import Input, Conv2D, Conv2DTranspose, BatchNormalization, LeakyReLU, Dropout, Activation, Flatten, Dense, Reshape
+from tensorflow.keras.callbacks import TensorBoard, EarlyStopping
 
 
 os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
@@ -41,6 +42,18 @@ METRICS = [
 ]
 
 
+
+
+def load_mnist():
+    (x_train, y_train), (x_test, y_test) = mnist.load_data()
+
+    x_train = x_train.astype('float32') / 255.
+    x_train = x_train.reshape(x_train.shape + (1,))
+    x_test = x_test.astype('float32') / 255.
+    x_test = x_test.reshape(x_test.shape + (1,))
+
+    return (x_train, y_train), (x_test, y_test)
+
 class SearchTool(MLToolMixin):
 
     def __init__(self, settings_file, working_location):
@@ -64,6 +77,7 @@ class SearchTool(MLToolMixin):
             input_obj = Input(shape=(self.Lx, self.Ly, 1))
         else:
             input_obj = Input(shape=(self.Lx * 2, self.Ly * 2, 1))
+            input_obj = Input(shape=(self.Lx, self.Ly, 1))
 
         x = Conv2D(
             self.feature_map_start,
@@ -94,7 +108,7 @@ class SearchTool(MLToolMixin):
                 x = Dropout(rate=0.25)(x)
         max_fm = fm
         #if hyper_params[self.use_dense]:
-        shape_before_flattening = keras.backend.int_shape(x)[1:]
+        shape_before_flattening = tf.keras.backend.int_shape(x)[1:]
         x = Flatten()(x)
         x = Dense(2, name='dense_encoder_output')(x)
         x = Dense(np.prod(shape_before_flattening))(x)
@@ -157,12 +171,15 @@ class SearchTool(MLToolMixin):
         kwargs = {}
         if self.is_image:
             # A possible workaround for breakage in shapes (but seems to currently be working) : https: // github.com / tensorflow / tensorflow / issues / 32912
-            x_train = x_train.prefetch(tf.data.AUTOTUNE)
-            x_train = x_train.batch(hyper_params[self.hp_batch_size], drop_remainder=True)
+            #x_train = x_train.prefetch(tf.data.AUTOTUNE)
+            #x_train = x_train.batch(hyper_params[self.hp_batch_size], drop_remainder=True)
 
             kwargs.update({
-                'generator': x_train,
+                #'generator': x_train,
                 #'validation_data': (x_test, x_test)
+                'x': x_train,
+                #'validation_data': (x_test, x_test),
+                'batch_size': hyper_params[self.hp_batch_size],
             })
         else:
             kwargs.update({
@@ -192,17 +209,16 @@ class SearchTool(MLToolMixin):
             ]
         })
 
-        if self.is_image:
-            result = autoencoder.fit_generator(**kwargs)
-        else:
-            result = autoencoder.fit(**kwargs)
+        #if self.is_image:
+        #    result = autoencoder.fit_generator(**kwargs)
+        #else:
+        result = autoencoder.fit(**kwargs)
 
     def run(self, run_dir, hyper_params, x_test, x_train):
         self.train_test_model(run_dir, hyper_params, x_test, x_train)
 
     def main(self):
         if hasattr(self, "data_train"):
-        #if isinstance(self.data, ABCMeta):
             x_train = self.data_train
             x_test = self.data_test
         else:
@@ -231,6 +247,9 @@ class SearchTool(MLToolMixin):
                 metrics=METRICS
             )
 
+        #(x_train, y_train), (x_test, y_test) = load_mnist()
+        #x_train = x_train[:1000]
+        #x_test = x_test[:1000]
         c = 0
         autoencoder = None
         for batch_size in self.hp_batch_size.domain.values:
@@ -259,7 +278,7 @@ class SearchTool(MLToolMixin):
                                 )
                                 # After each run lets attempt to log a sample of activations for the different layers
 
-        best_autoencoder = keras.models.load_model(self.checkpoint_file, custom_objects={'r_loss': r_loss})
+        best_autoencoder = tf.keras.models.load_model(self.checkpoint_file, custom_objects={'r_loss': r_loss})
         best_autoencoder.save(self.best_model_file)
         # Get the encoder piece of the autoencoder. We call this the "activation model". This is the full model up to
         # the bottle neck.
