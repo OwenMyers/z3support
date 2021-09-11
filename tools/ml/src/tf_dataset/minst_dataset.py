@@ -1,8 +1,9 @@
 import tensorflow as tf
 
+
 class MnistDataset(tf.data.Dataset):
     def _generator(cls, batch_size, train=True, train_percent=80):
-
+        print("--------------------------------------------------- IN MNIST GENERATOR -------------------------------")
         (train_images, train_labels), (_, _) = tf.keras.datasets.mnist.load_data()
         train_images = (train_images - 127.5) / 127.5  # Normalize the images to [-1, 1]
 

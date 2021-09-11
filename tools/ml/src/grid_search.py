@@ -11,7 +11,7 @@ import argparse
 import logging
 import keras
 from tools.ml.src.base import MLToolMixin
-from tools.ml.src.custom_callbacks import CustomCallbacks
+from tools.ml.src.custom_callbacks import CustomCallbacks, step_decay_schedule
 
 
 os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
@@ -145,10 +145,12 @@ class SearchTool(MLToolMixin):
         autoencoder = Model(input_obj, decoded)
         # autoencoder.summary()
         optimizer = tf.keras.optimizers.Adam(learning_rate=0.0005)
+
         autoencoder.compile(
             #optimizer='adadelta',
             optimizer=optimizer,
-            loss='binary_crossentropy',
+            #loss='binary_crossentropy',
+            loss=r_loss,
             metrics=['accuracy']
         )
         autoencoder.summary()
@@ -170,20 +172,23 @@ class SearchTool(MLToolMixin):
                 'batch_size': hyper_params[self.hp_batch_size],
             })
         kwargs.update({
-            'epochs':self.epochs,
-            'shuffle':True,
-            'callbacks':[
+            'epochs': self.epochs,
+            'shuffle': True,
+            'callbacks': [
                 TensorBoard(
                     run_dir,
                     update_freq=UPDATE_FREQ,
                     profile_batch=0,
                     histogram_freq=2,
                     embeddings_freq=2,
+                    write_images=True,
+                    write_steps_per_second=True,
                 ),
                 hp.KerasCallback(run_dir, hyper_params),
                 self.checkpointer,
                 EarlyStopping(monitor='loss', patience=self.early_stopping_patience),
-                CustomCallbacks(autoencoder.to_json(), self.checkpoint_json_file)
+                CustomCallbacks(autoencoder.to_json(), self.checkpoint_json_file),
+                step_decay_schedule(initial_lr=0.0005, decay_factor=1.0, step_size=1)
             ]
         })
 
@@ -254,7 +259,7 @@ class SearchTool(MLToolMixin):
                                 )
                                 # After each run lets attempt to log a sample of activations for the different layers
 
-        best_autoencoder = keras.models.load_model(self.checkpoint_file)
+        best_autoencoder = keras.models.load_model(self.checkpoint_file, custom_objects={'r_loss': r_loss})
         best_autoencoder.save(self.best_model_file)
         # Get the encoder piece of the autoencoder. We call this the "activation model". This is the full model up to
         # the bottle neck.

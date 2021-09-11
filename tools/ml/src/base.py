@@ -1,4 +1,5 @@
 import os
+from keras import backend as K
 import pickle
 import configparser
 import logging
@@ -8,7 +9,7 @@ import keras
 from tensorboard.plugins.hparams import api as hp
 from tf_dataset.s3_image_dataset import ImageDataset
 from tf_dataset.minst_dataset import MnistDataset
-
+from keras import backend as K
 
 class MLToolMixin:
     """
@@ -66,7 +67,7 @@ class MLToolMixin:
         self.verbose = self.config['Settings']['VERBOSE']
         self.tensorboard_sub_dir = self.config['Settings']['TENSORBOARD_SUB_DIR']
         self.checkpoint_file = os.path.join(working_location, 'model_checkpoints',
-                                            'checkpoint_{}.hdf5'.format(self.config['Settings']['timestamp']))
+                                            'checkpoint_{}.tf'.format(self.config['Settings']['timestamp']))
         # We are saving the model as json so we have the proper structure to load the weights into. Weights come from
         # self.checkpoint_file
         self.checkpoint_json_file = os.path.join(
@@ -138,7 +139,7 @@ class MLToolMixin:
 
         :return: the keras model of the "best" model
         """
-        return keras.models.load_model(self.best_model_file)
+        return keras.models.load_model(self.best_model_file, custom_objects={'r_loss': r_loss})
 
     def get_checkpoint_model(self):
         """
@@ -177,7 +178,7 @@ class MLToolMixin:
 
         :return: the keras activations for the "best" model
         """
-        return keras.models.load_model(self.best_activations_file)
+        return keras.models.load_model(self.best_activations_file, custom_objects={'r_loss': r_loss})
 
     def get_testing_data(self):
         if self.is_image:
@@ -299,3 +300,7 @@ class MLToolMixin:
                 got_all = True
 
         return path_list
+
+
+def r_loss(y_true, y_pred):
+    return K.mean(K.square(y_true - y_pred), axis=[1, 2, 3])
