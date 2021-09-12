@@ -148,8 +148,8 @@ class VizTool(MLToolMixin):
             plt.savefig(os.path.join(self.figures_project_dir, layer_name + 'layer_weights.png'))
 
     def plot_input_and_output(self, autoencoder, x_test):
-        (x1, y1) = next(iter(x_test))
-        (x2, y2) = next(iter(x_test))
+        x1 = next(iter(x_test))
+        x2 = next(iter(x_test))
         x = np.array([x1, x2])
         y = autoencoder.predict(x)
         #y = np.array(y[:,:,0,:])
@@ -176,10 +176,10 @@ class VizTool(MLToolMixin):
         x_test = self.get_testing_data()
 
         #activation_model.predict(np.zeros([5, 28, 28, 1]))
-        x_test = x_test.take(100)
-        input_for_act = list(x_test.as_numpy_iterator())
-        input_for_act = np.array(input_for_act)[:, 0, :, :]
-        activations = activation_model.predict(input_for_act)
+        #x_test = x_test.take(100)
+        #input_for_act = list(x_test.as_numpy_iterator())
+        #input_for_act = np.array(input_for_act)[:, 0, :, :]
+        activations = activation_model.predict(x_test)
         images_per_row = 16
         layer_names = []
         layers_to_encoded = int(len(autoencoder.layers) / 2)
@@ -189,7 +189,7 @@ class VizTool(MLToolMixin):
 
         #self.plot_feature_maps(autoencoder, activations, x_test, layer_names, images_per_row)
         #self.plot_weights(autoencoder, layer_names, images_per_row)
-        self.plot_dense_layer(autoencoder, layer_names, activations)
+        #self.plot_dense_layer(autoencoder, layer_names, activations)
         self.plot_input_and_output(autoencoder, x_test)
 
 

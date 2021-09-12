@@ -54,6 +54,7 @@ def load_mnist():
 
     return (x_train, y_train), (x_test, y_test)
 
+
 class SearchTool(MLToolMixin):
 
     def __init__(self, settings_file, working_location):
@@ -77,7 +78,6 @@ class SearchTool(MLToolMixin):
             input_obj = Input(shape=(self.Lx, self.Ly, 1))
         else:
             input_obj = Input(shape=(self.Lx * 2, self.Ly * 2, 1))
-            input_obj = Input(shape=(self.Lx, self.Ly, 1))
 
         x = Conv2D(
             self.feature_map_start,
@@ -175,9 +175,9 @@ class SearchTool(MLToolMixin):
             #x_train = x_train.batch(hyper_params[self.hp_batch_size], drop_remainder=True)
 
             kwargs.update({
-                #'generator': x_train,
                 #'validation_data': (x_test, x_test)
                 'x': x_train,
+                'y': x_train,
                 #'validation_data': (x_test, x_test),
                 'batch_size': hyper_params[self.hp_batch_size],
             })
@@ -209,9 +209,6 @@ class SearchTool(MLToolMixin):
             ]
         })
 
-        #if self.is_image:
-        #    result = autoencoder.fit_generator(**kwargs)
-        #else:
         result = autoencoder.fit(**kwargs)
 
     def run(self, run_dir, hyper_params, x_test, x_train):
