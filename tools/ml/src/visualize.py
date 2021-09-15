@@ -158,13 +158,15 @@ class VizTool(MLToolMixin):
         plt.imshow(y[0], aspect='auto', cmap='viridis')
         plt.savefig(os.path.join(self.figures_project_dir, 'example_out.png'))
 
-    def plot_dense_layer(self, autoencoder, layer_names, activations):
+    def plot_dense_layer(self, autoencoder, layer_names, activations, labels):
         #weights = autoencoder.get_layer(name='dense_encoder_output').get_weights()
         for layer_name, layer_activation in zip(layer_names, activations):  # Displays the feature maps
             if layer_name == 'dense_encoder_output':
                 print("hi")
-                plt.scatter(layer_activation[:, 0], layer_activation[:, 1], c='k')
+                plt.scatter(layer_activation[:, 0], layer_activation[:, 1], c=labels, cmap='Set1')#, s=1)
+                plt.show()
                 plt.savefig(os.path.join(self.figures_project_dir, 'dense_layer.png'))
+                #plt.xlim()
 
     def main(self):
         if self.use_current_checkpoint:
@@ -174,9 +176,11 @@ class VizTool(MLToolMixin):
         activation_model = self.get_best_activations()
 
         x_test = self.get_testing_data()
+        y_test = self.get_testing_data_labels()
 
         #activation_model.predict(np.zeros([5, 28, 28, 1]))
-        #x_test = x_test.take(100)
+        x_test = x_test[:1000]
+        y_test = y_test[:1000]
         #input_for_act = list(x_test.as_numpy_iterator())
         #input_for_act = np.array(input_for_act)[:, 0, :, :]
         activations = activation_model.predict(x_test)
@@ -189,8 +193,8 @@ class VizTool(MLToolMixin):
 
         #self.plot_feature_maps(autoencoder, activations, x_test, layer_names, images_per_row)
         #self.plot_weights(autoencoder, layer_names, images_per_row)
-        #self.plot_dense_layer(autoencoder, layer_names, activations)
-        self.plot_input_and_output(autoencoder, x_test)
+        self.plot_dense_layer(autoencoder, layer_names, activations, y_test)
+        #self.plot_input_and_output(autoencoder, x_test)
 
 
 if __name__ == "__main__":
