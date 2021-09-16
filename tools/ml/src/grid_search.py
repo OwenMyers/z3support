@@ -209,10 +209,11 @@ class SearchTool(MLToolMixin):
             ]
         })
 
-        result = autoencoder.fit(**kwargs)
+        autoencoder.fit(**kwargs)
+        return autoencoder
 
     def run(self, run_dir, hyper_params, x_test, x_train):
-        self.train_test_model(run_dir, hyper_params, x_test, x_train)
+        return self.train_test_model(run_dir, hyper_params, x_test, x_train)
 
     def main(self):
         if hasattr(self, "data_train"):
@@ -267,13 +268,14 @@ class SearchTool(MLToolMixin):
                                 run_name = f"run-{c}"
                                 print('--- Starting trial: %s' % run_name)
                                 print({h.name: hyper_params[h] for h in hyper_params})
-                                self.run(
+                                run_result = self.run(
                                     os.path.join(self.run_location, 'tensorboard_raw', self.tensorboard_sub_dir, run_name),
                                     hyper_params,
                                     x_test,
                                     x_train
                                 )
                                 # After each run lets attempt to log a sample of activations for the different layers
+                                run_result.save(os.path.join(self.run_location, 'models', run_name + 'model_completion_save'))
 
         best_autoencoder = tf.keras.models.load_model(self.checkpoint_file, custom_objects={'r_loss': r_loss})
         best_autoencoder.save(self.best_model_file)
