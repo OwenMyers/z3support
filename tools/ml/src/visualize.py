@@ -188,7 +188,7 @@ class VizTool(MLToolMixin):
         decoder = Model(inputs=decoder_input, outputs=decoder)
 
         # create the path that that we want to cut across
-        num_steps = 10
+        num_steps = 300
         start_loc = [-15.8, -60.1]
         end_loc = [33.4, -31.7]
         loc_list = []
@@ -202,8 +202,9 @@ class VizTool(MLToolMixin):
             loc_list.append(current_loc)
 
         results = decoder.predict(loc_list)
-        for cur_result in results:
-            print('hey')
+        for l, cur_result in enumerate(results):
+            plt.imshow(cur_result, aspect='auto', cmap='viridis')
+            plt.savefig(os.path.join(self.figures_project_dir, 'latent_slice_video', f'slice_{l}.png'))
 
     def main(self):
         if self.use_current_checkpoint:

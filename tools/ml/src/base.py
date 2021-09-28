@@ -62,10 +62,14 @@ class MLToolMixin:
         self.hp_use_dropout = hp.HParam('use_dropout', hp.Discrete([0]))
         #self.hp_use_dense = hp.HParam('use_dropout', hp.Discrete([1, 0]))
         self.is_image = eval(self.config['Settings']['IS_IMAGE'].title())
+        self.z_dim = int(self.config['Settings']['LATENT_DIMENSION'])
         # quick run of single param or full param sweep. Use True for testing.
         self.quick_run = False
         if 'true' in self.config['Settings']['QUICK_RUN'].lower():
             self.quick_run = True
+        self.variational = False
+        if 'true' in self.config['Settings']['VARIATIONAL'].lower():
+            self.variational = True
         self.verbose = self.config['Settings']['VERBOSE']
         self.tensorboard_sub_dir = self.config['Settings']['TENSORBOARD_SUB_DIR']
         self.checkpoint_file = os.path.join(working_location, 'model_checkpoints',

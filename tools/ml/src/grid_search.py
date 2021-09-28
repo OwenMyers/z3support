@@ -10,8 +10,9 @@ import logging
 from tools.ml.src.base import MLToolMixin, r_loss
 from tools.ml.src.custom_callbacks import CustomCallbacks, step_decay_schedule
 #from tensorflow.keras.datasets import mnist
-from tensorflow.keras.layers import Input, Conv2D, Conv2DTranspose, BatchNormalization, LeakyReLU, Dropout, Activation, Flatten, Dense, Reshape
+from tensorflow.keras.layers import Input, Conv2D, Conv2DTranspose, BatchNormalization, LeakyReLU, Dropout, Activation, Flatten, Dense, Reshape, Lambda
 from tensorflow.keras.callbacks import TensorBoard, EarlyStopping
+from tensorflow.keras import backend as K
 
 #tf.debugging.set_log_device_placement(True)
 os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
@@ -40,9 +41,6 @@ METRICS = [
     ),
 ]
 
-
-
-
 #def load_mnist():
 #    (x_train, y_train), (x_test, y_test) = mnist.load_data()
 #
@@ -53,12 +51,17 @@ METRICS = [
 #
 #    return (x_train, y_train), (x_test, y_test)
 
-
 class SearchTool(MLToolMixin):
 
     def __init__(self, settings_file, working_location):
         super().__init__(settings_file, working_location)
         self.early_stopping_patience = int(self.config['Settings']['EARLY_STOPPING_PATIENCE'])
+
+    @staticmethod
+    def variational_sampling(args):
+        mu, log_var = args
+        epsilon = K.random_normal(shape=K.shape(mu), mean=0.0, stddev=1.0)
+        return mu + K.exp(log_var / 2) * epsilon
 
     def train_test_model(self, run_dir, hyper_params, x_test, x_train):
         """
@@ -109,8 +112,18 @@ class SearchTool(MLToolMixin):
         #if hyper_params[self.use_dense]:
         shape_before_flattening = tf.keras.backend.int_shape(x)[1:]
         x = Flatten()(x)
-        x = Dense(2, name='dense_encoder_output')(x)
-        x = Dense(np.prod(shape_before_flattening))(x)
+        if self.variational:
+            mu = Dense(self.z_dim, name='mu')(x)
+            log_var = Dense(self.z_dim, name='log_var')(x)
+            encoder_mu_log_var = Model(input_obj, (mu, log_var))
+            encoder_output = Lambda(self.variational_sampling, name='encoder_output')([mu, log_var])
+            encoder = Model(input_obj, encoder_output)
+
+            decoder_input = Input(shape=(self.z_dim,), name='decoder_input')
+            x = Dense(np.prod(shape_before_flattening))(decoder_input)
+        else:
+            x = Dense(self.z_dim, name='dense_encoder_output')(x)
+            x = Dense(np.prod(shape_before_flattening))(x)
         x = Reshape(shape_before_flattening)(x)
 
         for i in range(hyper_params[self.hp_n_layers]):
@@ -145,7 +158,7 @@ class SearchTool(MLToolMixin):
             if hyper_params[self.hp_use_dropout]:
                 x = Dropout(rate=0.25)(x)
 
-        decoded = Conv2DTranspose(
+        x = Conv2DTranspose(
             1,
             (3, 3),
             strides=1,
@@ -153,9 +166,14 @@ class SearchTool(MLToolMixin):
             padding='same',
             use_bias=True
         )(x)
-        x = Activation('sigmoid')(x)
-
-        autoencoder = Model(input_obj, decoded)
+        decoded = Activation('sigmoid')(x)
+        if self.variational:
+            decoder = Model(decoder_input, decoded)
+            model_input = input_obj
+            model_output = decoder(encoder_output)
+            autoencoder = Model(model_input, model_output)
+        else:
+            autoencoder = Model(input_obj, decoded)
         # autoencoder.summary()
         optimizer = tf.keras.optimizers.Adam(learning_rate=0.0005)
 
