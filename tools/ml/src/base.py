@@ -1,15 +1,15 @@
 import os
-from keras import backend as K
+from tensorflow.keras import backend as K
 import pickle
 import configparser
 import logging
 import numpy as np
-from keras.callbacks import ModelCheckpoint
-import keras
+from tensorflow.keras.callbacks import ModelCheckpoint
+from tensorflow import keras
 from tensorboard.plugins.hparams import api as hp
 from tf_dataset.s3_image_dataset import ImageDataset
 from tf_dataset.minst_dataset import MnistDataset
-from keras import backend as K
+
 
 class MLToolMixin:
     """

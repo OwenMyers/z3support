@@ -7,10 +7,9 @@ import tensorflow as tf
 import numpy as np
 import argparse
 import logging
-import keras
 from tools.ml.src.base import MLToolMixin, r_loss
 from tools.ml.src.custom_callbacks import CustomCallbacks, step_decay_schedule
-from keras.datasets import mnist
+#from tensorflow.keras.datasets import mnist
 from tensorflow.keras.layers import Input, Conv2D, Conv2DTranspose, BatchNormalization, LeakyReLU, Dropout, Activation, Flatten, Dense, Reshape
 from tensorflow.keras.callbacks import TensorBoard, EarlyStopping
 
@@ -44,15 +43,15 @@ METRICS = [
 
 
 
-def load_mnist():
-    (x_train, y_train), (x_test, y_test) = mnist.load_data()
-
-    x_train = x_train.astype('float32') / 255.
-    x_train = x_train.reshape(x_train.shape + (1,))
-    x_test = x_test.astype('float32') / 255.
-    x_test = x_test.reshape(x_test.shape + (1,))
-
-    return (x_train, y_train), (x_test, y_test)
+#def load_mnist():
+#    (x_train, y_train), (x_test, y_test) = mnist.load_data()
+#
+#    x_train = x_train.astype('float32') / 255.
+#    x_train = x_train.reshape(x_train.shape + (1,))
+#    x_test = x_test.astype('float32') / 255.
+#    x_test = x_test.reshape(x_test.shape + (1,))
+#
+#    return (x_train, y_train), (x_test, y_test)
 
 
 class SearchTool(MLToolMixin):
@@ -199,7 +198,7 @@ class SearchTool(MLToolMixin):
                     histogram_freq=2,
                     embeddings_freq=2,
                     write_images=True,
-                    write_steps_per_second=True,
+                    #write_steps_per_second=True,
                 ),
                 hp.KerasCallback(run_dir, hyper_params),
                 self.checkpointer,
