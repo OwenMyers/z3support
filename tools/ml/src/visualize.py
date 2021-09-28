@@ -175,14 +175,35 @@ class VizTool(MLToolMixin):
         started = False
         for i, layer_name in enumerate(layer_names):  # Displays the feature maps
             if started:
-                decoder = autoencoder.layers[i+1](decoder)
+                if i+1 > len(layer_names)-1:
+                    break
+                current_layer = autoencoder.layers[i+1]
+                decoder = current_layer(decoder)
             elif layer_name == 'dense_encoder_output':
                 started = True
                 print("hey hey")
                 decoder_input = Input(autoencoder.layers[i+1].input_shape[1:])
                 decoder = decoder_input
+                decoder = autoencoder.layers[i + 1](decoder)
         decoder = Model(inputs=decoder_input, outputs=decoder)
 
+        # create the path that that we want to cut across
+        num_steps = 10
+        start_loc = [-15.8, -60.1]
+        end_loc = [33.4, -31.7]
+        loc_list = []
+        running_loc = [None, None]
+        x_step_size = (end_loc[0] - start_loc[0])/num_steps
+        y_step_size = (end_loc[1] - start_loc[1])/num_steps
+        for i in range(num_steps):
+            current_loc = [None, None]
+            current_loc[0] = start_loc[0] + i * x_step_size
+            current_loc[1] = start_loc[1] + i * y_step_size
+            loc_list.append(current_loc)
+
+        results = decoder.predict(loc_list)
+        for cur_result in results:
+            print('hey')
 
     def main(self):
         if self.use_current_checkpoint:
@@ -207,11 +228,15 @@ class VizTool(MLToolMixin):
             # Names of the layers to include in plot
             encoder_layer_names.append(layer.name)
 
+        full_ae_layer_names = []
+        for layer in autoencoder.layers:
+            full_ae_layer_names.append(layer.name)
+
         #self.plot_feature_maps(autoencoder, activations, x_test, encoder_layer_names, images_per_row)
         #self.plot_weights(autoencoder, encoder_layer_names, images_per_row)
         #self.plot_dense_layer(autoencoder, encoder_layer_names, activations, y_test)
         #self.plot_input_and_output(autoencoder, x_test)
-        self.plot_decoder_result_from_input(autoencoder, encoder_layer_names, input)
+        self.plot_decoder_result_from_input(autoencoder, full_ae_layer_names, input)
 
 
 if __name__ == "__main__":
