@@ -1,4 +1,6 @@
 import logging
+from tensorflow.keras.layers import Input
+from tensorflow.keras.models import Model
 import random
 from matplotlib import pyplot as plt
 import numpy as np
@@ -168,6 +170,20 @@ class VizTool(MLToolMixin):
                 plt.savefig(os.path.join(self.figures_project_dir, 'dense_layer.png'))
                 #plt.xlim()
 
+    def plot_decoder_result_from_input(self, autoencoder, layer_names, input):
+        # Trying to do this using suggestion https://stackoverflow.com/questions/49193510/how-to-split-a-model-trained-in-keras
+        started = False
+        for i, layer_name in enumerate(layer_names):  # Displays the feature maps
+            if started:
+                decoder = autoencoder.layers[i+1](decoder)
+            elif layer_name == 'dense_encoder_output':
+                started = True
+                print("hey hey")
+                decoder_input = Input(autoencoder.layers[i+1].input_shape[1:])
+                decoder = decoder_input
+        decoder = Model(inputs=decoder_input, outputs=decoder)
+
+
     def main(self):
         if self.use_current_checkpoint:
             autoencoder = self.get_checkpoint_model()
@@ -185,16 +201,17 @@ class VizTool(MLToolMixin):
         #input_for_act = np.array(input_for_act)[:, 0, :, :]
         activations = activation_model.predict(x_test)
         images_per_row = 16
-        layer_names = []
+        encoder_layer_names = []
         layers_to_encoded = int(len(autoencoder.layers) / 2)
         for layer in autoencoder.layers[:layers_to_encoded+1]:
             # Names of the layers to include in plot
-            layer_names.append(layer.name)
+            encoder_layer_names.append(layer.name)
 
-        #self.plot_feature_maps(autoencoder, activations, x_test, layer_names, images_per_row)
-        #self.plot_weights(autoencoder, layer_names, images_per_row)
-        self.plot_dense_layer(autoencoder, layer_names, activations, y_test)
+        #self.plot_feature_maps(autoencoder, activations, x_test, encoder_layer_names, images_per_row)
+        #self.plot_weights(autoencoder, encoder_layer_names, images_per_row)
+        #self.plot_dense_layer(autoencoder, encoder_layer_names, activations, y_test)
         #self.plot_input_and_output(autoencoder, x_test)
+        self.plot_decoder_result_from_input(autoencoder, encoder_layer_names, input)
 
 
 if __name__ == "__main__":

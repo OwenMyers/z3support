@@ -14,7 +14,7 @@ from keras.datasets import mnist
 from tensorflow.keras.layers import Input, Conv2D, Conv2DTranspose, BatchNormalization, LeakyReLU, Dropout, Activation, Flatten, Dense, Reshape
 from tensorflow.keras.callbacks import TensorBoard, EarlyStopping
 
-
+#tf.debugging.set_log_device_placement(True)
 os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
 METRIC_ACCURACY = 'accuracy'
 UPDATE_FREQ = 600,
