@@ -1,4 +1,5 @@
 import os
+import matplotlib.pyplot as plt
 from abc import ABCMeta
 from tensorflow.keras.models import Model
 from tensorflow.keras import models
@@ -13,8 +14,8 @@ from tools.ml.src.custom_callbacks import CustomCallbacks, step_decay_schedule
 from tensorflow.keras.layers import Input, Conv2D, Conv2DTranspose, BatchNormalization, LeakyReLU, Dropout, Activation, Flatten, Dense, Reshape, Lambda
 from tensorflow.keras.callbacks import TensorBoard, EarlyStopping
 from tensorflow.keras import backend as K
-#from tensorflow.python.framework.ops import disable_eager_execution
-#disable_eager_execution()
+from tensorflow.python.framework.ops import disable_eager_execution
+disable_eager_execution()
 
 
 #os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
@@ -228,12 +229,12 @@ class SearchTool(MLToolMixin):
                         update_freq=UPDATE_FREQ,
                         profile_batch=0,
                         histogram_freq=2,
-                        embeddings_freq=2,
+                        #embeddings_freq=2,
                         write_images=True,
                         #write_steps_per_second=True,
                     )]
         if not self.tensorboard_debugging:
-            callbacks += [hp.KerasCallback(run_dir, hyper_params),
+            callbacks += [#hp.KerasCallback(run_dir, hyper_params),
                           self.checkpointer,
                           EarlyStopping(monitor='loss', patience=self.early_stopping_patience),
                           CustomCallbacks(autoencoder.to_json(), self.checkpoint_json_file),
@@ -315,10 +316,18 @@ class SearchTool(MLToolMixin):
                                     run_result.save(os.path.join(self.run_location, 'models', run_name + 'model_completion_save'))
         if not self.tensorboard_debugging:
             if self.variational:
-                check_loss = self.vae_loss
+                def vae_kl_loss(y_true, y_pred):
+                    kl_loss = -0.5 * K.sum(1 + self.log_var - K.square(self.mu) - K.exp(self.log_var), axis=1)
+                    return kl_loss
+
+                def vae_loss(y_true, y_pred):
+                    new_r_loss = vae_r_loss(y_true, y_pred)
+                    kl_loss = vae_kl_loss(y_true, y_pred)
+                    return new_r_loss + kl_loss
+                check_loss = vae_loss
             else:
                 check_loss = r_loss
-            best_autoencoder = tf.keras.models.load_model(self.checkpoint_file, custom_objects={'r_loss': check_loss})
+            best_autoencoder = tf.keras.models.load_model(self.checkpoint_file, custom_objects={'vae_loss': check_loss, 'vae_kl_loss': vae_kl_loss, 'vae_r_loss': vae_r_loss})
             best_autoencoder.save(self.best_model_file)
             # Get the encoder piece of the autoencoder. We call this the "activation model". This is the full model up to
             # the bottle neck.
@@ -330,6 +339,16 @@ class SearchTool(MLToolMixin):
                 outputs=layer_activations
             )
             activation_model.save(self.best_activations_file)
+
+        x1 = next(iter(x_test))
+        x2 = next(iter(x_test))
+        x = np.array([x1, x2])
+        y = best_autoencoder.predict(x)
+        #y = np.array(y[:,:,0,:])
+        plt.imshow(x[0], aspect='auto', cmap='viridis')
+        plt.savefig(os.path.join('figures', 'example_in.png'))
+        plt.imshow(y[0], aspect='auto', cmap='viridis')
+        plt.savefig(os.path.join('figures', 'example_out.png'))
 
 
 if __name__ == "__main__":
