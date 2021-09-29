@@ -2,7 +2,6 @@ import os
 from abc import ABCMeta
 from tensorflow.keras.models import Model
 from tensorflow.keras import models
-from tensorboard.plugins.hparams import api as hp
 import tensorflow as tf
 import numpy as np
 import argparse
@@ -13,35 +12,14 @@ from tools.ml.src.custom_callbacks import CustomCallbacks, step_decay_schedule
 from tensorflow.keras.layers import Input, Conv2D, Conv2DTranspose, BatchNormalization, LeakyReLU, Dropout, Activation, Flatten, Dense, Reshape, Lambda
 from tensorflow.keras.callbacks import TensorBoard, EarlyStopping
 from tensorflow.keras import backend as K
-#from tensorflow.python.framework.ops import disable_eager_execution
-#disable_eager_execution()
+from tensorflow.python.framework.ops import disable_eager_execution
+disable_eager_execution()
 
 
 #os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
 METRIC_ACCURACY = 'accuracy'
-UPDATE_FREQ = 600,
-METRICS = [
-    hp.Metric(
-        "epoch_accuracy",
-        group="validation",
-        display_name="accuracy (val.)",
-    ),
-    hp.Metric(
-        "epoch_loss",
-        group="validation",
-        display_name="loss (val.)",
-    ),
-    hp.Metric(
-        "batch_accuracy",
-        group="train",
-        display_name="accuracy (train)",
-    ),
-    hp.Metric(
-        "batch_loss",
-        group="train",
-        display_name="loss (train)",
-    ),
-]
+UPDATE_FREQ = 600
+
 
 #def load_mnist():
 #    (x_train, y_train), (x_test, y_test) = mnist.load_data()
@@ -233,16 +211,16 @@ class SearchTool(MLToolMixin):
                         #write_steps_per_second=True,
                     )]
         if not self.tensorboard_debugging:
-            callbacks += [hp.KerasCallback(run_dir, hyper_params),
+            callbacks += [tf.keras.callbacks.TensorBoard(log_dir=os.path.join(self.run_location, 'tensorboard_raw', self.tensorboard_sub_dir)),
                           self.checkpointer,
                           EarlyStopping(monitor='loss', patience=self.early_stopping_patience),
                           CustomCallbacks(autoencoder.to_json(), self.checkpoint_json_file),
-                          step_decay_schedule(initial_lr=0.0005, decay_factor=1.0, step_size=1)]
+                          step_decay_schedule(initial_lr=0.0005, decay_factor=1.0, step_size=1)
+            ]
         kwargs.update({
             'epochs': self.epochs,
             'shuffle': True,
             'callbacks': callbacks,
-
         })
 
         autoencoder.fit(**kwargs)
@@ -273,46 +251,31 @@ class SearchTool(MLToolMixin):
             np.save(self.testing_data_location, x_test)
             np.save(self.data_label_location, data_labels)
 
-        with tf.summary.create_file_writer(
-            os.path.join(self.run_location, 'tensorboard_raw', self.tensorboard_sub_dir)
-        ).as_default():
-            hp.hparams_config(
-                hparams=[self.hp_batch_size, self.hp_n_layers, self.hp_feature_map_step, self.hp_stride_size, self.hp_use_batch_normalization, self.hp_use_dropout],
-                metrics=METRICS
-            )
-
         #(x_train, y_train), (x_test, y_test) = load_mnist()
         #x_train = x_train[:1000]
         #x_test = x_test[:1000]
         c = 0
         autoencoder = None
-        for batch_size in self.hp_batch_size.domain.values:
-            for n_layers in self.hp_n_layers.domain.values:
-                for f_map_step in self.hp_feature_map_step.domain.values:
-                    for stride in self.hp_stride_size.domain.values:
-                        for use_batch_normalization in self.hp_use_batch_normalization.domain.values:
-                            for use_dropout in self.hp_use_dropout.domain.values:
-                                hyper_params = {
-                                    self.hp_batch_size: batch_size,
-                                    self.hp_n_layers: n_layers,
-                                    self.hp_feature_map_step: f_map_step,
-                                    self.hp_stride_size: stride,
-                                    self.hp_use_batch_normalization: use_batch_normalization,
-                                    self.hp_use_dropout: use_dropout
-                                }
-                                c += 1
-                                run_name = f"run-{c}"
-                                print('--- Starting trial: %s' % run_name)
-                                print({h.name: hyper_params[h] for h in hyper_params})
-                                run_result = self.run(
-                                    os.path.join(self.run_location, 'tensorboard_raw', self.tensorboard_sub_dir, run_name),
-                                    hyper_params,
-                                    x_test,
-                                    x_train
-                                )
-                                # After each run lets attempt to log a sample of activations for the different layers
-                                if not self.tensorboard_debugging:
-                                    run_result.save(os.path.join(self.run_location, 'models', run_name + 'model_completion_save'))
+        hyper_params = {
+            self.hp_batch_size: self.hp_batch_size,
+            self.hp_n_layers: self.hp_n_layers,
+            self.hp_feature_map_step: self.hp_feature_map_step,
+            self.hp_stride_size: self.hp_stride_size,
+            self.hp_use_batch_normalization: self.hp_use_batch_normalization,
+            self.hp_use_dropout: self.hp_use_dropout
+        }
+        c += 1
+        run_name = f"run-{c}"
+        print('--- Starting trial: %s' % run_name)
+        run_result = self.run(
+            os.path.join(self.run_location, 'tensorboard_raw', self.tensorboard_sub_dir, run_name),
+            hyper_params,
+            x_test,
+            x_train
+        )
+        # After each run lets attempt to log a sample of activations for the different layers
+        if not self.tensorboard_debugging:
+            run_result.save(os.path.join(self.run_location, 'models', run_name + 'model_completion_save'))
         if not self.tensorboard_debugging:
             if self.variational:
                 check_loss = self.vae_loss
