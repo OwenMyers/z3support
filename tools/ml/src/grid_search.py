@@ -19,7 +19,7 @@ from tensorflow.keras import backend as K
 
 #os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
 METRIC_ACCURACY = 'accuracy'
-UPDATE_FREQ = 600,
+UPDATE_FREQ = 600
 METRICS = [
     hp.Metric(
         "epoch_accuracy",
