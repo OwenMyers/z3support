@@ -235,9 +235,9 @@ class VizTool(MLToolMixin):
 
         #self.plot_feature_maps(autoencoder, activations, x_test, encoder_layer_names, images_per_row)
         #self.plot_weights(autoencoder, encoder_layer_names, images_per_row)
-        #self.plot_dense_layer(autoencoder, encoder_layer_names, activations, y_test)
-        #self.plot_input_and_output(autoencoder, x_test)
-        self.plot_decoder_result_from_input(autoencoder, full_ae_layer_names, input)
+        self.plot_dense_layer(autoencoder, encoder_layer_names, activations, y_test)
+        self.plot_input_and_output(autoencoder, x_test)
+        #self.plot_decoder_result_from_input(autoencoder, full_ae_layer_names, input)
 
 
 if __name__ == "__main__":

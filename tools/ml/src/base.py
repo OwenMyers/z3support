@@ -1,4 +1,5 @@
 import os
+import tensorflow as tf
 from tensorflow.keras import backend as K
 import pickle
 import configparser
@@ -42,7 +43,6 @@ class MLToolMixin:
         assert os.path.exists(os.path.join(working_location, 'tensorboard_raw'))
         assert os.path.exists(os.path.join(working_location, 'study_data'))
 
-
         self.timestamp = self.config['Settings']['timestamp']
         self.Lx = int(self.config['Settings']['Lx'])
         self.Ly = int(self.config['Settings']['Ly'])
@@ -70,6 +70,9 @@ class MLToolMixin:
         self.variational = False
         if 'true' in self.config['Settings']['VARIATIONAL'].lower():
             self.variational = True
+        self.tensorboard_debugging = False
+        if 'true' in self.config['Settings']['TENSORBOARD_DEBUGGING'].lower():
+            self.tensorboard_debugging = True
         self.verbose = self.config['Settings']['VERBOSE']
         self.tensorboard_sub_dir = self.config['Settings']['TENSORBOARD_SUB_DIR']
         self.checkpoint_file = os.path.join(working_location, 'model_checkpoints',
@@ -80,6 +83,7 @@ class MLToolMixin:
             working_location, 'model_checkpoints',
             'pickled_compiled_model_{}.pkl'.format(self.config['Settings']['timestamp'])
         )
+        #self.debugging_logs_location = os.path.join(working_location, 'debugging_logs')
         self.best_model_file = os.path.join(
             working_location, 'models',
             'best_hyper_param_autoencoder_{}'.format(self.config['Settings']['timestamp'])
@@ -118,6 +122,10 @@ class MLToolMixin:
             save_weights_only=False
         )
         self.run_location = working_location
+
+        if self.tensorboard_debugging:
+            tf.debugging.experimental.enable_dump_debug_info(os.path.join(working_location, 'tensorboard_raw/hp_autoencoder/'), tensor_debug_mode="FULL_HEALTH",
+                                                             circular_buffer_size=-1)
 
         if self.quick_run:
             self.hp_batch_size = hp.HParam('batch_size', hp.Discrete([5]))

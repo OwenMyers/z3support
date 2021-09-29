@@ -14,6 +14,7 @@ from tensorflow.keras.layers import Input, Conv2D, Conv2DTranspose, BatchNormali
 from tensorflow.keras.callbacks import TensorBoard, EarlyStopping
 from tensorflow.keras import backend as K
 
+
 #tf.debugging.set_log_device_placement(True)
 os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
 METRIC_ACCURACY = 'accuracy'
@@ -205,25 +206,26 @@ class SearchTool(MLToolMixin):
                 'validation_data': (x_test, x_test),
                 'batch_size': hyper_params[self.hp_batch_size],
             })
+        callbacks = [TensorBoard(
+                        run_dir,
+                        update_freq=UPDATE_FREQ,
+                        profile_batch=0,
+                        histogram_freq=2,
+                        embeddings_freq=2,
+                        write_images=True,
+                        #write_steps_per_second=True,
+                    )]
+        if not self.tensorboard_debugging:
+            callbacks += [hp.KerasCallback(run_dir, hyper_params),
+                          self.checkpointer,
+                          EarlyStopping(monitor='loss', patience=self.early_stopping_patience),
+                          CustomCallbacks(autoencoder.to_json(), self.checkpoint_json_file),
+                          step_decay_schedule(initial_lr=0.0005, decay_factor=1.0, step_size=1)]
         kwargs.update({
             'epochs': self.epochs,
             'shuffle': True,
-            'callbacks': [
-                TensorBoard(
-                    run_dir,
-                    update_freq=UPDATE_FREQ,
-                    profile_batch=0,
-                    histogram_freq=2,
-                    embeddings_freq=2,
-                    write_images=True,
-                    #write_steps_per_second=True,
-                ),
-                hp.KerasCallback(run_dir, hyper_params),
-                self.checkpointer,
-                EarlyStopping(monitor='loss', patience=self.early_stopping_patience),
-                CustomCallbacks(autoencoder.to_json(), self.checkpoint_json_file),
-                step_decay_schedule(initial_lr=0.0005, decay_factor=1.0, step_size=1)
-            ]
+            'callbacks': callbacks,
+
         })
 
         autoencoder.fit(**kwargs)
@@ -292,20 +294,21 @@ class SearchTool(MLToolMixin):
                                     x_train
                                 )
                                 # After each run lets attempt to log a sample of activations for the different layers
-                                run_result.save(os.path.join(self.run_location, 'models', run_name + 'model_completion_save'))
-
-        best_autoencoder = tf.keras.models.load_model(self.checkpoint_file, custom_objects={'r_loss': r_loss})
-        best_autoencoder.save(self.best_model_file)
-        # Get the encoder piece of the autoencoder. We call this the "activation model". This is the full model up to
-        # the bottle neck.
-        layers_to_encoded = int(len(best_autoencoder.layers) / 2 + 1)
-        print(layers_to_encoded)
-        layer_activations = [layer.output for layer in best_autoencoder.layers[:layers_to_encoded]]
-        activation_model = models.Model(
-            inputs=best_autoencoder.input,
-            outputs=layer_activations
-        )
-        activation_model.save(self.best_activations_file)
+                                if not self.tensorboard_debugging:
+                                    run_result.save(os.path.join(self.run_location, 'models', run_name + 'model_completion_save'))
+        if not self.tensorboard_debugging:
+            best_autoencoder = tf.keras.models.load_model(self.checkpoint_file, custom_objects={'r_loss': r_loss})
+            best_autoencoder.save(self.best_model_file)
+            # Get the encoder piece of the autoencoder. We call this the "activation model". This is the full model up to
+            # the bottle neck.
+            layers_to_encoded = int(len(best_autoencoder.layers) / 2 + 1)
+            print(layers_to_encoded)
+            layer_activations = [layer.output for layer in best_autoencoder.layers[:layers_to_encoded]]
+            activation_model = models.Model(
+                inputs=best_autoencoder.input,
+                outputs=layer_activations
+            )
+            activation_model.save(self.best_activations_file)
 
 
 if __name__ == "__main__":
