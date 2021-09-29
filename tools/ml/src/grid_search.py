@@ -6,6 +6,7 @@ import tensorflow as tf
 import numpy as np
 import argparse
 import logging
+from tensorboard.plugins.hparams import api as hp
 from tools.ml.src.base import MLToolMixin, r_loss, vae_r_loss
 from tools.ml.src.custom_callbacks import CustomCallbacks, step_decay_schedule
 #from tensorflow.keras.datasets import mnist
@@ -20,6 +21,28 @@ disable_eager_execution()
 METRIC_ACCURACY = 'accuracy'
 UPDATE_FREQ = 600
 
+METRICS = [
+    hp.Metric(
+        "epoch_accuracy",
+        group="validation",
+        display_name="accuracy (val.)",
+    ),
+    hp.Metric(
+        "epoch_loss",
+        group="validation",
+        display_name="loss (val.)",
+    ),
+    hp.Metric(
+        "batch_accuracy",
+        group="train",
+        display_name="accuracy (train)",
+    ),
+    hp.Metric(
+        "batch_loss",
+        group="train",
+        display_name="loss (train)",
+    ),
+]
 
 #def load_mnist():
 #    (x_train, y_train), (x_test, y_test) = mnist.load_data()
@@ -206,12 +229,12 @@ class SearchTool(MLToolMixin):
                         update_freq=UPDATE_FREQ,
                         profile_batch=0,
                         histogram_freq=2,
-                        embeddings_freq=2,
+                        #embeddings_freq=2,
                         write_images=True,
                         #write_steps_per_second=True,
                     )]
         if not self.tensorboard_debugging:
-            callbacks += [tf.keras.callbacks.TensorBoard(log_dir=os.path.join(self.run_location, 'tensorboard_raw', self.tensorboard_sub_dir)),
+            callbacks += [
                           self.checkpointer,
                           EarlyStopping(monitor='loss', patience=self.early_stopping_patience),
                           CustomCallbacks(autoencoder.to_json(), self.checkpoint_json_file),
@@ -264,6 +287,14 @@ class SearchTool(MLToolMixin):
             self.hp_use_batch_normalization: self.hp_use_batch_normalization,
             self.hp_use_dropout: self.hp_use_dropout
         }
+
+        #with tf.summary.create_file_writer(
+        #    os.path.join(self.run_location, 'tensorboard_raw', self.tensorboard_sub_dir)
+        #).as_default():
+        #    hp.hparams_config(
+        #        hparams=[self.hp_batch_size, self.hp_n_layers, self.hp_feature_map_step, self.hp_stride_size, self.hp_use_batch_normalization, self.hp_use_dropout],
+        #        metrics=METRICS
+        #    )
         c += 1
         run_name = f"run-{c}"
         print('--- Starting trial: %s' % run_name)
@@ -273,6 +304,7 @@ class SearchTool(MLToolMixin):
             x_test,
             x_train
         )
+
         # After each run lets attempt to log a sample of activations for the different layers
         if not self.tensorboard_debugging:
             run_result.save(os.path.join(self.run_location, 'models', run_name + 'model_completion_save'))
