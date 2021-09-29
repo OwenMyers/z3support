@@ -22,3 +22,4 @@ tools/ml/settings/tmp_docker.conf
 tools/ml/study_data/
 notebooks/logs/
 tools/ml/autoencode.egg-info/
+tools/ml/debugging_logs/
