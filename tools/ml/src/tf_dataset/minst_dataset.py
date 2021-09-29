@@ -13,10 +13,10 @@ class MnistDataset:
         x_test = x_test.astype('float32') / 255.
         x_test = x_test.reshape(x_test.shape + (1,))
 
-        x_train = x_train[:1000]
-        y_train = y_train[:1000]
-        x_test = x_test[:1000]
-        y_test = y_test[:1000]
+        #x_train = x_train[:1000]
+        #y_train = y_train[:1000]
+        #x_test = x_test[:1000]
+        #y_test = y_test[:1000]
         if train:
             return x_train, y_train
         return x_test, y_test

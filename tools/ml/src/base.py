@@ -153,7 +153,10 @@ class MLToolMixin:
 
         :return: the keras model of the "best" model
         """
-        return keras.models.load_model(self.best_model_file, custom_objects={'r_loss': r_loss})
+        if self.variational:
+            return keras.models.load_model(self.best_model_file, custom_objects={'r_loss': self.vae_loss})
+        else:
+            return keras.models.load_model(self.best_model_file, custom_objects={'r_loss': r_loss})
 
     def get_checkpoint_model(self):
         """
@@ -192,7 +195,10 @@ class MLToolMixin:
 
         :return: the keras activations for the "best" model
         """
-        return keras.models.load_model(self.best_activations_file, custom_objects={'r_loss': r_loss})
+        if self.variational:
+            return keras.models.load_model(self.best_activations_file, custom_objects={'r_loss': self.vae_loss})
+        else:
+            return keras.models.load_model(self.best_activations_file, custom_objects={'r_loss': r_loss})
 
     def get_testing_data(self):
         if self.is_image:
@@ -322,5 +328,14 @@ class MLToolMixin:
         return path_list
 
 
+
 def r_loss(y_true, y_pred):
     return K.mean(K.square(y_true - y_pred), axis=[1, 2, 3])
+
+
+def vae_r_loss(y_true, y_pred):
+    r_loss_factor = 1000
+    vae_r_loss = K.mean(K.square(y_true - y_pred), axis=[1, 2, 3])
+    return r_loss_factor * vae_r_loss
+
+

@@ -7,16 +7,17 @@ import tensorflow as tf
 import numpy as np
 import argparse
 import logging
-from tools.ml.src.base import MLToolMixin, r_loss
+from tools.ml.src.base import MLToolMixin, r_loss, vae_r_loss
 from tools.ml.src.custom_callbacks import CustomCallbacks, step_decay_schedule
 #from tensorflow.keras.datasets import mnist
 from tensorflow.keras.layers import Input, Conv2D, Conv2DTranspose, BatchNormalization, LeakyReLU, Dropout, Activation, Flatten, Dense, Reshape, Lambda
 from tensorflow.keras.callbacks import TensorBoard, EarlyStopping
 from tensorflow.keras import backend as K
+#from tensorflow.python.framework.ops import disable_eager_execution
+#disable_eager_execution()
 
 
-#tf.debugging.set_log_device_placement(True)
-os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
+#os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
 METRIC_ACCURACY = 'accuracy'
 UPDATE_FREQ = 600,
 METRICS = [
@@ -82,6 +83,7 @@ class SearchTool(MLToolMixin):
         else:
             input_obj = Input(shape=(self.Lx * 2, self.Ly * 2, 1))
 
+
         x = Conv2D(
             self.feature_map_start,
             (3, 3),
@@ -114,10 +116,10 @@ class SearchTool(MLToolMixin):
         shape_before_flattening = tf.keras.backend.int_shape(x)[1:]
         x = Flatten()(x)
         if self.variational:
-            mu = Dense(self.z_dim, name='mu')(x)
-            log_var = Dense(self.z_dim, name='log_var')(x)
-            encoder_mu_log_var = Model(input_obj, (mu, log_var))
-            encoder_output = Lambda(self.variational_sampling, name='encoder_output')([mu, log_var])
+            self.mu = Dense(self.z_dim, name='mu')(x)
+            self.log_var = Dense(self.z_dim, name='log_var')(x)
+            encoder_mu_log_var = Model(input_obj, (self.mu, self.log_var))
+            encoder_output = Lambda(self.variational_sampling, name='encoder_output')([self.mu, self.log_var])
             encoder = Model(input_obj, encoder_output)
 
             decoder_input = Input(shape=(self.z_dim,), name='decoder_input')
@@ -178,12 +180,27 @@ class SearchTool(MLToolMixin):
         # autoencoder.summary()
         optimizer = tf.keras.optimizers.Adam(learning_rate=0.0005)
 
+        if self.variational:
+            def vae_kl_loss(y_true, y_pred):
+                kl_loss = -0.5 * K.sum(1 + self.log_var - K.square(self.mu) - K.exp(self.log_var), axis=1)
+                return kl_loss
+
+            def vae_loss(y_true, y_pred):
+                new_r_loss = vae_r_loss(y_true, y_pred)
+                kl_loss = vae_kl_loss(y_true, y_pred)
+                return new_r_loss + kl_loss
+
+            loss_in = vae_loss
+        else:
+            loss_in = r_loss
+
         autoencoder.compile(
             #optimizer='adadelta',
             optimizer=optimizer,
             #loss='binary_crossentropy',
-            loss=r_loss,
-            metrics=['accuracy']
+            loss=loss_in,
+            #metrics=['accuracy']
+            metrics=[vae_kl_loss, vae_r_loss]
         )
         autoencoder.summary()
         kwargs = {}
@@ -297,7 +314,11 @@ class SearchTool(MLToolMixin):
                                 if not self.tensorboard_debugging:
                                     run_result.save(os.path.join(self.run_location, 'models', run_name + 'model_completion_save'))
         if not self.tensorboard_debugging:
-            best_autoencoder = tf.keras.models.load_model(self.checkpoint_file, custom_objects={'r_loss': r_loss})
+            if self.variational:
+                check_loss = self.vae_loss
+            else:
+                check_loss = r_loss
+            best_autoencoder = tf.keras.models.load_model(self.checkpoint_file, custom_objects={'r_loss': check_loss})
             best_autoencoder.save(self.best_model_file)
             # Get the encoder piece of the autoencoder. We call this the "activation model". This is the full model up to
             # the bottle neck.
