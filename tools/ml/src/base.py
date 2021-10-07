@@ -155,7 +155,7 @@ class MLToolMixin:
         """
         if self.variational:
             def vae_kl_loss(y_true, y_pred):
-                kl_loss = -0.5 * K.sum(1 + self.log_var - K.square(self.mu) - K.exp(self.log_var), axis=1)
+                kl_loss = -0.5 * K.sum(1.0 + self.log_var - K.square(self.mu) - K.exp(self.log_var), axis=1)
                 return kl_loss
 
             def vae_loss(y_true, y_pred):
@@ -205,8 +205,9 @@ class MLToolMixin:
         """
         if self.variational:
             def vae_kl_loss(y_true, y_pred):
-                kl_loss = -0.5 * K.sum(1 + self.log_var - K.square(self.mu) - K.exp(self.log_var), axis=1)
+                kl_loss = -0.5 * K.sum(1.0 + self.log_var - K.square(self.mu) - K.exp(self.log_var), axis=1)
                 return kl_loss
+
 
             def vae_loss(y_true, y_pred):
                 new_r_loss = vae_r_loss(y_true, y_pred)
@@ -351,7 +352,7 @@ def r_loss(y_true, y_pred):
 
 
 def vae_r_loss(y_true, y_pred):
-    r_loss_factor = 1000
+    r_loss_factor = 1.0
     vae_r_loss = K.mean(K.square(y_true - y_pred), axis=[1, 2, 3])
     return r_loss_factor * vae_r_loss
 

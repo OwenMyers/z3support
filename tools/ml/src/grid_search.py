@@ -64,7 +64,7 @@ class SearchTool(MLToolMixin):
     def variational_sampling(args):
         mu, log_var = args
         epsilon = K.random_normal(shape=K.shape(mu), mean=0.0, stddev=1.0)
-        return mu + K.exp(log_var / 2) * epsilon
+        return mu + K.exp(log_var / 2.0) * epsilon
 
     def train_test_model(self, run_dir, hyper_params, x_test, x_train):
         """
@@ -121,6 +121,7 @@ class SearchTool(MLToolMixin):
             self.log_var = Dense(self.z_dim, name='log_var')(x)
             encoder_mu_log_var = Model(input_obj, (self.mu, self.log_var))
             encoder_output = Lambda(self.variational_sampling, name='encoder_output')([self.mu, self.log_var])
+            print(f"encoder_output: {encoder_output}")
             encoder = Model(input_obj, encoder_output)
 
             decoder_input = Input(shape=(self.z_dim,), name='decoder_input')
@@ -183,8 +184,17 @@ class SearchTool(MLToolMixin):
 
         if self.variational:
             def vae_kl_loss(y_true, y_pred):
-                kl_loss = -0.5 * K.sum(1 + self.log_var - K.square(self.mu) - K.exp(self.log_var), axis=1)
+                kl_loss = -0.5 * K.sum(1.0 + self.log_var - K.square(self.mu) - K.exp(self.log_var), axis=1)
                 return kl_loss
+
+            def raw_log_var(y_true, y_pred):
+                return self.log_var
+
+            def raw_mu(y_true, y_pred):
+                return self.mu
+
+            def raw_square_mu(y_true, y_pred):
+                return K.square(self.mu)
 
             def vae_loss(y_true, y_pred):
                 new_r_loss = vae_r_loss(y_true, y_pred)
@@ -201,7 +211,7 @@ class SearchTool(MLToolMixin):
             #loss='binary_crossentropy',
             loss=loss_in,
             #metrics=['accuracy']
-            metrics=[vae_kl_loss, vae_r_loss]
+            metrics=[vae_kl_loss, vae_r_loss, raw_log_var, raw_mu, raw_square_mu]
         )
         autoencoder.summary()
         kwargs = {}
