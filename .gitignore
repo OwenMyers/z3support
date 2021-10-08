@@ -23,3 +23,6 @@ tools/ml/study_data/
 notebooks/logs/
 tools/ml/autoencode.egg-info/
 tools/ml/debugging_logs/
+tools/ml/gdl_code_repeate/figures/
+tools/ml/gdl_code_repeate/run/
+
