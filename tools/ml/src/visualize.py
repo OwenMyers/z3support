@@ -1,6 +1,7 @@
 import logging
 from tensorflow.keras.layers import Input
 from tensorflow.keras.models import Model
+import tensorflow as tf
 import random
 from matplotlib import pyplot as plt
 import numpy as np
@@ -240,10 +241,18 @@ class VizTool(MLToolMixin):
         #self.plot_decoder_result_from_input(autoencoder, full_ae_layer_names, input)
 
 
+def external_viz_in_out(path_to_model):
+    from gdl_code_repeate.vae_model import VariationalAutoencoder
+    from gdl_code_repeate.utils.loaders import load_model
+    loaded_model = load_model(VariationalAutoencoder, path_to_model)
+    print('Hhhhhhhhhhhhhhey')
+
+
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO)
-    parser = argparse.ArgumentParser(description='Run a parameter sweep to find the best autoencoder.', default=None)
-    parser.add_argument('--external_model', type=str, help='Path to model', required=False)
+    parser = argparse.ArgumentParser(description='Run a parameter sweep to find the best autoencoder.')
+    parser.add_argument('--external_model', type=str, help='Path to model', required=False, default=None)
+    parser.add_argument('--external_type', type=str, help='Specifies if the saved model is a tf format or h5', required=False, default='tf')
     parser.add_argument('--settings', type=str, help='Settings file location', required=False)
     parser.add_argument('--run-location', type=str, help='Path you want the run to be done at', default='./')
     parser.add_argument('--use-current-checkpoint', help='If this is used then the current checkpoint in'
@@ -252,5 +261,8 @@ if __name__ == "__main__":
                                                          action='store_true')
     args = parser.parse_args()
 
-    tool = VizTool(args.settings, args.run_location, args.use_current_checkpoint)
-    tool.main()
+    if args.external_model is not None:
+        external_viz_in_out(args.external_model)
+    else:
+        tool = VizTool(args.settings, args.run_location, args.use_current_checkpoint)
+        tool.main()
