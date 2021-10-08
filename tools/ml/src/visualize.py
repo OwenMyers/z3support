@@ -242,8 +242,9 @@ class VizTool(MLToolMixin):
 
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO)
-    parser = argparse.ArgumentParser(description='Run a parameter sweep to find the best autoencoder.')
-    parser.add_argument('--settings', type=str, help='Settings file location', required=True)
+    parser = argparse.ArgumentParser(description='Run a parameter sweep to find the best autoencoder.', default=None)
+    parser.add_argument('--external_model', type=str, help='Path to model', required=False)
+    parser.add_argument('--settings', type=str, help='Settings file location', required=False)
     parser.add_argument('--run-location', type=str, help='Path you want the run to be done at', default='./')
     parser.add_argument('--use-current-checkpoint', help='If this is used then the current checkpoint in'
                                                          'model_checkpoints will be used instead of the best model.'

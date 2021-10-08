@@ -201,8 +201,6 @@ class VariationalAutoencoder():
             , callbacks = callbacks_list
         )
 
-
-
     def train_with_generator(self, data_flow, epochs, steps_per_epoch, run_folder, print_every_n_batches = 100, initial_epoch = 0, lr_decay = 1, ):
 
         custom_callback = CustomCallback(run_folder, print_every_n_batches, initial_epoch, self)
@@ -225,8 +223,6 @@ class VariationalAutoencoder():
             , steps_per_epoch=steps_per_epoch 
             )
 
-
-    
     def plot_model(self, run_folder):
         plot_model(self.model, to_file=os.path.join(run_folder ,'viz/model.png'), show_shapes = True, show_layer_names = True)
         plot_model(self.encoder, to_file=os.path.join(run_folder ,'viz/encoder.png'), show_shapes = True, show_layer_names = True)

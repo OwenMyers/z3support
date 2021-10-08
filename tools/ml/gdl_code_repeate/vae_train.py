@@ -7,8 +7,6 @@ from utils.loaders import load_mnist
 from tensorflow.python.framework.ops import disable_eager_execution
 disable_eager_execution()
 
-
-
 # run params
 SECTION = 'vae'
 RUN_ID = '0002'
@@ -45,26 +43,21 @@ else:
 vae.encoder.summary()
 vae.decoder.summary()
 
-
-
 LEARNING_RATE = 0.0005
 R_LOSS_FACTOR = 1000
 
-
 vae.compile(LEARNING_RATE, R_LOSS_FACTOR)
-
-
 
 BATCH_SIZE = 32
 EPOCHS = 200
 PRINT_EVERY_N_BATCHES = 100
 INITIAL_EPOCH = 0
 vae.train(     
-x_train
-, batch_size = BATCH_SIZE
-, epochs = EPOCHS
-, run_folder = RUN_FOLDER
-, print_every_n_batches = PRINT_EVERY_N_BATCHES
-, initial_epoch = INITIAL_EPOCH
+    x_train
+    , batch_size = BATCH_SIZE
+    , epochs = EPOCHS
+    , run_folder = RUN_FOLDER
+    , print_every_n_batches = PRINT_EVERY_N_BATCHES
+    , initial_epoch = INITIAL_EPOCH
 )
 
