@@ -150,16 +150,21 @@ class VizTool(MLToolMixin):
             plt.imshow(display_grid, aspect='auto', cmap='viridis')
             plt.savefig(os.path.join(self.figures_project_dir, layer_name + 'layer_weights.png'))
 
-    def plot_input_and_output(self, autoencoder, x_test):
+    @staticmethod
+    def plot_input_and_output(autoencoder, x_test, figures_project_dir, model_is_split=False):
         x1 = next(iter(x_test))
         x2 = next(iter(x_test))
         x = np.array([x1, x2])
-        y = autoencoder.predict(x)
+        if model_is_split:
+            z_points = autoencoder.encoder.predict(x)
+            y = autoencoder.decoder.predict(z_points)
+        else:
+            y = autoencoder.predict(x)
         #y = np.array(y[:,:,0,:])
         plt.imshow(x[0], aspect='auto', cmap='viridis')
-        plt.savefig(os.path.join(self.figures_project_dir, 'example_in.png'))
+        plt.savefig(os.path.join(figures_project_dir, 'example_in.png'))
         plt.imshow(y[0], aspect='auto', cmap='viridis')
-        plt.savefig(os.path.join(self.figures_project_dir, 'example_out.png'))
+        plt.savefig(os.path.join(figures_project_dir, 'example_out.png'))
 
     def plot_dense_layer(self, autoencoder, layer_names, activations, labels):
         #weights = autoencoder.get_layer(name='dense_encoder_output').get_weights()
@@ -171,27 +176,29 @@ class VizTool(MLToolMixin):
                 plt.savefig(os.path.join(self.figures_project_dir, 'dense_layer.png'))
                 #plt.xlim()
 
-    def plot_decoder_result_from_input(self, autoencoder, layer_names, input):
+    @staticmethod
+    def plot_decoder_result_from_input(autoencoder, figures_project_dir, start_loc=[], end_loc=[], layer_names=None, model_is_split=False):
         # Trying to do this using suggestion https://stackoverflow.com/questions/49193510/how-to-split-a-model-trained-in-keras
-        started = False
-        for i, layer_name in enumerate(layer_names):  # Displays the feature maps
-            if started:
-                if i+1 > len(layer_names)-1:
-                    break
-                current_layer = autoencoder.layers[i+1]
-                decoder = current_layer(decoder)
-            elif layer_name == 'dense_encoder_output':
-                started = True
-                print("hey hey")
-                decoder_input = Input(autoencoder.layers[i+1].input_shape[1:])
-                decoder = decoder_input
-                decoder = autoencoder.layers[i + 1](decoder)
-        decoder = Model(inputs=decoder_input, outputs=decoder)
+        if model_is_split:
+            decoder = autoencoder.decoder
+        else:
+            started = False
+            for i, layer_name in enumerate(layer_names):
+                if started:
+                    if i+1 > len(layer_names)-1:
+                        break
+                    current_layer = autoencoder.layers[i+1]
+                    decoder = current_layer(decoder)
+                elif layer_name == 'dense_encoder_output':
+                    started = True
+                    print("hey hey")
+                    decoder_input = Input(autoencoder.layers[i+1].input_shape[1:])
+                    decoder = decoder_input
+                    decoder = autoencoder.layers[i + 1](decoder)
+            decoder = Model(inputs=decoder_input, outputs=decoder)
 
         # create the path that that we want to cut across
         num_steps = 300
-        start_loc = [-15.8, -60.1]
-        end_loc = [33.4, -31.7]
         loc_list = []
         running_loc = [None, None]
         x_step_size = (end_loc[0] - start_loc[0])/num_steps
@@ -205,7 +212,7 @@ class VizTool(MLToolMixin):
         results = decoder.predict(loc_list)
         for l, cur_result in enumerate(results):
             plt.imshow(cur_result, aspect='auto', cmap='viridis')
-            plt.savefig(os.path.join(self.figures_project_dir, 'latent_slice_video', f'slice_{l}.png'))
+            plt.savefig(os.path.join(figures_project_dir, 'latent_slice_video', f'slice_{l}.png'))
 
     def main(self):
         if self.use_current_checkpoint:
@@ -237,14 +244,37 @@ class VizTool(MLToolMixin):
         #self.plot_feature_maps(autoencoder, activations, x_test, encoder_layer_names, images_per_row)
         #self.plot_weights(autoencoder, encoder_layer_names, images_per_row)
         self.plot_dense_layer(autoencoder, encoder_layer_names, activations, y_test)
-        self.plot_input_and_output(autoencoder, x_test)
-        #self.plot_decoder_result_from_input(autoencoder, full_ae_layer_names, input)
+        self.plot_input_and_output(autoencoder, x_test, self.figures_project_dir)
+        #self.plot_decoder_result_from_input(autoencoder, self.figures_project_dir, start_loc=[-15.8, -60.1], end_loc=[33.4, -31.7],layer_names=full_ae_layer_names)
 
 
-def external_viz_in_out(path_to_model):
+def external_viz_in_out(path_to_model, settings_file, ignore_this_run_loc):
     from gdl_code_repeate.vae_model import VariationalAutoencoder
     from gdl_code_repeate.utils.loaders import load_model
     loaded_model = load_model(VariationalAutoencoder, path_to_model)
+    viz_tool = VizTool(settings_file, ignore_this_run_loc, False)
+    x_test = viz_tool.get_testing_data()
+    y_test = viz_tool.get_testing_data_labels()
+    viz_tool.plot_input_and_output(loaded_model, x_test[:1000], 'gdl_code_repeate/figures/', model_is_split=True)
+
+    n_to_show = 5000
+    example_idx = np.random.choice(range(len(x_test)), n_to_show)
+    example_images = x_test[example_idx]
+    example_labels = y_test[example_idx]
+
+    z_points = loaded_model.encoder.predict(example_images)
+
+    min_x = min(z_points[:, 0])
+    max_x = max(z_points[:, 0])
+    min_y = min(z_points[:, 1])
+    max_y = max(z_points[:, 1])
+
+    plt.figure()
+    plt.scatter(z_points[:, 0], z_points[:, 1], c=example_labels, alpha=0.5, s=2)
+    plt.savefig('gdl_code_repeate/figures/vae_latent_space.png', dpi=200)
+
+    #viz_tool.plot_decoder_result_from_input(loaded_model, 'gdl_code_repeate/figures/', start_loc=[-0.75, 1.5], end_loc=[2.0, 1.5], model_is_split=True)
+    viz_tool.plot_decoder_result_from_input(loaded_model, 'gdl_code_repeate/figures/', start_loc=[-0.75, 1.5], end_loc=[-1.5, 0.0], model_is_split=True)
     print('Hhhhhhhhhhhhhhey')
 
 
@@ -262,7 +292,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     if args.external_model is not None:
-        external_viz_in_out(args.external_model)
+        external_viz_in_out(args.external_model, args.settings, args.run_location)
     else:
         tool = VizTool(args.settings, args.run_location, args.use_current_checkpoint)
         tool.main()
