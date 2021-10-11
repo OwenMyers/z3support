@@ -352,8 +352,8 @@ def r_loss(y_true, y_pred):
 
 
 def vae_r_loss(y_true, y_pred):
-    r_loss_factor = 1.0
-    vae_r_loss = K.mean(K.square(y_true - y_pred), axis=[1, 2, 3])
-    return r_loss_factor * vae_r_loss
+    r_loss_factor = 100
+    tmp_r_loss = K.mean(K.square(y_true - y_pred), axis=[1, 2, 3])
+    return r_loss_factor * tmp_r_loss
 
 

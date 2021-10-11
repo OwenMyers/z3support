@@ -1,4 +1,6 @@
 import os
+from tensorflow.keras.utils import plot_model
+from gdl_code_repeate.vae_model import VariationalAutoencoder
 import matplotlib.pyplot as plt
 from abc import ABCMeta
 from tensorflow.keras.models import Model
@@ -67,197 +69,245 @@ class SearchTool(MLToolMixin):
         return mu + K.exp(log_var / 2.0) * epsilon
 
     def train_test_model(self, run_dir, hyper_params, x_test, x_train):
-        """
-        This method constructs the model that will be trained and then trains it. We don't know the best model
-        architecture apriori so we will be searching across different architectures.
-
-        Arguments:
-            hyper_params (Hparam): used to set the current hyper parameter that we are looping over. E.g.
-            ``hyper_params[self.hp_stride_size] will get the stride we currently want to build the model with
-            determined by where we are in the hyper parameter loop.
-            x_test: testing dataset
-            x_train: training dataset
-        """
-
-        if self.is_image:
-            input_obj = Input(shape=(self.Lx, self.Ly, 1))
-        else:
-            input_obj = Input(shape=(self.Lx * 2, self.Ly * 2, 1))
-
-
-        x = Conv2D(
-            self.feature_map_start,
-            (3, 3),
-            strides=1,
-            padding='same',
-        )(input_obj)
-        if hyper_params[self.hp_use_batch_normalization]:
-            x = BatchNormalization()(x)
-        x = LeakyReLU()(x)
-
-        fm = None
-        for i in range(hyper_params[self.hp_n_layers]):
-            if i == hyper_params[self.hp_n_layers] - 1:
-                print("Done expanding feature map for now")
-            else:
-                fm = self.feature_map_start + (i + 1) * hyper_params[self.hp_feature_map_step]
-            x = Conv2D(
-                fm,
-                (3, 3),
-                strides=hyper_params[self.hp_stride_size],
-                padding='same',
-            )(x)
-            x = LeakyReLU()(x)
-            if hyper_params[self.hp_use_batch_normalization]:
-                x = BatchNormalization()(x)
-            if hyper_params[self.hp_use_dropout]:
-                x = Dropout(rate=0.25)(x)
-        max_fm = fm
-        #if hyper_params[self.use_dense]:
-        shape_before_flattening = tf.keras.backend.int_shape(x)[1:]
-        x = Flatten()(x)
-        if self.variational:
-            self.mu = Dense(self.z_dim, name='mu')(x)
-            self.log_var = Dense(self.z_dim, name='log_var')(x)
-            encoder_mu_log_var = Model(input_obj, (self.mu, self.log_var))
-            encoder_output = Lambda(self.variational_sampling, name='encoder_output')([self.mu, self.log_var])
-            print(f"encoder_output: {encoder_output}")
-            encoder = Model(input_obj, encoder_output)
-
-            decoder_input = Input(shape=(self.z_dim,), name='decoder_input')
-            x = Dense(np.prod(shape_before_flattening))(decoder_input)
-        else:
-            x = Dense(self.z_dim, name='dense_encoder_output')(x)
-            x = Dense(np.prod(shape_before_flattening))(x)
-        x = Reshape(shape_before_flattening)(x)
-
-        for i in range(hyper_params[self.hp_n_layers]):
-            if i == 0:
-                fm = max_fm
-                x = Conv2DTranspose(
-                    fm,
-                    (3, 3),
-                    strides=1,
-                    activation='relu',
-                    padding='same',
-                    use_bias=True
-                )(x)
-                x = LeakyReLU()(x)
-                if hyper_params[self.hp_use_batch_normalization]:
-                    x = BatchNormalization()(x)
-                if hyper_params[self.hp_use_dropout]:
-                    x = Dropout(rate=0.25)(x)
-            else:
-                fm = max_fm - i * hyper_params[self.hp_feature_map_step]
-            x = Conv2DTranspose(
-                fm,
-                (3, 3),
-                strides=hyper_params[self.hp_stride_size],
-                activation='relu',
-                padding='same',
-                use_bias=True
-            )(x)
-            x = LeakyReLU()(x)
-            if hyper_params[self.hp_use_batch_normalization]:
-                x = BatchNormalization()(x)
-            if hyper_params[self.hp_use_dropout]:
-                x = Dropout(rate=0.25)(x)
-
-        x = Conv2DTranspose(
-            1,
-            (3, 3),
-            strides=1,
-            activation='relu',
-            padding='same',
-            use_bias=True
-        )(x)
-        decoded = Activation('sigmoid')(x)
-        if self.variational:
-            decoder = Model(decoder_input, decoded)
-            model_input = input_obj
-            model_output = decoder(encoder_output)
-            autoencoder = Model(model_input, model_output)
-        else:
-            autoencoder = Model(input_obj, decoded)
-        # autoencoder.summary()
-        optimizer = tf.keras.optimizers.Adam(learning_rate=0.0005)
-
-        if self.variational:
-            def vae_kl_loss(y_true, y_pred):
-                kl_loss = -0.5 * K.sum(1.0 + self.log_var - K.square(self.mu) - K.exp(self.log_var), axis=1)
-                return kl_loss
-
-            def raw_log_var(y_true, y_pred):
-                return self.log_var
-
-            def raw_mu(y_true, y_pred):
-                return self.mu
-
-            def raw_square_mu(y_true, y_pred):
-                return K.square(self.mu)
-
-            def vae_loss(y_true, y_pred):
-                new_r_loss = vae_r_loss(y_true, y_pred)
-                kl_loss = vae_kl_loss(y_true, y_pred)
-                return new_r_loss + kl_loss
-
-            loss_in = vae_loss
-        else:
-            loss_in = r_loss
-
-        autoencoder.compile(
-            #optimizer='adadelta',
-            optimizer=optimizer,
-            #loss='binary_crossentropy',
-            loss=loss_in,
-            #metrics=['accuracy']
-            metrics=[vae_kl_loss, vae_r_loss, raw_log_var, raw_mu, raw_square_mu]
+        vae = VariationalAutoencoder(
+            input_dim=(28, 28, 1)
+            , encoder_conv_filters=[32, 64, 64, 64]
+            , encoder_conv_kernel_size=[3, 3, 3, 3]
+            , encoder_conv_strides=[1, 2, 2, 1]
+            , decoder_conv_t_filters=[64, 64, 32, 1]
+            , decoder_conv_t_kernel_size=[3, 3, 3, 3]
+            , decoder_conv_t_strides=[1, 2, 2, 1]
+            , z_dim=2
         )
-        autoencoder.summary()
-        kwargs = {}
-        if self.is_image:
-            # A possible workaround for breakage in shapes (but seems to currently be working) : https: // github.com / tensorflow / tensorflow / issues / 32912
-            #x_train = x_train.prefetch(tf.data.AUTOTUNE)
-            #x_train = x_train.batch(hyper_params[self.hp_batch_size], drop_remainder=True)
+        learning_rate = 0.0005
+        self.learning_rate = learning_rate
+        r_loss_factor = 1000
 
-            kwargs.update({
-                #'validation_data': (x_test, x_test)
-                'x': x_train,
-                'y': x_train,
-                #'validation_data': (x_test, x_test),
-                'batch_size': hyper_params[self.hp_batch_size],
-            })
-        else:
-            kwargs.update({
-                'x': x_train,
-                'y': x_train,
-                'validation_data': (x_test, x_test),
-                'batch_size': hyper_params[self.hp_batch_size],
-            })
-        callbacks = [TensorBoard(
-                        run_dir,
-                        update_freq=UPDATE_FREQ,
-                        profile_batch=0,
-                        histogram_freq=2,
-                        #embeddings_freq=2,
-                        write_images=True,
-                        #write_steps_per_second=True,
-                    )]
-        if not self.tensorboard_debugging:
-            callbacks += [#hp.KerasCallback(run_dir, hyper_params),
-                          self.checkpointer,
-                          EarlyStopping(monitor='loss', patience=self.early_stopping_patience),
-                          CustomCallbacks(autoencoder.to_json(), self.checkpoint_json_file),
-                          step_decay_schedule(initial_lr=0.0005, decay_factor=1.0, step_size=1)]
-        kwargs.update({
-            'epochs': self.epochs,
-            'shuffle': True,
-            'callbacks': callbacks,
+        ### COMPILATION
+        def vae_r_loss(y_true, y_pred):
+            r_loss = K.mean(K.square(y_true - y_pred), axis = [1,2,3])
+            return r_loss_factor * r_loss
 
-        })
+        def vae_kl_loss(y_true, y_pred):
+            kl_loss =  -0.5 * K.sum(1 + vae.log_var - K.square(vae.mu) - K.exp(vae.log_var), axis = 1)
+            return kl_loss
 
-        autoencoder.fit(**kwargs)
-        return autoencoder
+        def vae_loss(y_true, y_pred):
+            r_loss = vae_r_loss(y_true, y_pred)
+            kl_loss = vae_kl_loss(y_true, y_pred)
+            return  r_loss + kl_loss
+
+        optimizer = tf.keras.optimizers.Adam(lr=learning_rate)
+        vae.model.compile(optimizer=optimizer, loss = vae_loss,  metrics = [vae_r_loss, vae_kl_loss])
+
+        vae.model.fit(
+            x_train
+            , x_train
+            , batch_size = 32
+            , shuffle = True
+            , epochs = 10
+            , initial_epoch = 0
+        )
+        return vae.model
+
+    #def train_test_model(self, run_dir, hyper_params, x_test, x_train):
+    #    """
+    #    This method constructs the model that will be trained and then trains it. We don't know the best model
+    #    architecture apriori so we will be searching across different architectures.
+
+    #    Arguments:
+    #        hyper_params (Hparam): used to set the current hyper parameter that we are looping over. E.g.
+    #        ``hyper_params[self.hp_stride_size] will get the stride we currently want to build the model with
+    #        determined by where we are in the hyper parameter loop.
+    #        x_test: testing dataset
+    #        x_train: training dataset
+    #    """
+
+    #    if self.is_image:
+    #        input_obj = Input(shape=(self.Lx, self.Ly, 1))
+    #    else:
+    #        input_obj = Input(shape=(self.Lx * 2, self.Ly * 2, 1))
+
+
+    #    x = Conv2D(
+    #        self.feature_map_start,
+    #        (3, 3),
+    #        strides=1,
+    #        padding='same',
+    #    )(input_obj)
+    #    if hyper_params[self.hp_use_batch_normalization]:
+    #        x = BatchNormalization()(x)
+    #    x = LeakyReLU()(x)
+
+    #    fm = None
+    #    for i in range(hyper_params[self.hp_n_layers]):
+    #        if i == hyper_params[self.hp_n_layers] - 1:
+    #            print("Done expanding feature map for now")
+    #        else:
+    #            fm = self.feature_map_start + (i + 1) * hyper_params[self.hp_feature_map_step]
+    #        x = Conv2D(
+    #            fm,
+    #            (3, 3),
+    #            strides=hyper_params[self.hp_stride_size],
+    #            padding='same',
+    #        )(x)
+    #        x = LeakyReLU()(x)
+    #        if hyper_params[self.hp_use_batch_normalization]:
+    #            x = BatchNormalization()(x)
+    #        if hyper_params[self.hp_use_dropout]:
+    #            x = Dropout(rate=0.25)(x)
+    #    x = Conv2D(
+    #        fm,
+    #        (3, 3),
+    #        strides=1,
+    #        padding='same',
+    #    )(x)
+    #    x = LeakyReLU()(x)
+    #    max_fm = fm
+    #    #if hyper_params[self.use_dense]:
+    #    shape_before_flattening = tf.keras.backend.int_shape(x)[1:]
+    #    x = Flatten()(x)
+    #    if self.variational:
+    #        self.mu = Dense(self.z_dim, name='mu')(x)
+    #        self.log_var = Dense(self.z_dim, name='log_var')(x)
+    #        encoder_mu_log_var = Model(input_obj, (self.mu, self.log_var))
+    #        encoder_output = Lambda(self.variational_sampling, name='encoder_output')([self.mu, self.log_var])
+    #        encoder = Model(input_obj, encoder_output)
+
+    #        decoder_input = Input(shape=(self.z_dim,), name='decoder_input')
+    #        x = Dense(np.prod(shape_before_flattening))(decoder_input)
+    #    else:
+    #        x = Dense(self.z_dim, name='dense_encoder_output')(x)
+    #        x = Dense(np.prod(shape_before_flattening))(x)
+    #    x = Reshape(shape_before_flattening)(x)
+
+    #    for i in range(hyper_params[self.hp_n_layers]):
+    #        if i == 0:
+    #            fm = max_fm
+    #            x = Conv2DTranspose(
+    #                fm,
+    #                (3, 3),
+    #                strides=1,
+    #                activation='relu',
+    #                padding='same',
+    #                use_bias=True
+    #            )(x)
+    #            x = LeakyReLU()(x)
+    #            if hyper_params[self.hp_use_batch_normalization]:
+    #                x = BatchNormalization()(x)
+    #            if hyper_params[self.hp_use_dropout]:
+    #                x = Dropout(rate=0.25)(x)
+    #        else:
+    #            fm = max_fm - i * hyper_params[self.hp_feature_map_step]
+    #        x = Conv2DTranspose(
+    #            fm,
+    #            (3, 3),
+    #            strides=hyper_params[self.hp_stride_size],
+    #            activation='relu',
+    #            padding='same',
+    #            use_bias=True
+    #        )(x)
+    #        x = LeakyReLU()(x)
+    #        if hyper_params[self.hp_use_batch_normalization]:
+    #            x = BatchNormalization()(x)
+    #        if hyper_params[self.hp_use_dropout]:
+    #            x = Dropout(rate=0.25)(x)
+
+    #    x = Conv2DTranspose(
+    #        1,
+    #        (3, 3),
+    #        strides=1,
+    #        activation='relu',
+    #        padding='same',
+    #        use_bias=True
+    #    )(x)
+    #    decoded = Activation('sigmoid')(x)
+    #    if self.variational:
+    #        decoder = Model(decoder_input, decoded)
+    #        model_output = decoder(encoder_output)
+    #        autoencoder = Model(input_obj, model_output)
+    #    else:
+    #        autoencoder = Model(input_obj, decoded)
+    #    # autoencoder.summary()
+    #    optimizer = tf.keras.optimizers.Adam(learning_rate=0.0005)
+
+    #    if self.variational:
+    #        def vae_kl_loss(y_true, y_pred):
+    #            kl_loss = -0.5 * K.sum(1.0 + self.log_var - K.square(self.mu) - K.exp(self.log_var), axis=1)
+    #            return kl_loss
+
+    #        def raw_log_var(y_true, y_pred):
+    #            return self.log_var
+
+    #        def raw_mu(y_true, y_pred):
+    #            return self.mu
+
+    #        def raw_square_mu(y_true, y_pred):
+    #            return K.square(self.mu)
+
+    #        def vae_loss(y_true, y_pred):
+    #            new_r_loss = vae_r_loss(y_true, y_pred)
+    #            kl_loss = vae_kl_loss(y_true, y_pred)
+    #            return new_r_loss + kl_loss
+
+    #        loss_in = vae_loss
+    #    else:
+    #        loss_in = r_loss
+
+    #    autoencoder.compile(
+    #        #optimizer='adadelta',
+    #        optimizer=optimizer,
+    #        #loss='binary_crossentropy',
+    #        loss=loss_in,
+    #        #metrics=['accuracy']
+    #        metrics=[vae_kl_loss, vae_r_loss, raw_log_var, raw_mu, raw_square_mu]
+    #    )
+    #    autoencoder.summary()
+    #    plot_model(autoencoder, to_file=os.path.join('figures', 'model_visual.png'), show_shapes=True, show_layer_names=True)
+    #    kwargs = {}
+    #    if self.is_image:
+    #        # A possible workaround for breakage in shapes (but seems to currently be working) : https: // github.com / tensorflow / tensorflow / issues / 32912
+    #        #x_train = x_train.prefetch(tf.data.AUTOTUNE)
+    #        #x_train = x_train.batch(hyper_params[self.hp_batch_size], drop_remainder=True)
+
+    #        kwargs.update({
+    #            #'validation_data': (x_test, x_test)
+    #            'x': x_train,
+    #            'y': x_train,
+    #            #'validation_data': (x_test, x_test),
+    #            'batch_size': hyper_params[self.hp_batch_size],
+    #        })
+    #    else:
+    #        kwargs.update({
+    #            'x': x_train,
+    #            'y': x_train,
+    #            'validation_data': (x_test, x_test),
+    #            'batch_size': hyper_params[self.hp_batch_size],
+    #        })
+    #    callbacks = [TensorBoard(
+    #                    run_dir,
+    #                    update_freq=UPDATE_FREQ,
+    #                    profile_batch=0,
+    #                    histogram_freq=2,
+    #                    #embeddings_freq=2,
+    #                    write_images=True,
+    #                    #write_steps_per_second=True,
+    #                )]
+    #    if not self.tensorboard_debugging:
+    #        callbacks += [#hp.KerasCallback(run_dir, hyper_params),
+    #                      self.checkpointer,
+    #                      EarlyStopping(monitor='loss', patience=self.early_stopping_patience),
+    #                      CustomCallbacks(autoencoder.to_json(), self.checkpoint_json_file),
+    #                      step_decay_schedule(initial_lr=0.0005, decay_factor=1.0, step_size=1)]
+    #    kwargs.update({
+    #        'epochs': self.epochs,
+    #        'shuffle': True,
+    #        'callbacks': callbacks,
+
+    #    })
+
+    #    autoencoder.fit(**kwargs)
+    #    return autoencoder
 
     def run(self, run_dir, hyper_params, x_test, x_train):
         return self.train_test_model(run_dir, hyper_params, x_test, x_train)
