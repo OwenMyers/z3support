@@ -69,46 +69,22 @@ class SearchTool(MLToolMixin):
         return mu + K.exp(log_var / 2.0) * epsilon
 
     def train_test_model(self, run_dir, hyper_params, x_test, x_train):
-        vae = VariationalAutoencoder(
-            input_dim=(28, 28, 1)
-            , encoder_conv_filters=[32, 64, 64, 64]
-            , encoder_conv_kernel_size=[3, 3, 3, 3]
-            , encoder_conv_strides=[1, 2, 2, 1]
-            , decoder_conv_t_filters=[64, 64, 32, 1]
-            , decoder_conv_t_kernel_size=[3, 3, 3, 3]
-            , decoder_conv_t_strides=[1, 2, 2, 1]
-            , z_dim=2
-        )
-        learning_rate = 0.0005
-        self.learning_rate = learning_rate
-        r_loss_factor = 1000
 
-        ### COMPILATION
-        def vae_r_loss(y_true, y_pred):
-            r_loss = K.mean(K.square(y_true - y_pred), axis=[1, 2, 3])
-            return r_loss_factor * r_loss
+        import tf_vae
+        optimizer = tf.keras.optimizers.Adam(1e-4)
+        train_images = tf_vae.preprocess_images(x_train)
+        test_images = tf_vae.preprocess_images(x_test)
+        print('hei')
 
-        def vae_kl_loss(y_true, y_pred):
-            kl_loss = -0.5 * K.sum(1 + vae.log_var - K.square(vae.mu) - K.exp(vae.log_var), axis=1)
-            return kl_loss
-
-        def vae_loss(y_true, y_pred):
-            r_loss = vae_r_loss(y_true, y_pred)
-            kl_loss = vae_kl_loss(y_true, y_pred)
-            return r_loss + kl_loss
-
-        optimizer = tf.keras.optimizers.Adam(lr=learning_rate)
-        vae.model.compile(optimizer=optimizer, loss=vae_loss,  metrics=[vae_r_loss, vae_kl_loss])
-
-        vae.model.fit(
-            x_train,
-            x_train,
-            batch_size=32,
-            shuffle=True,
-            epochs=10,
-            initial_epoch=0
-        )
-        return vae.model
+        #vae.model.fit(
+        #    x_train,
+        #    x_train,
+        #    batch_size=32,
+        #    shuffle=True,
+        #    epochs=10,
+        #    initial_epoch=0
+        #)
+        #return vae.model
 
     #def train_test_model(self, run_dir, hyper_params, x_test, x_train):
     #    """
