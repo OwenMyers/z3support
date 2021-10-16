@@ -130,32 +130,22 @@ def main():
     for test_batch in test_dataset.take(1):
         test_sample = test_batch[0:num_examples_to_generate, :, :, :]
 
-    def compute_loss(y_in, y_out):
-        mean, logvar = model.encode(y_in)
-        z = model.reparameterize(mean, logvar)
-        x_logit = model.decode(z)
-        cross_ent = tf.nn.sigmoid_cross_entropy_with_logits(logits=x_logit, labels=y_in)
-        logpx_z = -tf.reduce_sum(cross_ent, axis=[1, 2, 3])
-        logpz = log_normal_pdf(z, 0., 0.)
-        logqz_x = log_normal_pdf(z, mean, logvar)
-        return -tf.reduce_mean(logpx_z + logpz - logqz_x)
+    #model.compile(loss=compute_loss)
+    #model.fit(train_images, train_images)
+    for epoch in range(1, epochs + 1):
+        start_time = time.time()
+        for train_x in train_dataset:
+          train_step(model, train_x, optimizer)
+        end_time = time.time()
 
-    model.compile(loss=compute_loss)
-    model.fit(train_images, train_images)
-    #for epoch in range(1, epochs + 1):
-    #    start_time = time.time()
-    #    for train_x in train_dataset:
-    #      train_step(model, train_x, optimizer)
-    #    end_time = time.time()
-
-    #    loss = tf.keras.metrics.Mean()
-    #    for test_x in test_dataset:
-    #      loss(compute_loss(model, test_x))
-    #    elbo = -loss.result()
-    #    #display.clear_output(wait=False)
-    #    print('Epoch: {}, Test set ELBO: {}, time elapse for current epoch: {}'
-    #          .format(epoch, elbo, end_time - start_time))
-    #    #generate_and_save_images(model, epoch, test_sample)
+        loss = tf.keras.metrics.Mean()
+        for test_x in test_dataset:
+          loss(compute_loss(model, test_x))
+        elbo = -loss.result()
+        #display.clear_output(wait=False)
+        print('Epoch: {}, Test set ELBO: {}, time elapse for current epoch: {}'
+              .format(epoch, elbo, end_time - start_time))
+        #generate_and_save_images(model, epoch, test_sample)
 
     model.save('./tmp_model_tf_vae.fg')
 

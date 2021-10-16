@@ -1,3 +1,4 @@
+import time
 import os
 from tensorflow.keras.utils import plot_model
 from gdl_code_repeate.vae_model import VariationalAutoencoder
@@ -17,7 +18,7 @@ from tensorflow.keras.layers import Input, Conv2D, Conv2DTranspose, BatchNormali
 from tensorflow.keras.callbacks import TensorBoard, EarlyStopping
 from tensorflow.keras import backend as K
 from tensorflow.python.framework.ops import disable_eager_execution
-disable_eager_execution()
+#disable_eager_execution()
 
 
 #os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
@@ -74,8 +75,46 @@ class SearchTool(MLToolMixin):
         optimizer = tf.keras.optimizers.Adam(1e-4)
         train_images = tf_vae.preprocess_images(x_train)
         test_images = tf_vae.preprocess_images(x_test)
-        print('hei')
 
+        train_size = 60000
+        batch_size = 32
+        test_size = 10000
+
+        train_dataset = (tf.data.Dataset.from_tensor_slices(x_train).batch(batch_size))
+        test_dataset = (tf.data.Dataset.from_tensor_slices(x_test).batch(batch_size))
+
+        epochs = 10
+        # set the dimensionality of the latent space to a plane for visualization later
+        latent_dim = 2
+        num_examples_to_generate = 16
+
+        # keeping the random vector constant for generation (prediction) so
+        # it will be easier to see the improvement.
+        random_vector_for_generation = tf.random.normal(
+            shape=[num_examples_to_generate, latent_dim])
+        model = tf_vae.CVAE(latent_dim)
+        assert batch_size >= num_examples_to_generate
+        for test_batch in test_dataset.take(1):
+            test_sample = test_batch[0:num_examples_to_generate, :, :, :]
+
+        model.compile(loss=tf_vae.compute_loss)
+        model.fit(train_images, train_images, ca)
+        #for epoch in range(1, epochs + 1):
+        #    start_time = time.time()
+        #    for train_x in train_dataset:
+        #        tf_vae.train_step(model, train_x, optimizer)
+        #    end_time = time.time()
+
+        #    loss = tf.keras.metrics.Mean()
+        #    for test_x in test_dataset:
+        #        loss(tf_vae.compute_loss(model, test_x))
+        #    elbo = -loss.result()
+        #    # display.clear_output(wait=False)
+        #    print('Epoch: {}, Test set ELBO: {}, time elapse for current epoch: {}'
+        #          .format(epoch, elbo, end_time - start_time))
+        #    # generate_and_save_images(model, epoch, test_sample)
+
+        print('heikk')
         #vae.model.fit(
         #    x_train,
         #    x_train,
