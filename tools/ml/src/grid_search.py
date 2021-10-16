@@ -85,28 +85,28 @@ class SearchTool(MLToolMixin):
 
         ### COMPILATION
         def vae_r_loss(y_true, y_pred):
-            r_loss = K.mean(K.square(y_true - y_pred), axis = [1,2,3])
+            r_loss = K.mean(K.square(y_true - y_pred), axis=[1, 2, 3])
             return r_loss_factor * r_loss
 
         def vae_kl_loss(y_true, y_pred):
-            kl_loss =  -0.5 * K.sum(1 + vae.log_var - K.square(vae.mu) - K.exp(vae.log_var), axis = 1)
+            kl_loss = -0.5 * K.sum(1 + vae.log_var - K.square(vae.mu) - K.exp(vae.log_var), axis=1)
             return kl_loss
 
         def vae_loss(y_true, y_pred):
             r_loss = vae_r_loss(y_true, y_pred)
             kl_loss = vae_kl_loss(y_true, y_pred)
-            return  r_loss + kl_loss
+            return r_loss + kl_loss
 
         optimizer = tf.keras.optimizers.Adam(lr=learning_rate)
-        vae.model.compile(optimizer=optimizer, loss = vae_loss,  metrics = [vae_r_loss, vae_kl_loss])
+        vae.model.compile(optimizer=optimizer, loss=vae_loss,  metrics=[vae_r_loss, vae_kl_loss])
 
         vae.model.fit(
-            x_train
-            , x_train
-            , batch_size = 32
-            , shuffle = True
-            , epochs = 10
-            , initial_epoch = 0
+            x_train,
+            x_train,
+            batch_size=32,
+            shuffle=True,
+            epochs=10,
+            initial_epoch=0
         )
         return vae.model
 

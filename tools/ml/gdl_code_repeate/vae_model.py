@@ -1,4 +1,5 @@
 from tensorflow.keras.layers import Input, Conv2D, Flatten, Dense, Conv2DTranspose, Reshape, Lambda, Activation, BatchNormalization, LeakyReLU, Dropout
+from tensorboard.plugins.hparams import api as hp
 from tensorflow.keras.models import Model
 from tensorflow.keras import backend as K
 from tensorflow.keras.optimizers import Adam
@@ -14,18 +15,18 @@ import pickle
 
 
 class VariationalAutoencoder:
-    def __init__(self
-        , input_dim
-        , encoder_conv_filters
-        , encoder_conv_kernel_size
-        , encoder_conv_strides
-        , decoder_conv_t_filters
-        , decoder_conv_t_kernel_size
-        , decoder_conv_t_strides
-        , z_dim
-        , use_batch_norm = False
-        , use_dropout= False
-        ):
+    def __init__(self,
+                 input_dim,
+                 encoder_conv_filters,
+                 encoder_conv_kernel_size,
+                 encoder_conv_strides,
+                 decoder_conv_t_filters,
+                 decoder_conv_t_kernel_size,
+                 decoder_conv_t_strides,
+                 z_dim,
+                 use_batch_norm=False,
+                 use_dropout=False
+                ):
 
         self.name = 'variational_autoencoder'
 
@@ -89,8 +90,6 @@ class VariationalAutoencoder:
 
         self.encoder = Model(encoder_input, encoder_output)
         
-        
-
         ### THE DECODER
 
         decoder_input = Input(shape=(self.z_dim,), name='decoder_input')
