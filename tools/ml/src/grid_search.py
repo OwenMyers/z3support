@@ -77,7 +77,7 @@ class SearchTool(MLToolMixin):
         test_images = tf_vae.preprocess_images(x_test)
 
         train_size = 60000
-        batch_size = 32
+        batch_size = hyper_params[self.hp_batch_size]
         test_size = 10000
 
         train_dataset = (tf.data.Dataset.from_tensor_slices(x_train).batch(batch_size))
@@ -98,7 +98,19 @@ class SearchTool(MLToolMixin):
             test_sample = test_batch[0:num_examples_to_generate, :, :, :]
 
         model.compile(loss=tf_vae.compute_loss)
-        model.fit(train_images, train_images, ca)
+        callbacks = [
+            TensorBoard(
+                    run_dir,
+                    update_freq=UPDATE_FREQ,
+                    profile_batch=0,
+                    histogram_freq=2,
+                    #embeddings_freq=2,
+                    write_images=True,
+                    #write_steps_per_second=True,
+                ),
+            hp.KerasCallback(run_dir, hyper_params)
+        ]
+        model.fit(train_images, train_images, callbacks=callbacks)
         #for epoch in range(1, epochs + 1):
         #    start_time = time.time()
         #    for train_x in train_dataset:
