@@ -1,5 +1,9 @@
+import pickle
+import json
+import tf_vae
 import time
 import os
+from hashlib import sha1
 from tensorflow.keras.utils import plot_model
 from gdl_code_repeate.vae_model import VariationalAutoencoder
 import matplotlib.pyplot as plt
@@ -71,7 +75,6 @@ class SearchTool(MLToolMixin):
 
     def train_test_model(self, run_dir, hyper_params, x_test, x_train):
 
-        import tf_vae
         optimizer = tf.keras.optimizers.Adam(1e-4)
         train_images = tf_vae.preprocess_images(x_train)
         test_images = tf_vae.preprocess_images(x_test)
@@ -98,35 +101,35 @@ class SearchTool(MLToolMixin):
             test_sample = test_batch[0:num_examples_to_generate, :, :, :]
 
         model.compile(loss=tf_vae.compute_loss)
-        callbacks = [
-            TensorBoard(
-                    run_dir,
-                    update_freq=UPDATE_FREQ,
-                    profile_batch=0,
-                    histogram_freq=2,
-                    #embeddings_freq=2,
-                    write_images=True,
-                    #write_steps_per_second=True,
-                ),
-            hp.KerasCallback(run_dir, hyper_params)
-        ]
-        model.fit(train_images, train_images, callbacks=callbacks)
-        #for epoch in range(1, epochs + 1):
-        #    start_time = time.time()
-        #    for train_x in train_dataset:
-        #        tf_vae.train_step(model, train_x, optimizer)
-        #    end_time = time.time()
+        tb_callback = TensorBoard(
+                run_dir,
+                update_freq=UPDATE_FREQ,
+                profile_batch=0,
+                histogram_freq=2,
+                #embeddings_freq=2,
+                write_images=True,
+                #write_steps_per_second=True,
+        )
+        tb_callback.set_model(model)
+        #hp.KerasCallback(run_dir, hyper_params)
+        #model.fit(train_images, train_images)#, callbacks=callbacks)
+        for epoch in range(1, epochs + 1):
+            start_time = time.time()
+            for train_x in train_dataset:
+                tf_vae.train_step(model, train_x, optimizer)
+            end_time = time.time()
 
-        #    loss = tf.keras.metrics.Mean()
-        #    for test_x in test_dataset:
-        #        loss(tf_vae.compute_loss(model, test_x))
-        #    elbo = -loss.result()
-        #    # display.clear_output(wait=False)
-        #    print('Epoch: {}, Test set ELBO: {}, time elapse for current epoch: {}'
-        #          .format(epoch, elbo, end_time - start_time))
-        #    # generate_and_save_images(model, epoch, test_sample)
+            loss = tf.keras.metrics.Mean()
+            for test_x in test_dataset:
+                loss(tf_vae.compute_loss(model, test_x))
+            elbo = -loss.result()
+            # display.clear_output(wait=False)
+            print('Epoch: {}, Test set ELBO: {}, time elapse for current epoch: {}'
+                  .format(epoch, elbo, end_time - start_time))
+            # generate_and_save_images(model, epoch, test_sample)
 
-        print('heikk')
+        model.predict(train_images)
+        return model, float(elbo.numpy())
         #vae.model.fit(
         #    x_train,
         #    x_train,
@@ -388,54 +391,38 @@ class SearchTool(MLToolMixin):
                                     self.hp_use_batch_normalization: use_batch_normalization,
                                     self.hp_use_dropout: use_dropout
                                 }
+                                simp_hyper_params = {
+                                    'hp_batch_size': batch_size,
+                                    'hp_n_layers': n_layers,
+                                    'hp_feature_map_step': f_map_step,
+                                    'hp_stride_size': stride,
+                                    'hp_use_batch_normalization': use_batch_normalization,
+                                    'hp_use_dropout': use_dropout
+                                }
                                 c += 1
                                 run_name = f"run-{c}"
                                 print('--- Starting trial: %s' % run_name)
                                 print({h.name: hyper_params[h] for h in hyper_params})
-                                run_result = self.run(
+                                run_result, loss = self.run(
                                     os.path.join(self.run_location, 'tensorboard_raw', self.tensorboard_sub_dir, run_name),
                                     hyper_params,
                                     x_test,
                                     x_train
                                 )
                                 # After each run lets attempt to log a sample of activations for the different layers
+                                simp_hyper_params['loss'] = loss
                                 if not self.tensorboard_debugging:
-                                    run_result.save(os.path.join(self.run_location, 'models', run_name + 'model_completion_save'))
-        if not self.tensorboard_debugging:
-            if self.variational:
-                def vae_kl_loss(y_true, y_pred):
-                    kl_loss = -0.5 * K.sum(1 + self.log_var - K.square(self.mu) - K.exp(self.log_var), axis=1)
-                    return kl_loss
+                                    hh = hash(frozenset(simp_hyper_params.items()))
+                                    if hh > 0:
+                                        hash_name = str(hex(hh))
+                                    else:
+                                        hash_name = str(hex(hh)).replace('-', 'neg_')
+                                    run_result.save(os.path.join(self.run_location, 'models', f'{hash_name}.tf'), save_format='tf')
 
-                def vae_loss(y_true, y_pred):
-                    new_r_loss = vae_r_loss(y_true, y_pred)
-                    kl_loss = vae_kl_loss(y_true, y_pred)
-                    return new_r_loss + kl_loss
-                check_loss = vae_loss
-            else:
-                check_loss = r_loss
-            best_autoencoder = tf.keras.models.load_model(self.checkpoint_file, custom_objects={'vae_loss': check_loss, 'vae_kl_loss': vae_kl_loss, 'vae_r_loss': vae_r_loss})
-            best_autoencoder.save(self.best_model_file)
-            # Get the encoder piece of the autoencoder. We call this the "activation model". This is the full model up to
-            # the bottle neck.
-            layers_to_encoded = int(len(best_autoencoder.layers) / 2 + 1)
-            print(layers_to_encoded)
-            layer_activations = [layer.output for layer in best_autoencoder.layers[:layers_to_encoded]]
-            activation_model = models.Model(
-                inputs=best_autoencoder.input,
-                outputs=layer_activations
-            )
-            activation_model.save(self.best_activations_file)
-
-        x1 = next(iter(x_test))
-        x2 = next(iter(x_test))
-        x = np.array([x1, x2])
-        y = best_autoencoder.predict(x)
-        #y = np.array(y[:,:,0,:])
-        plt.imshow(x[0], aspect='auto', cmap='viridis')
-        plt.savefig(os.path.join('figures', 'example_in.png'))
-        plt.imshow(y[0], aspect='auto', cmap='viridis')
-        plt.savefig(os.path.join('figures', 'example_out.png'))
+                                    with open(os.path.join(self.run_location, 'models', f'{hash_name}_run_info_dic.pkl'), 'wb') as f:
+                                        pickle.dump(simp_hyper_params, f)
+                                    #with open(os.path.join(self.run_location, 'models', run_name + 'model_completion_save.pkl'), 'w') as f:
+                                    #    pickle.dump(run_result, f)
 
 
 if __name__ == "__main__":

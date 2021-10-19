@@ -1,6 +1,7 @@
 import tensorflow as tf
 import numpy as np
 import time
+from tensorflow.keras.losses import Loss
 
 class CVAE(tf.keras.Model):
   """Convolutional variational autoencoder."""
@@ -49,7 +50,7 @@ class CVAE(tf.keras.Model):
     return mean, logvar
 
   def reparameterize(self, mean, logvar):
-    eps = tf.random.normal(shape=mean.shape)
+    eps = tf.random.normal(shape=tf.shape(mean))
     return eps * tf.exp(logvar * .5) + mean
 
   def decode(self, z, apply_sigmoid=False):
@@ -60,13 +61,14 @@ class CVAE(tf.keras.Model):
     return logits
 
   def call(self, inputs):
-      x = self.encoder(inputs)
-      return self.decoder(x)
+      mean, logvar = tf.split(self.encoder(inputs), num_or_size_splits=2, axis=1)
+      z = self.reparameterize(mean, logvar)
+      return self.decode(z)
+
 
 def preprocess_images(images):
   images = images.reshape((images.shape[0], 28, 28, 1)) / 255.
   return np.where(images > .5, 1.0, 0.0).astype('float32')
-
 
 
 def log_normal_pdf(sample, mean, logvar, raxis=1):
@@ -86,8 +88,16 @@ def compute_loss(model, x):
   logqz_x = log_normal_pdf(z, mean, logvar)
   return -tf.reduce_mean(logpx_z + logpz - logqz_x)
 
-
-
+#class VAELoss(Loss):
+#    def __init__(self):
+#        super(VAELoss, self).__init__()
+#
+#    def call(self, y_true, y_pred):
+#        cross_ent = tf.nn.sigmoid_cross_entropy_with_logits(logits=y_pred)
+#        logpx_z = -tf.reduce_sum(cross_ent, axis=[1, 2, 3])
+#        logpz = log_normal_pdf(z, 0., 0.)
+#        logqz_x = log_normal_pdf(z, mean, logvar)
+#        return -tf.reduce_mean(logpx_z + logpz - logqz_x)
 
 @tf.function
 def train_step(model, x, optimizer):
