@@ -89,7 +89,7 @@ class SearchTool(MLToolMixin):
         train_dataset = (tf.data.Dataset.from_tensor_slices(x_train).batch(batch_size))
         test_dataset = (tf.data.Dataset.from_tensor_slices(x_test).batch(batch_size))
 
-        epochs = 10
+        epochs = 2
         # set the dimensionality of the latent space to a plane for visualization later
         latent_dim = 2
         num_examples_to_generate = 4
@@ -115,7 +115,8 @@ class SearchTool(MLToolMixin):
                 #write_steps_per_second=True,
         )
         tb_callback.set_model(model)
-        #hp.KerasCallback(run_dir, hyper_params)
+        hp_callback = hp.KerasCallback(run_dir, hyper_params)
+        hp_callback.set_model(model)
         #model.fit(train_images, train_images)#, callbacks=callbacks)
         for epoch in range(1, epochs + 1):
             start_time = time.time()
