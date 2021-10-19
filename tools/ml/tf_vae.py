@@ -8,6 +8,7 @@ class CVAE(tf.keras.Model):
 
   def __init__(self, latent_dim):
     super(CVAE, self).__init__()
+    self.gradients = None
     self.latent_dim = latent_dim
     self.encoder = tf.keras.Sequential(
         [
@@ -39,11 +40,11 @@ class CVAE(tf.keras.Model):
         ]
     )
 
-  @tf.function
-  def sample(self, eps=None):
-    if eps is None:
-      eps = tf.random.normal(shape=(100, self.latent_dim))
-    return self.decode(eps, apply_sigmoid=True)
+#  @tf.function
+#  def sample(self, eps=None):
+#    if eps is None:
+#      eps = tf.random.normal(shape=(100, self.latent_dim))
+#    return self.decode(eps, apply_sigmoid=True)
 
   def encode(self, x):
     mean, logvar = tf.split(self.encoder(x), num_or_size_splits=2, axis=1)
@@ -64,6 +65,18 @@ class CVAE(tf.keras.Model):
       mean, logvar = tf.split(self.encoder(inputs), num_or_size_splits=2, axis=1)
       z = self.reparameterize(mean, logvar)
       return self.decode(z)
+
+  @tf.function
+  def train_step(self, model, x, optimizer):
+      """Executes one training step and returns the loss.
+
+      This function computes the loss and gradients, and uses the latter to
+      update the model's parameters.
+      """
+      with tf.GradientTape() as tape:
+          loss = compute_loss(model, x)
+      self.gradients = tape.gradient(loss, model.trainable_variables)
+      optimizer.apply_gradients(zip(self.gradients, model.trainable_variables))
 
 
 def preprocess_images(images):
@@ -99,17 +112,7 @@ def compute_loss(model, x):
 #        logqz_x = log_normal_pdf(z, mean, logvar)
 #        return -tf.reduce_mean(logpx_z + logpz - logqz_x)
 
-@tf.function
-def train_step(model, x, optimizer):
-  """Executes one training step and returns the loss.
 
-  This function computes the loss and gradients, and uses the latter to
-  update the model's parameters.
-  """
-  with tf.GradientTape() as tape:
-    loss = compute_loss(model, x)
-  gradients = tape.gradient(loss, model.trainable_variables)
-  optimizer.apply_gradients(zip(gradients, model.trainable_variables))
 
 def main():
     optimizer = tf.keras.optimizers.Adam(1e-4)

@@ -24,6 +24,9 @@ from tensorflow.keras import backend as K
 from tensorflow.python.framework.ops import disable_eager_execution
 #disable_eager_execution()
 
+# Makes multi runs work but runs slow (same as removing tf.function decorator)
+#tf.config.experimental_run_functions_eagerly(True)
+
 
 #os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
 METRIC_ACCURACY = 'accuracy'
@@ -89,8 +92,9 @@ class SearchTool(MLToolMixin):
         epochs = 10
         # set the dimensionality of the latent space to a plane for visualization later
         latent_dim = 2
-        num_examples_to_generate = 16
+        num_examples_to_generate = 4
 
+        # TODO revisit this section. May want to remove it depending on how we decide to create the plots
         # keeping the random vector constant for generation (prediction) so
         # it will be easier to see the improvement.
         random_vector_for_generation = tf.random.normal(
@@ -116,7 +120,7 @@ class SearchTool(MLToolMixin):
         for epoch in range(1, epochs + 1):
             start_time = time.time()
             for train_x in train_dataset:
-                tf_vae.train_step(model, train_x, optimizer)
+                model.train_step(model, train_x, optimizer)
             end_time = time.time()
 
             loss = tf.keras.metrics.Mean()
@@ -412,17 +416,17 @@ class SearchTool(MLToolMixin):
                                 # After each run lets attempt to log a sample of activations for the different layers
                                 simp_hyper_params['loss'] = loss
                                 if not self.tensorboard_debugging:
-                                    hh = hash(frozenset(simp_hyper_params.items()))
-                                    if hh > 0:
-                                        hash_name = str(hex(hh))
+                                    current_hash = hash(frozenset(simp_hyper_params.items()))
+                                    if current_hash > 0:
+                                        hash_name = str(hex(current_hash))
                                     else:
-                                        hash_name = str(hex(hh)).replace('-', 'neg_')
+                                        hash_name = str(hex(current_hash)).replace('-', 'neg_')
+                                    # Creates two output lines telling us the "asset" was created. Just a note so I
+                                    # don't go digging into why later
                                     run_result.save(os.path.join(self.run_location, 'models', f'{hash_name}.tf'), save_format='tf')
 
                                     with open(os.path.join(self.run_location, 'models', f'{hash_name}_run_info_dic.pkl'), 'wb') as f:
                                         pickle.dump(simp_hyper_params, f)
-                                    #with open(os.path.join(self.run_location, 'models', run_name + 'model_completion_save.pkl'), 'w') as f:
-                                    #    pickle.dump(run_result, f)
 
 
 if __name__ == "__main__":
