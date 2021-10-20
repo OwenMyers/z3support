@@ -37,11 +37,8 @@ class SearchTool(MLToolMixin):
 
         optimizer = tf.keras.optimizers.Adam(1e-4)
         train_images = tf_vae.preprocess_images(x_train)
-        test_images = tf_vae.preprocess_images(x_test)
 
-        train_size = 60000
         batch_size = hyper_params[self.hp_batch_size]
-        test_size = 10000
 
         train_dataset = (tf.data.Dataset.from_tensor_slices(x_train).batch(batch_size))
         test_dataset = (tf.data.Dataset.from_tensor_slices(x_test).batch(batch_size))
@@ -149,17 +146,10 @@ class SearchTool(MLToolMixin):
 
                                 aim_run["hparams"] = simp_hyper_params
                                 if not self.tensorboard_debugging:
-                                    current_hash = hash(frozenset(simp_hyper_params.items()))
-                                    if current_hash > 0:
-                                        hash_name = str(hex(current_hash))
-                                    else:
-                                        hash_name = str(hex(current_hash)).replace('-', 'neg_')
+                                    hash_name = aim_run.hashname
                                     # Creates two output lines telling us the "asset" was created. Just a note so I
                                     # don't go digging into why later
                                     run_result.save(os.path.join(self.run_location, 'models', f'{hash_name}.tf'), save_format='tf')
-
-                                    with open(os.path.join(self.run_location, 'models', f'{hash_name}_run_info_dic.pkl'), 'wb') as f:
-                                        pickle.dump(simp_hyper_params, f)
 
 
 if __name__ == "__main__":
