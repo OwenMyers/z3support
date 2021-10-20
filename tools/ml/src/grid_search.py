@@ -33,12 +33,6 @@ class SearchTool(MLToolMixin):
         super().__init__(settings_file, working_location)
         self.early_stopping_patience = int(self.config['Settings']['EARLY_STOPPING_PATIENCE'])
 
-    @staticmethod
-    def variational_sampling(args):
-        mu, log_var = args
-        epsilon = K.random_normal(shape=K.shape(mu), mean=0.0, stddev=1.0)
-        return mu + K.exp(log_var / 2.0) * epsilon
-
     def train_test_model(self, run_dir, hyper_params, x_test, x_train, aim_run):
 
         optimizer = tf.keras.optimizers.Adam(1e-4)
@@ -52,7 +46,7 @@ class SearchTool(MLToolMixin):
         train_dataset = (tf.data.Dataset.from_tensor_slices(x_train).batch(batch_size))
         test_dataset = (tf.data.Dataset.from_tensor_slices(x_test).batch(batch_size))
 
-        epochs = 2
+        epochs = self.epochs
         # set the dimensionality of the latent space to a plane for visualization later
         latent_dim = 2
         num_examples_to_generate = 4
@@ -68,7 +62,7 @@ class SearchTool(MLToolMixin):
             test_sample = test_batch[0:num_examples_to_generate, :, :, :]
 
         model.compile(loss=tf_vae.compute_loss)
-        #model.fit(train_images, train_images)#, callbacks=callbacks)
+        elbo = None
         for epoch in range(1, epochs + 1):
             start_time = time.time()
             for train_x in train_dataset:
@@ -88,15 +82,6 @@ class SearchTool(MLToolMixin):
 
         model.predict(train_images)
         return model, float(elbo.numpy())
-        #vae.model.fit(
-        #    x_train,
-        #    x_train,
-        #    batch_size=32,
-        #    shuffle=True,
-        #    epochs=10,
-        #    initial_epoch=0
-        #)
-        #return vae.model
 
     def run(self, run_dir, hyper_params, x_test, x_train, aim_run):
         return self.train_test_model(run_dir, hyper_params, x_test, x_train, aim_run)
@@ -108,8 +93,8 @@ class SearchTool(MLToolMixin):
         else:
             # DATA will contain a list of the paths to different binary data files. There should be one for each of the
             # "different types of systems" (e.g. z3, z2, high temp, etc). There is no guarantee that there are the same
-            # number of configurations in each file though but the function below takes care of all of that for us to make
-            # sure we get a balanced dataset and that it meets some basic requirements.
+            # number of configurations in each file though but the function below takes care of all of that for us to
+            # make sure we get a balanced dataset and that it meets some basic requirements.
             # all_data = np.load(DATA)
             all_data, data_labels = self.import_data(self.data)
 
@@ -123,16 +108,6 @@ class SearchTool(MLToolMixin):
             np.save(self.testing_data_location, x_test)
             np.save(self.data_label_location, data_labels)
 
-        with tf.summary.create_file_writer(
-            os.path.join(self.run_location, 'tensorboard_raw', self.tensorboard_sub_dir)
-        ).as_default():
-            hp.hparams_config(
-                hparams=[self.hp_batch_size, self.hp_n_layers, self.hp_feature_map_step, self.hp_stride_size, self.hp_use_batch_normalization, self.hp_use_dropout],
-            )
-
-        #(x_train, y_train), (x_test, y_test) = load_mnist()
-        #x_train = x_train[:1000]
-        #x_test = x_test[:1000]
         c = 0
         autoencoder = None
         for batch_size in self.hp_batch_size.domain.values:
