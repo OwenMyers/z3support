@@ -74,7 +74,7 @@ class SearchTool(MLToolMixin):
             print('Epoch: {}, Test set ELBO: {}, time elapse for current epoch: {}'
                   .format(epoch, elbo, end_time - start_time))
 
-            aim_run.track(float(elbo.numpy()), name='loss', epoch=epoch, context={ "subset": "train" })
+            aim_run.track(float(elbo.numpy()), name='loss', epoch=epoch, context={"subset": "train" })
             # generate_and_save_images(model, epoch, test_sample)
 
         model.predict(train_images)

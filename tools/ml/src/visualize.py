@@ -5,6 +5,7 @@ import tensorflow as tf
 import random
 from matplotlib import pyplot as plt
 import numpy as np
+from tools.ml import tf_vae
 from tools.ml.src.base import MLToolMixin
 import argparse
 import os
@@ -166,15 +167,7 @@ class VizTool(MLToolMixin):
         plt.imshow(y[0], aspect='auto', cmap='viridis')
         plt.savefig(os.path.join(figures_project_dir, 'example_out.png'))
 
-    def plot_dense_layer(self, autoencoder, layer_names, activations, labels):
-        #weights = autoencoder.get_layer(name='dense_encoder_output').get_weights()
-        for layer_name, layer_activation in zip(layer_names, activations):  # Displays the feature maps
-            if layer_name == 'dense_encoder_output':
-                print("hi")
-                plt.scatter(layer_activation[:, 0], layer_activation[:, 1], c=labels, cmap='Set1')#, s=1)
-                plt.show()
-                plt.savefig(os.path.join(self.figures_project_dir, 'dense_layer.png'))
-                #plt.xlim()
+
 
     @staticmethod
     def plot_decoder_result_from_input(autoencoder, figures_project_dir, start_loc=[], end_loc=[], layer_names=None, model_is_split=False):
@@ -247,6 +240,27 @@ class VizTool(MLToolMixin):
         self.plot_input_and_output(autoencoder, x_test, self.figures_project_dir)
         #self.plot_decoder_result_from_input(autoencoder, self.figures_project_dir, start_loc=[-15.8, -60.1], end_loc=[33.4, -31.7],layer_names=full_ae_layer_names)
 
+    def plot_dense_layer(self, autoencoder, layer_names, activations, labels):
+        #weights = autoencoder.get_layer(name='dense_encoder_output').get_weights()
+        for layer_name, layer_activation in zip(layer_names, activations):  # Displays the feature maps
+            if layer_name == 'dense_encoder_output':
+                print("hi")
+                plt.scatter(layer_activation[:, 0], layer_activation[:, 1], c=labels, cmap='Set1')#, s=1)
+                plt.show()
+                plt.savefig(os.path.join(self.figures_project_dir, 'dense_layer.png'))
+                #plt.xlim()
+
+    def simple_plot_dense_layer(self, model, model_path, x, labels):
+        #weights = autoencoder.get_layer(name='dense_encoder_output').get_weights()
+        model_hash_name = model_path.strip('/').split('/')[-1].split('.')[0]
+        mean, logvar = model.encode(self.get_testing_data())
+        z = model.reparameterize(mean, logvar)
+        print("hi")
+        plt.scatter(layer_activation[:, 0], layer_activation[:, 1], c=labels, cmap='Set1')#, s=1)
+        plt.show()
+        plt.savefig(os.path.join('figures, f'{model_hash_name}_dense_layer.png'))
+        #plt.xlim()
+
 
 def external_viz_in_out(path_to_model, settings_file, ignore_this_run_loc):
     from gdl_code_repeate.vae_model import VariationalAutoencoder
@@ -278,9 +292,18 @@ def external_viz_in_out(path_to_model, settings_file, ignore_this_run_loc):
     print('Hhhhhhhhhhhhhhey')
 
 
+
+
+def simplified_load_visualize(model_path, tool):
+    model = tf.keras.models.load_model(model_path, custom_objects={'compute_loss': tf_vae.compute_loss})
+    tool.simple_plot_dense_layer(model, model_path)
+    print("hi")
+
+
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO)
     parser = argparse.ArgumentParser(description='Run a parameter sweep to find the best autoencoder.')
+    parser.add_argument('--model_path', type=str, help='Path to model', required=True)
     parser.add_argument('--external_model', type=str, help='Path to model', required=False, default=None)
     parser.add_argument('--external_type', type=str, help='Specifies if the saved model is a tf format or h5', required=False, default='tf')
     parser.add_argument('--settings', type=str, help='Settings file location', required=False)
@@ -295,4 +318,5 @@ if __name__ == "__main__":
         external_viz_in_out(args.external_model, args.settings, args.run_location)
     else:
         tool = VizTool(args.settings, args.run_location, args.use_current_checkpoint)
-        tool.main()
+        simplified_load_visualize(args.model_path, tool)
+        #tool.main()

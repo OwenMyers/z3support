@@ -1,5 +1,5 @@
 import os
-import tf_vae
+from tools.ml import tf_vae
 import tensorflow as tf
 from tensorflow.keras import backend as K
 import pickle
