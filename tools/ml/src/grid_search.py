@@ -1,11 +1,11 @@
 import pickle
+from aim import Run
 import json
 import tf_vae
 import time
 import os
 from hashlib import sha1
 from tensorflow.keras.utils import plot_model
-from gdl_code_repeate.vae_model import VariationalAutoencoder
 import matplotlib.pyplot as plt
 from abc import ABCMeta
 from tensorflow.keras.models import Model
@@ -39,7 +39,7 @@ class SearchTool(MLToolMixin):
         epsilon = K.random_normal(shape=K.shape(mu), mean=0.0, stddev=1.0)
         return mu + K.exp(log_var / 2.0) * epsilon
 
-    def train_test_model(self, run_dir, hyper_params, x_test, x_train):
+    def train_test_model(self, run_dir, hyper_params, x_test, x_train, aim_run):
 
         optimizer = tf.keras.optimizers.Adam(1e-4)
         train_images = tf_vae.preprocess_images(x_train)
@@ -82,6 +82,8 @@ class SearchTool(MLToolMixin):
             # display.clear_output(wait=False)
             print('Epoch: {}, Test set ELBO: {}, time elapse for current epoch: {}'
                   .format(epoch, elbo, end_time - start_time))
+
+            aim_run.track(float(elbo.numpy()), name='loss', epoch=epoch, context={ "subset": "train" })
             # generate_and_save_images(model, epoch, test_sample)
 
         model.predict(train_images)
@@ -96,8 +98,8 @@ class SearchTool(MLToolMixin):
         #)
         #return vae.model
 
-    def run(self, run_dir, hyper_params, x_test, x_train):
-        return self.train_test_model(run_dir, hyper_params, x_test, x_train)
+    def run(self, run_dir, hyper_params, x_test, x_train, aim_run):
+        return self.train_test_model(run_dir, hyper_params, x_test, x_train, aim_run)
 
     def main(self):
         if hasattr(self, "data_train"):
@@ -159,14 +161,18 @@ class SearchTool(MLToolMixin):
                                 run_name = f"run-{c}"
                                 print('--- Starting trial: %s' % run_name)
                                 print({h.name: hyper_params[h] for h in hyper_params})
+                                aim_run = Run()
                                 run_result, loss = self.run(
                                     os.path.join(self.run_location, 'tensorboard_raw', self.tensorboard_sub_dir, run_name),
                                     hyper_params,
                                     x_test,
-                                    x_train
+                                    x_train,
+                                    aim_run
                                 )
                                 # After each run lets attempt to log a sample of activations for the different layers
                                 simp_hyper_params['loss'] = loss
+
+                                aim_run["hparams"] = simp_hyper_params
                                 if not self.tensorboard_debugging:
                                     current_hash = hash(frozenset(simp_hyper_params.items()))
                                     if current_hash > 0:
