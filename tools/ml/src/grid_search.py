@@ -23,46 +23,9 @@ from tensorflow.keras.callbacks import TensorBoard, EarlyStopping
 from tensorflow.keras import backend as K
 from tensorflow.python.framework.ops import disable_eager_execution
 #disable_eager_execution()
-
 # Makes multi runs work but runs slow (same as removing tf.function decorator)
 #tf.config.experimental_run_functions_eagerly(True)
-
-
 #os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
-METRIC_ACCURACY = 'accuracy'
-UPDATE_FREQ = 600
-METRICS = [
-    hp.Metric(
-        "epoch_accuracy",
-        group="validation",
-        display_name="accuracy (val.)",
-    ),
-    hp.Metric(
-        "epoch_loss",
-        group="validation",
-        display_name="loss (val.)",
-    ),
-    hp.Metric(
-        "batch_accuracy",
-        group="train",
-        display_name="accuracy (train)",
-    ),
-    hp.Metric(
-        "batch_loss",
-        group="train",
-        display_name="loss (train)",
-    ),
-]
-
-#def load_mnist():
-#    (x_train, y_train), (x_test, y_test) = mnist.load_data()
-#
-#    x_train = x_train.astype('float32') / 255.
-#    x_train = x_train.reshape(x_train.shape + (1,))
-#    x_test = x_test.astype('float32') / 255.
-#    x_test = x_test.reshape(x_test.shape + (1,))
-#
-#    return (x_train, y_train), (x_test, y_test)
 
 class SearchTool(MLToolMixin):
 
@@ -105,14 +68,14 @@ class SearchTool(MLToolMixin):
             test_sample = test_batch[0:num_examples_to_generate, :, :, :]
 
         model.compile(loss=tf_vae.compute_loss)
-        tb_callback = TensorBoard(
+        tb_callback = tensorboard(
                 run_dir,
-                update_freq=UPDATE_FREQ,
+                update_freq=update_freq,
                 profile_batch=0,
                 histogram_freq=2,
                 #embeddings_freq=2,
-                write_images=True,
-                #write_steps_per_second=True,
+                write_images=true,
+                #write_steps_per_second=true,
         )
         tb_callback.set_model(model)
         hp_callback = hp.KerasCallback(run_dir, hyper_params)
