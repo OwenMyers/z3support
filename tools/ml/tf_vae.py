@@ -40,21 +40,26 @@ class CVAE(tf.keras.Model):
         ]
     )
 
+  #def get_config(self):
+  #    return {"encode": self.encode, "reparameterize": self.reparameterize}
+
+  #@classmethod
+  #def from_config(cls, config):
+  #    return cls(**config)
+
 #  @tf.function
 #  def sample(self, eps=None):
 #    if eps is None:
 #      eps = tf.random.normal(shape=(100, self.latent_dim))
 #    return self.decode(eps, apply_sigmoid=True)
 
-  @tf.function
-  def encode(self, x=None):
-    mean, logvar = tf.split(self.encoder(x), num_or_size_splits=2, axis=1)
-    return mean, logvar
+#  def encode(self, x=None):
+#    mean, logvar = tf.split(self.encoder(x), num_or_size_splits=2, axis=1)
+#    return mean, logvar
 
-  @tf.function
-  def reparameterize(self, mean=None, logvar=None):
-    eps = tf.random.normal(shape=tf.shape(mean))
-    return eps * tf.exp(logvar * .5) + mean
+#  def reparameterize(self, mean=None, logvar=None):
+#    eps = tf.random.normal(shape=tf.shape(mean))
+#    return eps * tf.exp(logvar * .5) + mean
 
   def decode(self, z, apply_sigmoid=False):
     logits = self.decoder(z)
@@ -65,7 +70,7 @@ class CVAE(tf.keras.Model):
 
   def call(self, inputs):
       mean, logvar = tf.split(self.encoder(inputs), num_or_size_splits=2, axis=1)
-      z = self.reparameterize(mean=mean, logvar=logvar)
+      z = reparameterize(mean=mean, logvar=logvar)
       return self.decode(z)
 
   @tf.function
@@ -80,6 +85,13 @@ class CVAE(tf.keras.Model):
       self.gradients = tape.gradient(loss, model.trainable_variables)
       optimizer.apply_gradients(zip(self.gradients, model.trainable_variables))
 
+def encode(model, x=None):
+  mean, logvar = tf.split(model.encoder(x), num_or_size_splits=2, axis=1)
+  return mean, logvar
+
+def reparameterize(mean=None, logvar=None):
+  eps = tf.random.normal(shape=tf.shape(mean))
+  return eps * tf.exp(logvar * .5) + mean
 
 def preprocess_images(images):
   images = images.reshape((images.shape[0], 28, 28, 1)) / 255.
@@ -94,8 +106,8 @@ def log_normal_pdf(sample, mean, logvar, raxis=1):
 
 
 def compute_loss(model, x):
-    mean, logvar = model.encode(x=x)
-    z = model.reparameterize(mean=mean, logvar=logvar)
+    mean, logvar = encode(model, x=x)
+    z = reparameterize(mean=mean, logvar=logvar)
     x_logit = model.decode(z)
     cross_ent = tf.nn.sigmoid_cross_entropy_with_logits(logits=x_logit, labels=x)
     logpx_z = -tf.reduce_sum(cross_ent, axis=[1, 2, 3])
@@ -106,8 +118,8 @@ def compute_loss(model, x):
 # Trying to make a custom metric version of the above compute_loss
 def metric_compute_loss(model):
     def custom_vae_loss(y_pred, y_true):
-        mean, logvar = model.encode(x=y_true)
-        z = model.reparameterize(mean=mean, logvar=logvar)
+        mean, logvar = encode(model, x=y_true)
+        z = reparameterize(model, mean=mean, logvar=logvar)
         x_logit = model.decode(z)
         cross_ent = tf.nn.sigmoid_cross_entropy_with_logits(logits=x_logit, labels=y_true)
         logpx_z = -tf.reduce_sum(cross_ent, axis=[1, 2, 3])

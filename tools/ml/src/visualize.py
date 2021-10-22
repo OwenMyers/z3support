@@ -256,11 +256,10 @@ class VizTool(MLToolMixin):
         model_hash_name = model_path.strip('/').split('/')[-1].split('.')[0]
         y_test = self.get_testing_data_labels()[:10000]
 
-        mean, logvar = model.encode(x=self.get_testing_data()[:10000])
-        z = model.reparameterize(mean=mean, logvar=logvar)
+        mean, logvar = tf_vae.encode(model, x=self.get_testing_data()[:10000])
+        z = tf_vae.reparameterize(mean=mean, logvar=logvar)
         print("hi")
-        plt.scatter(layer_activation[:, 0], layer_activation[:, 1], c=y_test, cmap='Set1')#, s=1)
-        plt.show()
+        plt.scatter(z[:, 0], z[:, 1], c=y_test, cmap='Set1')#, s=1)
         plt.savefig(os.path.join('figures', f'{model_hash_name}_dense_layer.png'))
         #plt.xlim()
 
@@ -296,9 +295,9 @@ def external_viz_in_out(path_to_model, settings_file, ignore_this_run_loc):
 
 
 def simplified_load_visualize(model_path, tool):
-    #model = tf.keras.models.load_model(model_path, custom_objects={'compute_loss': tf_vae.compute_loss})
-    with open(model_path, 'rb') as f:
-        model = pickle.load(f)
+    model = tf.keras.models.load_model(model_path, custom_objects={'compute_loss': tf_vae.compute_loss})
+    #with open(model_path, 'rb') as f:
+    #    model = pickle.load(f)
     tool.simple_plot_dense_layer(model, model_path)
     print("hi")
 

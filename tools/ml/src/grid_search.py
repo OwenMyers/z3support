@@ -45,7 +45,7 @@ class SearchTool(MLToolMixin):
 
         epochs = self.epochs
         # set the dimensionality of the latent space to a plane for visualization later
-        latent_dim = 2
+        latent_dim = self.latent_dim
         num_examples_to_generate = 4
 
         # TODO revisit this section. May want to remove it depending on how we decide to create the plots
@@ -149,9 +149,9 @@ class SearchTool(MLToolMixin):
                                     hash_name = aim_run.hashname
                                     # Creates two output lines telling us the "asset" was created. Just a note so I
                                     # don't go digging into why later
-                                    #run_result.save(os.path.join(self.run_location, 'models', f'{hash_name}.tf'), save_format='tf', save_traces=True)
-                                    with open(os.path.join(self.run_location, 'models', f'{hash_name}.tf'), 'wb') as f:
-                                        pickle.dump(run_result, f)
+                                    run_result.save(os.path.join(self.run_location, 'models', f'{hash_name}.tf'), save_format='tf', save_traces=True)
+                                    #with open(os.path.join(self.run_location, 'models', f'{hash_name}.pkl'), 'w') as f:
+                                    #    pickle.dump(run_result, f)
 
 
 if __name__ == "__main__":

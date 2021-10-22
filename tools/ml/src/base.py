@@ -49,6 +49,7 @@ class MLToolMixin:
         self.Ly = int(self.config['Settings']['Ly'])
         self.feature_map_start = int(self.config['Settings']['FEATURE_MAP_START'])
         self.epochs = int(self.config['Settings']['EPOCHS'])
+        self.latent_dim = int(self.config['Settings']['LATENT_DIMENSION'])
         batch_sizes = self.parse_int_list_from_config(self.config['Settings']['BATCH_SIZES'])
         self.hp_batch_size = hp.HParam('batch_size', hp.Discrete(batch_sizes))
         n_layers = self.parse_int_list_from_config(self.config['Settings']['N_LAYERS'])
