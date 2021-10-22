@@ -46,11 +46,13 @@ class CVAE(tf.keras.Model):
 #      eps = tf.random.normal(shape=(100, self.latent_dim))
 #    return self.decode(eps, apply_sigmoid=True)
 
-  def encode(self, x):
+  @tf.function
+  def encode(self, x=None):
     mean, logvar = tf.split(self.encoder(x), num_or_size_splits=2, axis=1)
     return mean, logvar
 
-  def reparameterize(self, mean, logvar):
+  @tf.function
+  def reparameterize(self, mean=None, logvar=None):
     eps = tf.random.normal(shape=tf.shape(mean))
     return eps * tf.exp(logvar * .5) + mean
 
@@ -63,7 +65,7 @@ class CVAE(tf.keras.Model):
 
   def call(self, inputs):
       mean, logvar = tf.split(self.encoder(inputs), num_or_size_splits=2, axis=1)
-      z = self.reparameterize(mean, logvar)
+      z = self.reparameterize(mean=mean, logvar=logvar)
       return self.decode(z)
 
   @tf.function
@@ -92,8 +94,8 @@ def log_normal_pdf(sample, mean, logvar, raxis=1):
 
 
 def compute_loss(model, x):
-    mean, logvar = model.encode(x)
-    z = model.reparameterize(mean, logvar)
+    mean, logvar = model.encode(x=x)
+    z = model.reparameterize(mean=mean, logvar=logvar)
     x_logit = model.decode(z)
     cross_ent = tf.nn.sigmoid_cross_entropy_with_logits(logits=x_logit, labels=x)
     logpx_z = -tf.reduce_sum(cross_ent, axis=[1, 2, 3])
@@ -104,8 +106,8 @@ def compute_loss(model, x):
 # Trying to make a custom metric version of the above compute_loss
 def metric_compute_loss(model):
     def custom_vae_loss(y_pred, y_true):
-        mean, logvar = model.encode(y_true)
-        z = model.reparameterize(mean, logvar)
+        mean, logvar = model.encode(x=y_true)
+        z = model.reparameterize(mean=mean, logvar=logvar)
         x_logit = model.decode(z)
         cross_ent = tf.nn.sigmoid_cross_entropy_with_logits(logits=x_logit, labels=y_true)
         logpx_z = -tf.reduce_sum(cross_ent, axis=[1, 2, 3])

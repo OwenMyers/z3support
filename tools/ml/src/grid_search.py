@@ -149,7 +149,9 @@ class SearchTool(MLToolMixin):
                                     hash_name = aim_run.hashname
                                     # Creates two output lines telling us the "asset" was created. Just a note so I
                                     # don't go digging into why later
-                                    run_result.save(os.path.join(self.run_location, 'models', f'{hash_name}.tf'), save_format='tf')
+                                    #run_result.save(os.path.join(self.run_location, 'models', f'{hash_name}.tf'), save_format='tf', save_traces=True)
+                                    with open(os.path.join(self.run_location, 'models', f'{hash_name}.tf'), 'wb') as f:
+                                        pickle.dump(run_result, f)
 
 
 if __name__ == "__main__":
