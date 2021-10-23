@@ -254,12 +254,11 @@ class VizTool(MLToolMixin):
     def simple_plot_dense_layer(self, model, model_path):
         #weights = autoencoder.get_layer(name='dense_encoder_output').get_weights()
         model_hash_name = model_path.strip('/').split('/')[-1].split('.')[0]
-        y_test = self.get_testing_data_labels()[:10000]
+        y_test = self.get_testing_data_labels()[:50000]
 
-        mean, logvar = tf_vae.encode(model, x=self.get_testing_data()[:10000])
+        mean, logvar = tf_vae.encode(model, x=self.get_testing_data()[:50000])
         z = tf_vae.reparameterize(mean=mean, logvar=logvar)
-        print("hi")
-        plt.scatter(z[:, 0], z[:, 1], c=y_test, cmap='Set1')#, s=1)
+        plt.scatter(z[:, 0], z[:, 1], c=y_test, cmap='Set1', s=1)
         plt.savefig(os.path.join('figures', f'{model_hash_name}_dense_layer.png'))
         #plt.xlim()
 

@@ -27,6 +27,7 @@ from tensorflow.python.framework.ops import disable_eager_execution
 #tf.config.experimental_run_functions_eagerly(True)
 #os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
 
+
 class SearchTool(MLToolMixin):
 
     def __init__(self, settings_file, working_location):
@@ -35,8 +36,7 @@ class SearchTool(MLToolMixin):
 
     def train_test_model(self, run_dir, hyper_params, x_test, x_train, aim_run):
 
-        optimizer = tf.keras.optimizers.Adam(1e-4)
-        train_images = tf_vae.preprocess_images(x_train)
+        optimizer = tf.keras.optimizers.Adam(1e-5)
 
         batch_size = hyper_params[self.hp_batch_size]
 
@@ -77,7 +77,7 @@ class SearchTool(MLToolMixin):
             aim_run.track(float(elbo.numpy()), name='loss', epoch=epoch, context={"subset": "train" })
             # generate_and_save_images(model, epoch, test_sample)
 
-        model.predict(train_images)
+        model.predict(x_train[:1000])
         return model, float(elbo.numpy())
 
     def run(self, run_dir, hyper_params, x_test, x_train, aim_run):
