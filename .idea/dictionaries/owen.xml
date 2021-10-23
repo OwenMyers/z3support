@@ -1,9 +1,11 @@
 <component name="ProjectDictionaryState">
   <dictionary name="owen">
     <words>
+      <w>autoencoder</w>
       <w>checkpointed</w>
       <w>checkpointers</w>
       <w>elbo</w>
+      <w>logits</w>
       <w>uint</w>
     </words>
   </dictionary>

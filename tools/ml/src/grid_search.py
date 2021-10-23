@@ -106,7 +106,6 @@ class SearchTool(MLToolMixin):
             np.save(self.data_label_location, data_labels)
 
         c = 0
-        autoencoder = None
         for batch_size in self.hp_batch_size.domain.values:
             for n_layers in self.hp_n_layers.domain.values:
                 for f_map_step in self.hp_feature_map_step.domain.values:
@@ -135,7 +134,8 @@ class SearchTool(MLToolMixin):
                                 print({h.name: hyper_params[h] for h in hyper_params})
                                 aim_run = Run()
                                 run_result, loss = self.run(
-                                    os.path.join(self.run_location, 'tensorboard_raw', self.tensorboard_sub_dir, run_name),
+                                    os.path.join(self.run_location, 'tensorboard_raw', self.tensorboard_sub_dir,
+                                                 run_name),
                                     hyper_params,
                                     x_test,
                                     x_train,
@@ -149,9 +149,8 @@ class SearchTool(MLToolMixin):
                                     hash_name = aim_run.hashname
                                     # Creates two output lines telling us the "asset" was created. Just a note so I
                                     # don't go digging into why later
-                                    run_result.save(os.path.join(self.run_location, 'models', f'{hash_name}.tf'), save_format='tf', save_traces=True)
-                                    #with open(os.path.join(self.run_location, 'models', f'{hash_name}.pkl'), 'w') as f:
-                                    #    pickle.dump(run_result, f)
+                                    run_result.save(os.path.join(self.run_location, 'models', f'{hash_name}.tf'),
+                                                    save_format='tf', save_traces=True)
 
 
 if __name__ == "__main__":
