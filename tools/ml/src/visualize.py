@@ -208,16 +208,17 @@ class VizTool(MLToolMixin):
 
     def main(self, model_path):
         if self.use_current_checkpoint:
-            model = self.get_checkpoint_model()
+            model = self.get_checkpoint_model(model_path)
         else:
             model = tf.keras.models.load_model(model_path, custom_objects={'compute_loss': tf_vae.compute_loss})
 
+        model_hash_name = model_path.strip('/').split('/')[-1].split('.')[0]
         x_test = self.get_testing_data()
         y_test = self.get_testing_data_labels()
 
         #self.plot_feature_maps(autoencoder, activations, x_test, encoder_layer_names, images_per_row)
         #self.plot_weights(autoencoder, encoder_layer_names, images_per_row)
-        self.plot_dense_layer(autoencoder, x_test, y_test)
+        self.simple_plot_dense_layer(model, model_hash_name, x_test, y_test)
         self.plot_input_and_output(autoencoder, x_test, self.figures_project_dir)
         #self.plot_decoder_result_from_input(autoencoder, self.figures_project_dir, start_loc=[-15.8, -60.1], end_loc=[33.4, -31.7],layer_names=full_ae_layer_names)
 
@@ -231,16 +232,15 @@ class VizTool(MLToolMixin):
                 plt.savefig(os.path.join(self.figures_project_dir, 'dense_layer.png'))
                 #plt.xlim()
 
-    def simple_plot_dense_layer(self, model, model_path):
+    def simple_plot_dense_layer(self, model, model_hash_name, x_test, y_test):
         #weights = autoencoder.get_layer(name='dense_encoder_output').get_weights()
-        model_hash_name = model_path.strip('/').split('/')[-1].split('.')[0]
-        y_test = self.get_testing_data_labels()[:50000]
+        x_in = self.get_testing_data()[:50000]
+        y_in = self.get_testing_data_labels()[:50000]
 
-        mean, logvar = tf_vae.encode(model, x=self.get_testing_data()[:50000])
+        mean, logvar = tf_vae.encode(model, x=x_in)
         z = tf_vae.reparameterize(mean=mean, logvar=logvar)
-        plt.scatter(z[:, 0], z[:, 1], c=y_test, cmap='Set1', s=1)
+        plt.scatter(z[:, 0], z[:, 1], c=y_in, cmap='Set1', s=1)
         plt.savefig(os.path.join('figures', f'{model_hash_name}_dense_layer.png'))
-        #plt.xlim()
 
 
 def gdl_external_viz_in_out(path_to_model, settings_file, ignore_this_run_loc):
