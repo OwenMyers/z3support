@@ -168,8 +168,6 @@ class VizTool(MLToolMixin):
         plt.imshow(y[0], aspect='auto', cmap='viridis')
         plt.savefig(os.path.join(figures_project_dir, 'example_out.png'))
 
-
-
     @staticmethod
     def plot_decoder_result_from_input(autoencoder, figures_project_dir, start_loc=[], end_loc=[], layer_names=None, model_is_split=False):
         # Trying to do this using suggestion https://stackoverflow.com/questions/49193510/how-to-split-a-model-trained-in-keras
@@ -208,40 +206,22 @@ class VizTool(MLToolMixin):
             plt.imshow(cur_result, aspect='auto', cmap='viridis')
             plt.savefig(os.path.join(figures_project_dir, 'latent_slice_video', f'slice_{l}.png'))
 
-    def main(self):
+    def main(self, model_path):
         if self.use_current_checkpoint:
-            autoencoder = self.get_checkpoint_model()
+            model = self.get_checkpoint_model()
         else:
-            autoencoder = self.get_best_autoencoder()
-        activation_model = self.get_best_activations()
+            model = tf.keras.models.load_model(model_path, custom_objects={'compute_loss': tf_vae.compute_loss})
 
         x_test = self.get_testing_data()
         y_test = self.get_testing_data_labels()
 
-        #activation_model.predict(np.zeros([5, 28, 28, 1]))
-        x_test = x_test[:1000]
-        y_test = y_test[:1000]
-        #input_for_act = list(x_test.as_numpy_iterator())
-        #input_for_act = np.array(input_for_act)[:, 0, :, :]
-        activations = activation_model.predict(x_test)
-        images_per_row = 16
-        encoder_layer_names = []
-        layers_to_encoded = int(len(autoencoder.layers) / 2)
-        for layer in autoencoder.layers[:layers_to_encoded+1]:
-            # Names of the layers to include in plot
-            encoder_layer_names.append(layer.name)
-
-        full_ae_layer_names = []
-        for layer in autoencoder.layers:
-            full_ae_layer_names.append(layer.name)
-
         #self.plot_feature_maps(autoencoder, activations, x_test, encoder_layer_names, images_per_row)
         #self.plot_weights(autoencoder, encoder_layer_names, images_per_row)
-        self.plot_dense_layer(autoencoder, encoder_layer_names, activations, y_test)
+        self.plot_dense_layer(autoencoder, x_test, y_test)
         self.plot_input_and_output(autoencoder, x_test, self.figures_project_dir)
         #self.plot_decoder_result_from_input(autoencoder, self.figures_project_dir, start_loc=[-15.8, -60.1], end_loc=[33.4, -31.7],layer_names=full_ae_layer_names)
 
-    def plot_dense_layer(self, autoencoder, layer_names, activations, labels):
+    def old_plot_dense_layer(self, autoencoder, layer_names, activations, labels):
         #weights = autoencoder.get_layer(name='dense_encoder_output').get_weights()
         for layer_name, layer_activation in zip(layer_names, activations):  # Displays the feature maps
             if layer_name == 'dense_encoder_output':
@@ -263,7 +243,7 @@ class VizTool(MLToolMixin):
         #plt.xlim()
 
 
-def external_viz_in_out(path_to_model, settings_file, ignore_this_run_loc):
+def gdl_external_viz_in_out(path_to_model, settings_file, ignore_this_run_loc):
     from gdl_code_repeate.vae_model import VariationalAutoencoder
     from gdl_code_repeate.utils.loaders import load_model
     loaded_model = load_model(VariationalAutoencoder, path_to_model)
@@ -290,14 +270,14 @@ def external_viz_in_out(path_to_model, settings_file, ignore_this_run_loc):
 
     #viz_tool.plot_decoder_result_from_input(loaded_model, 'gdl_code_repeate/figures/', start_loc=[-0.75, 1.5], end_loc=[2.0, 1.5], model_is_split=True)
     viz_tool.plot_decoder_result_from_input(loaded_model, 'gdl_code_repeate/figures/', start_loc=[-0.75, 1.5], end_loc=[-1.5, 0.0], model_is_split=True)
-    print('Hhhhhhhhhhhhhhey')
 
 
 def simplified_load_visualize(model_path, tool):
     model = tf.keras.models.load_model(model_path, custom_objects={'compute_loss': tf_vae.compute_loss})
-    #with open(model_path, 'rb') as f:
-    #    model = pickle.load(f)
-    tool.simple_plot_dense_layer(model, model_path)
+    #tool.simple_plot_dense_layer(model, model_path)
+    x = tool.get_testing_data()
+    tool.plot_input_and_output(model, x, tool.figures_project_dir, model_is_split=True)
+    #plot_decoder_result_from_input(model, tool.figures_project_dir, start_loc=[-1, -1], end_loc=[1, 1], layer_names=None, model_is_split=False):
     print("hi")
 
 
@@ -305,7 +285,6 @@ if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO)
     parser = argparse.ArgumentParser(description='Run a parameter sweep to find the best autoencoder.')
     parser.add_argument('--model_path', type=str, help='Path to model', required=True)
-    parser.add_argument('--external_model', type=str, help='Path to model', required=False, default=None)
     parser.add_argument('--external_type', type=str, help='Specifies if the saved model is a tf format or h5', required=False, default='tf')
     parser.add_argument('--settings', type=str, help='Settings file location', required=False)
     parser.add_argument('--run-location', type=str, help='Path you want the run to be done at', default='./')
@@ -313,10 +292,12 @@ if __name__ == "__main__":
                                                          'model_checkpoints will be used instead of the best model.'
                                                          'This is to be used for evaluating models mid run.',
                                                          action='store_true')
+    parser.add_argument('--gdl_external_model', type=str, help='Path to model', required=False, default=None)
+
     args = parser.parse_args()
 
     if args.external_model is not None:
-        external_viz_in_out(args.external_model, args.settings, args.run_location)
+        gdl_external_viz_in_out(args.external_model, args.settings, args.run_location)
     else:
         tool = VizTool(args.settings, args.run_location, args.use_current_checkpoint)
         simplified_load_visualize(args.model_path, tool)

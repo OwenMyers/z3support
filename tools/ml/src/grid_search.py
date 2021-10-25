@@ -19,13 +19,7 @@ from tools.ml.src.base import MLToolMixin, r_loss, vae_r_loss
 from tools.ml.src.custom_callbacks import CustomCallbacks, step_decay_schedule
 #from tensorflow.keras.datasets import mnist
 from tensorflow.keras.layers import Input, Conv2D, Conv2DTranspose, BatchNormalization, LeakyReLU, Dropout, Activation, Flatten, Dense, Reshape, Lambda
-from tensorflow.keras.callbacks import TensorBoard, EarlyStopping
-from tensorflow.keras import backend as K
-from tensorflow.python.framework.ops import disable_eager_execution
-#disable_eager_execution()
-# Makes multi runs work but runs slow (same as removing tf.function decorator)
-#tf.config.experimental_run_functions_eagerly(True)
-#os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
+os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
 
 
 class SearchTool(MLToolMixin):
