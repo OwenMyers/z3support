@@ -152,21 +152,22 @@ class VizTool(MLToolMixin):
             plt.imshow(display_grid, aspect='auto', cmap='viridis')
             plt.savefig(os.path.join(self.figures_project_dir, layer_name + 'layer_weights.png'))
 
-    @staticmethod
-    def plot_input_and_output(autoencoder, x_test, figures_project_dir, model_is_split=False):
+    def plot_input_and_output(self, autoencoder, x_test, model_hash_name, model_is_split=False):
         x1 = next(iter(x_test))
         x2 = next(iter(x_test))
         x = np.array([x1, x2])
         if model_is_split:
-            z_points = autoencoder.encoder.predict(x)
-            y = autoencoder.decoder.predict(z_points)
+            mean, logvar = tf_vae.encode(autoencoder, x=x)
+            z_points = tf_vae.reparameterize(mean=mean, logvar=logvar)
+            y = tf_vae.decode(autoencoder, z_points, apply_sigmoid=True)
         else:
             y = autoencoder.predict(x)
         #y = np.array(y[:,:,0,:])
         plt.imshow(x[0], aspect='auto', cmap='viridis')
-        plt.savefig(os.path.join(figures_project_dir, 'example_in.png'))
+        plt.savefig(os.path.join(self.figures_project_dir, f'{model_hash_name}_example_in.png'))
         plt.imshow(y[0], aspect='auto', cmap='viridis')
-        plt.savefig(os.path.join(figures_project_dir, 'example_out.png'))
+        plt.savefig(os.path.join(self.figures_project_dir, f'{model_hash_name}_example_out.png'))
+        plt.clf()
 
     @staticmethod
     def plot_decoder_result_from_input(autoencoder, figures_project_dir, start_loc=[], end_loc=[], layer_names=None, model_is_split=False):
@@ -219,7 +220,7 @@ class VizTool(MLToolMixin):
         #self.plot_feature_maps(autoencoder, activations, x_test, encoder_layer_names, images_per_row)
         #self.plot_weights(autoencoder, encoder_layer_names, images_per_row)
         self.simple_plot_dense_layer(model, model_hash_name, x_test, y_test)
-        self.plot_input_and_output(autoencoder, x_test, self.figures_project_dir)
+        self.plot_input_and_output(model, x_test, model_hash_name, model_is_split=True)
         #self.plot_decoder_result_from_input(autoencoder, self.figures_project_dir, start_loc=[-15.8, -60.1], end_loc=[33.4, -31.7],layer_names=full_ae_layer_names)
 
     def old_plot_dense_layer(self, autoencoder, layer_names, activations, labels):
@@ -240,7 +241,8 @@ class VizTool(MLToolMixin):
         mean, logvar = tf_vae.encode(model, x=x_in)
         z = tf_vae.reparameterize(mean=mean, logvar=logvar)
         plt.scatter(z[:, 0], z[:, 1], c=y_in, cmap='Set1', s=1)
-        plt.savefig(os.path.join('figures', f'{model_hash_name}_dense_layer.png'))
+        plt.savefig(os.path.join(self.figures_project_dir, f'{model_hash_name}_dense_layer.png'))
+        plt.clf()
 
 
 def gdl_external_viz_in_out(path_to_model, settings_file, ignore_this_run_loc):
@@ -278,14 +280,12 @@ def simplified_load_visualize(model_path, tool):
     x = tool.get_testing_data()
     tool.plot_input_and_output(model, x, tool.figures_project_dir, model_is_split=True)
     #plot_decoder_result_from_input(model, tool.figures_project_dir, start_loc=[-1, -1], end_loc=[1, 1], layer_names=None, model_is_split=False):
-    print("hi")
 
 
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO)
     parser = argparse.ArgumentParser(description='Run a parameter sweep to find the best autoencoder.')
     parser.add_argument('--model_path', type=str, help='Path to model', required=True)
-    parser.add_argument('--external_type', type=str, help='Specifies if the saved model is a tf format or h5', required=False, default='tf')
     parser.add_argument('--settings', type=str, help='Settings file location', required=False)
     parser.add_argument('--run-location', type=str, help='Path you want the run to be done at', default='./')
     parser.add_argument('--use-current-checkpoint', help='If this is used then the current checkpoint in'
@@ -293,12 +293,13 @@ if __name__ == "__main__":
                                                          'This is to be used for evaluating models mid run.',
                                                          action='store_true')
     parser.add_argument('--gdl_external_model', type=str, help='Path to model', required=False, default=None)
+    parser.add_argument('--gdl_external_type', type=str, help='Specifies if the saved model is a tf format or h5', required=False, default='tf')
 
     args = parser.parse_args()
 
-    if args.external_model is not None:
-        gdl_external_viz_in_out(args.external_model, args.settings, args.run_location)
+    if args.gdl_external_model is not None:
+        gdl_external_viz_in_out(args.gdl_external_model, args.settings, args.run_location)
     else:
         tool = VizTool(args.settings, args.run_location, args.use_current_checkpoint)
-        simplified_load_visualize(args.model_path, tool)
-        #tool.main()
+        #simplified_load_visualize(args.model_path, tool)
+        tool.main(model_path=args.model_path)

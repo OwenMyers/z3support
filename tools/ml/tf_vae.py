@@ -52,17 +52,10 @@ class CVAE(tf.keras.Model):
 #      eps = tf.random.normal(shape=(100, self.latent_dim))
 #    return self.decode(eps, apply_sigmoid=True)
 
-    def decode(self, z, apply_sigmoid=False):
-        logits = self.decoder(z)
-        if apply_sigmoid:
-            probabilities = tf.sigmoid(logits)
-            return probabilities
-        return logits
-
     def call(self, inputs):
         mean, log_var = tf.split(self.encoder(inputs), num_or_size_splits=2, axis=1)
         z = reparameterize(mean=mean, logvar=log_var)
-        return self.decode(z)
+        return decode(self, z)
 
     @tf.function
     def train_step(self, model, x, optimizer):
@@ -80,6 +73,14 @@ class CVAE(tf.keras.Model):
 def encode(model, x=None):
     mean, log_var = tf.split(model.encoder(x), num_or_size_splits=2, axis=1)
     return mean, log_var
+
+
+def decode(model, z, apply_sigmoid=False):
+    logits = model.decoder(z)
+    if apply_sigmoid:
+        probabilities = tf.sigmoid(logits)
+        return probabilities
+    return logits
 
 
 def reparameterize(mean=None, logvar=None):
@@ -102,7 +103,7 @@ def log_normal_pdf(sample, mean, logvar, raxis=1):
 def compute_loss(model, x):
     mean, logvar = encode(model, x=x)
     z = reparameterize(mean=mean, logvar=logvar)
-    x_logit = model.decode(z)
+    x_logit = decode(model, z)
     cross_ent = tf.nn.sigmoid_cross_entropy_with_logits(logits=x_logit, labels=x)
     logpx_z = -tf.reduce_sum(cross_ent, axis=[1, 2, 3])
     logpz = log_normal_pdf(z, 0., 0.)
@@ -115,7 +116,7 @@ def metric_compute_loss(model):
     def custom_vae_loss(y_pred, y_true):
         mean, logvar = encode(model, x=y_true)
         z = reparameterize(model, mean=mean, logvar=logvar)
-        x_logit = model.decode(z)
+        x_logit = decode(model, z)
         cross_ent = tf.nn.sigmoid_cross_entropy_with_logits(logits=x_logit, labels=y_true)
         logpx_z = -tf.reduce_sum(cross_ent, axis=[1, 2, 3])
         logpz = log_normal_pdf(z, 0., 0.)
