@@ -76,7 +76,7 @@ class VizTool(MLToolMixin):
         # print(w.shape)
         return w
 
-    def plot_feature_maps(self, autoencoder, activations, x_test, layer_names, images_per_row):
+    def plot_feature_maps(self, activations, layer_names, images_per_row):
         # Note: the `autoencoder` parameter is not currently used. We have it in here because it is required
         # for the solution we are trying to build to plot information about checkpointed models, which requires
         # information about the structure of the model being run. There is a known problem with the TF
@@ -89,7 +89,6 @@ class VizTool(MLToolMixin):
         # List of the indices of the rows of data that will be used to display feature maps
         feature_list = []
         while len(feature_list) < self.n_feature_maps:
-            #current_feature = random.randint(0, len(x_test) - 1)
             current_feature = random.randint(0, 100)
             if current_feature in feature_list:
                 continue
@@ -117,7 +116,9 @@ class VizTool(MLToolMixin):
                 plt.savefig(os.path.join(self.figures_project_dir,
                                          layer_name + f'feature_map_{current_feature}.png'))
 
-    def plot_weights(self, autoencoder, layer_names, images_per_row):
+    def plot_weights(self, autoencoder, layer_names, images_per_row, model_is_split=False):
+        if model_is_split:
+            raise ValueError("This method (plot_weights) can not currently handle a split model")
         neuron = 0
         for layer_name in layer_names:
             print(layer_name)
@@ -162,19 +163,19 @@ class VizTool(MLToolMixin):
             y = tf_vae.decode(autoencoder, z_points, apply_sigmoid=True)
         else:
             y = autoencoder.predict(x)
-        #y = np.array(y[:,:,0,:])
         plt.imshow(x[0], aspect='auto', cmap='viridis')
         plt.savefig(os.path.join(self.figures_project_dir, f'{model_hash_name}_example_in.png'))
         plt.imshow(y[0], aspect='auto', cmap='viridis')
         plt.savefig(os.path.join(self.figures_project_dir, f'{model_hash_name}_example_out.png'))
         plt.clf()
 
-    @staticmethod
-    def plot_decoder_result_from_input(autoencoder, figures_project_dir, start_loc=[], end_loc=[], layer_names=None, model_is_split=False):
-        # Trying to do this using suggestion https://stackoverflow.com/questions/49193510/how-to-split-a-model-trained-in-keras
-        if model_is_split:
-            decoder = autoencoder.decoder
-        else:
+    def plot_decoder_result_from_input(self, autoencoder, start_loc=(-1, -1), end_loc=(1, 1), layer_names=None,
+                                       model_is_split=False):
+        # Trying to do this using suggestion:
+        # https://stackoverflow.com/questions/49193510/how-to-split-a-model-trained-in-keras
+        decoder = None
+        if not model_is_split:
+            decoder_input = None
             started = False
             for i, layer_name in enumerate(layer_names):
                 if started:
@@ -191,9 +192,8 @@ class VizTool(MLToolMixin):
             decoder = Model(inputs=decoder_input, outputs=decoder)
 
         # create the path that that we want to cut across
-        num_steps = 300
+        num_steps = 5
         loc_list = []
-        running_loc = [None, None]
         x_step_size = (end_loc[0] - start_loc[0])/num_steps
         y_step_size = (end_loc[1] - start_loc[1])/num_steps
         for i in range(num_steps):
@@ -201,11 +201,15 @@ class VizTool(MLToolMixin):
             current_loc[0] = start_loc[0] + i * x_step_size
             current_loc[1] = start_loc[1] + i * y_step_size
             loc_list.append(current_loc)
-
-        results = decoder.predict(loc_list)
-        for l, cur_result in enumerate(results):
+        if model_is_split:
+            results = [tf_vae.decode(autoencoder, i, apply_sigmoid=True) for i in loc_list]
+        else:
+            results = decoder.predict(loc_list)
+        if not os.path.exists(os.path.join(self.figures_project_dir, 'latent_slice_video')):
+            os.mkdir(os.path.join(self.figures_project_dir, 'latent_slice_video'))
+        for index, cur_result in enumerate(results):
             plt.imshow(cur_result, aspect='auto', cmap='viridis')
-            plt.savefig(os.path.join(figures_project_dir, 'latent_slice_video', f'slice_{l}.png'))
+            plt.savefig(os.path.join(self.figures_project_dir, 'latent_slice_video', f'slice_{index}.png'))
 
     def main(self, model_path):
         if self.use_current_checkpoint:
@@ -217,24 +221,20 @@ class VizTool(MLToolMixin):
         x_test = self.get_testing_data()
         y_test = self.get_testing_data_labels()
 
-        #self.plot_feature_maps(autoencoder, activations, x_test, encoder_layer_names, images_per_row)
-        #self.plot_weights(autoencoder, encoder_layer_names, images_per_row)
+        # self.plot_feature_maps(autoencoder, activations, x_test, encoder_layer_names, images_per_row)
+        # self.plot_weights(autoencoder, encoder_layer_names, images_per_row)
+        self.plot_decoder_result_from_input(model, start_loc=[-1.0, -1.0], end_loc=[1.0, 1.0], model_is_split=True)
         self.simple_plot_dense_layer(model, model_hash_name, x_test, y_test)
         self.plot_input_and_output(model, x_test, model_hash_name, model_is_split=True)
-        #self.plot_decoder_result_from_input(autoencoder, self.figures_project_dir, start_loc=[-15.8, -60.1], end_loc=[33.4, -31.7],layer_names=full_ae_layer_names)
 
     def old_plot_dense_layer(self, autoencoder, layer_names, activations, labels):
-        #weights = autoencoder.get_layer(name='dense_encoder_output').get_weights()
         for layer_name, layer_activation in zip(layer_names, activations):  # Displays the feature maps
             if layer_name == 'dense_encoder_output':
-                print("hi")
-                plt.scatter(layer_activation[:, 0], layer_activation[:, 1], c=labels, cmap='Set1')#, s=1)
+                plt.scatter(layer_activation[:, 0], layer_activation[:, 1], c=labels, cmap='Set1')
                 plt.show()
                 plt.savefig(os.path.join(self.figures_project_dir, 'dense_layer.png'))
-                #plt.xlim()
 
     def simple_plot_dense_layer(self, model, model_hash_name, x_test, y_test):
-        #weights = autoencoder.get_layer(name='dense_encoder_output').get_weights()
         x_in = self.get_testing_data()[:50000]
         y_in = self.get_testing_data_labels()[:50000]
 
@@ -261,25 +261,12 @@ def gdl_external_viz_in_out(path_to_model, settings_file, ignore_this_run_loc):
 
     z_points = loaded_model.encoder.predict(example_images)
 
-    min_x = min(z_points[:, 0])
-    max_x = max(z_points[:, 0])
-    min_y = min(z_points[:, 1])
-    max_y = max(z_points[:, 1])
-
     plt.figure()
     plt.scatter(z_points[:, 0], z_points[:, 1], c=example_labels, alpha=0.5, s=2)
     plt.savefig('gdl_code_repeate/figures/vae_latent_space.png', dpi=200)
 
-    #viz_tool.plot_decoder_result_from_input(loaded_model, 'gdl_code_repeate/figures/', start_loc=[-0.75, 1.5], end_loc=[2.0, 1.5], model_is_split=True)
-    viz_tool.plot_decoder_result_from_input(loaded_model, 'gdl_code_repeate/figures/', start_loc=[-0.75, 1.5], end_loc=[-1.5, 0.0], model_is_split=True)
-
-
-def simplified_load_visualize(model_path, tool):
-    model = tf.keras.models.load_model(model_path, custom_objects={'compute_loss': tf_vae.compute_loss})
-    #tool.simple_plot_dense_layer(model, model_path)
-    x = tool.get_testing_data()
-    tool.plot_input_and_output(model, x, tool.figures_project_dir, model_is_split=True)
-    #plot_decoder_result_from_input(model, tool.figures_project_dir, start_loc=[-1, -1], end_loc=[1, 1], layer_names=None, model_is_split=False):
+    viz_tool.plot_decoder_result_from_input(loaded_model, start_loc=[-0.75, 1.5], end_loc=[-1.5, 0.0],
+                                            model_is_split=True)
 
 
 if __name__ == "__main__":
@@ -301,5 +288,4 @@ if __name__ == "__main__":
         gdl_external_viz_in_out(args.gdl_external_model, args.settings, args.run_location)
     else:
         tool = VizTool(args.settings, args.run_location, args.use_current_checkpoint)
-        #simplified_load_visualize(args.model_path, tool)
         tool.main(model_path=args.model_path)
