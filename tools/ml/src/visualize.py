@@ -192,7 +192,7 @@ class VizTool(MLToolMixin):
             decoder = Model(inputs=decoder_input, outputs=decoder)
 
         # create the path that that we want to cut across
-        num_steps = 5
+        num_steps = 300
         loc_list = []
         x_step_size = (end_loc[0] - start_loc[0])/num_steps
         y_step_size = (end_loc[1] - start_loc[1])/num_steps
@@ -202,7 +202,7 @@ class VizTool(MLToolMixin):
             current_loc[1] = start_loc[1] + i * y_step_size
             loc_list.append(current_loc)
         if model_is_split:
-            results = [tf_vae.decode(autoencoder, i, apply_sigmoid=True) for i in loc_list]
+            results = tf_vae.decode(autoencoder, np.matrix(loc_list), apply_sigmoid=True)
         else:
             results = decoder.predict(loc_list)
         if not os.path.exists(os.path.join(self.figures_project_dir, 'latent_slice_video')):
