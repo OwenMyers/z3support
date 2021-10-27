@@ -1,4 +1,5 @@
 import os
+from tools.ml import tf_vae
 import tensorflow as tf
 from tensorflow.keras import backend as K
 import pickle
@@ -48,6 +49,7 @@ class MLToolMixin:
         self.Ly = int(self.config['Settings']['Ly'])
         self.feature_map_start = int(self.config['Settings']['FEATURE_MAP_START'])
         self.epochs = int(self.config['Settings']['EPOCHS'])
+        self.latent_dim = int(self.config['Settings']['LATENT_DIMENSION'])
         batch_sizes = self.parse_int_list_from_config(self.config['Settings']['BATCH_SIZES'])
         self.hp_batch_size = hp.HParam('batch_size', hp.Discrete(batch_sizes))
         n_layers = self.parse_int_list_from_config(self.config['Settings']['N_LAYERS'])
@@ -154,15 +156,7 @@ class MLToolMixin:
         :return: the keras model of the "best" model
         """
         if self.variational:
-            def vae_kl_loss(y_true, y_pred):
-                kl_loss = -0.5 * K.sum(1.0 + self.log_var - K.square(self.mu) - K.exp(self.log_var), axis=1)
-                return kl_loss
-
-            def vae_loss(y_true, y_pred):
-                new_r_loss = vae_r_loss(y_true, y_pred)
-                kl_loss = vae_kl_loss(y_true, y_pred)
-                return new_r_loss + kl_loss
-            return tf.keras.models.load_model(self.checkpoint_file, custom_objects={'vae_loss': vae_loss, 'vae_kl_loss': vae_kl_loss, 'vae_r_loss': vae_r_loss})
+            return tf.keras.models.load_model(self.checkpoint_file, custom_objects={'compute_loss': tf_vae.compute_loss})
         else:
             return keras.models.load_model(self.best_model_file, custom_objects={'r_loss': r_loss})
 
@@ -204,17 +198,7 @@ class MLToolMixin:
         :return: the keras activations for the "best" model
         """
         if self.variational:
-            def vae_kl_loss(y_true, y_pred):
-                kl_loss = -0.5 * K.sum(1.0 + self.log_var - K.square(self.mu) - K.exp(self.log_var), axis=1)
-                return kl_loss
-
-
-            def vae_loss(y_true, y_pred):
-                new_r_loss = vae_r_loss(y_true, y_pred)
-                kl_loss = vae_kl_loss(y_true, y_pred)
-                return new_r_loss + kl_loss
-
-            return tf.keras.models.load_model(self.checkpoint_file, custom_objects={'vae_loss': vae_loss, 'vae_kl_loss': vae_kl_loss, 'vae_r_loss': vae_r_loss})
+            return tf.keras.models.load_model(self.checkpoint_file, custom_objects={'compute_loss': tf_vae.compute_loss})
         else:
             return keras.models.load_model(self.best_activations_file, custom_objects={'r_loss': r_loss})
 
@@ -352,8 +336,8 @@ def r_loss(y_true, y_pred):
 
 
 def vae_r_loss(y_true, y_pred):
-    r_loss_factor = 1.0
-    vae_r_loss = K.mean(K.square(y_true - y_pred), axis=[1, 2, 3])
-    return r_loss_factor * vae_r_loss
+    r_loss_factor = 100
+    tmp_r_loss = K.mean(K.square(y_true - y_pred), axis=[1, 2, 3])
+    return r_loss_factor * tmp_r_loss
 
 
