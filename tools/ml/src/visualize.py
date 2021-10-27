@@ -192,7 +192,7 @@ class VizTool(MLToolMixin):
             decoder = Model(inputs=decoder_input, outputs=decoder)
 
         # create the path that that we want to cut across
-        num_steps = 300
+        num_steps = 3
         loc_list = []
         x_step_size = (end_loc[0] - start_loc[0])/num_steps
         y_step_size = (end_loc[1] - start_loc[1])/num_steps
@@ -210,6 +210,7 @@ class VizTool(MLToolMixin):
         for index, cur_result in enumerate(results):
             plt.imshow(cur_result, aspect='auto', cmap='viridis')
             plt.savefig(os.path.join(self.figures_project_dir, 'latent_slice_video', f'slice_{index}.png'))
+            plt.clf()
 
     def main(self, model_path):
         if self.use_current_checkpoint:
@@ -280,7 +281,8 @@ if __name__ == "__main__":
                                                          'This is to be used for evaluating models mid run.',
                                                          action='store_true')
     parser.add_argument('--gdl_external_model', type=str, help='Path to model', required=False, default=None)
-    parser.add_argument('--gdl_external_type', type=str, help='Specifies if the saved model is a tf format or h5', required=False, default='tf')
+    parser.add_argument('--gdl_external_type', type=str, help='Specifies if the saved model is a tf format or h5',
+                        required=False, default='tf')
 
     args = parser.parse_args()
 
