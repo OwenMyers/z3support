@@ -42,9 +42,9 @@ class SearchTool(MLToolMixin):
         latent_dim = self.latent_dim
         num_examples_to_generate = 4
 
-        # TODO revisit this section. May want to remove it depending on how we decide to create the plots
-        # keeping the random vector constant for generation (prediction) so
-        # it will be easier to see the improvement.
+        # TODO revisit this section. May want to remove it depending on how we decide to create the plots (unused!)
+        # (Post TODO) keeping the random vector constant for generation (prediction) so it will be easier to see the
+        # improvement.
         random_vector_for_generation = tf.random.normal(
             shape=[num_examples_to_generate, latent_dim])
         model = tf_vae.CVAE(latent_dim)
@@ -78,26 +78,8 @@ class SearchTool(MLToolMixin):
         return self.train_test_model(run_dir, hyper_params, x_test, x_train, aim_run)
 
     def main(self):
-        if hasattr(self, "data_train"):
-            x_train = self.data_train
-            x_test = self.data_test
-        else:
-            # DATA will contain a list of the paths to different binary data files. There should be one for each of the
-            # "different types of systems" (e.g. z3, z2, high temp, etc). There is no guarantee that there are the same
-            # number of configurations in each file though but the function below takes care of all of that for us to
-            # make sure we get a balanced dataset and that it meets some basic requirements.
-            # all_data = np.load(DATA)
-            all_data, data_labels = self.import_data(self.data)
-
-            n_records = len(all_data)
-            x_train = all_data[: n_records - int(n_records / 4)]
-            x_test = all_data[int(n_records / 4):]
-            x_train = np.reshape(x_train, (len(x_train), self.L * 2, self.L * 2, 1))
-            x_test = np.reshape(x_test, (len(x_test), self.L * 2, self.L * 2, 1))
-
-            np.save(self.training_data_location, x_train)
-            np.save(self.testing_data_location, x_test)
-            np.save(self.data_label_location, data_labels)
+        x_train = self.data_train
+        x_test = self.data_test
 
         c = 0
         for batch_size in self.hp_batch_size.domain.values:

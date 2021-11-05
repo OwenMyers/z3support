@@ -35,13 +35,26 @@ def main():
     Note that the ``timestamp`` is set by the script. Don't change this.
 
     In the ``[Data]`` sections the user will specify the different sources of data to include in the training.
-    See the "Transforming Data For Autoencoder" section for more details on options and what is done with the data.
+    There are two different "modes".
+
+    * One: you have saved physics data (on a lattice) as numpy files and you want to train against the contents of
+      those files. In that case  do the following and see the "Transforming Data For Autoencoder" section for
+      more details on options and what is done with the data.
+
     Example::
 
         [Data]
-        S3=False
         DATA1=/full/path/to/data1.npy
         DATA2=/full/path/to/data2.npy
+
+    * Two: you have a way of generating the data on the fly or you want a wrapper for existing TF datasets. In which
+      case you will want to prefix with "generator-" and only supply data for "DATA1"
+
+    Example::
+
+        [Data]
+        DATA1=/full/path/to/data1.npy
+
 
     In section ``[Plotting]`` you can set some plotting options like::
 
@@ -55,7 +68,7 @@ def main():
 
             $ python src/new_setting_file.py -d settings
 
-        If you ommit the ``-d`` flag  which specifies a directory to place the new file in, then you will get your
+        If you omit the ``-d`` flag  which specifies a directory to place the new file in, then you will get your
         file in the directory you ran the python command from.
 
     :return: None
