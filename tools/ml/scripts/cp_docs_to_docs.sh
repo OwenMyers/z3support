@@ -1,1 +1,1 @@
-cp -r build/* ../../docs/
+cp -r ./build/html/* ../../docs/
