@@ -19,7 +19,7 @@ from tools.ml.src.base import MLToolMixin, r_loss, vae_r_loss
 from tools.ml.src.custom_callbacks import CustomCallbacks, step_decay_schedule
 #from tensorflow.keras.datasets import mnist
 from tensorflow.keras.layers import Input, Conv2D, Conv2DTranspose, BatchNormalization, LeakyReLU, Dropout, Activation, Flatten, Dense, Reshape, Lambda
-os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
+#os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
 
 
 class SearchTool(MLToolMixin):
@@ -83,7 +83,7 @@ class SearchTool(MLToolMixin):
         # improvement.
         random_vector_for_generation = tf.random.normal(
             shape=[num_examples_to_generate, latent_dim])
-        model = tf_vae.CVAE(latent_dim)
+        model = tf_vae.CVAECustom(latent_dim)
         assert batch_size >= num_examples_to_generate
         for test_batch in test_dataset.take(1):
             test_sample = test_batch[0:num_examples_to_generate, :, :, :]

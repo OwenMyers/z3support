@@ -6,7 +6,7 @@ import os
 class PhysicsDataset:
 
     @staticmethod
-    def __new__(cls, train=True, train_percent=80, path_list=None, lattice_size=None):
+    def __new__(cls, train=True, train_percent=80, path_list=None, lattice_size=None, configuration_shape='links'):
         """
         The `path_list` will contain a list of the paths to different binary data files. There SHOULD (should is in caps
         because you can use this with mixed data, but only do so if the mixed data is from the same system,
@@ -25,13 +25,19 @@ class PhysicsDataset:
         all_data, data_labels = cls.import_data(path_list)
 
         n_records = len(all_data)
-        x_train = all_data[: n_records - int(n_records / 4)]
-        x_test = all_data[int(n_records / 4):]
-        x_train = np.reshape(x_train, (len(x_train), lattice_size * 2, lattice_size * 2, 1))
-        x_test = np.reshape(x_test, (len(x_test), lattice_size * 2, lattice_size * 2, 1))
+        x_train = all_data[: int(n_records * train_percent/100.0)]
+        x_test = all_data[int(n_records * train_percent/100.0):]
+        if configuration_shape == 'links':
+            x_train = np.reshape(x_train, (len(x_train), lattice_size * 2, lattice_size * 2, 1))
+            x_test = np.reshape(x_test, (len(x_test), lattice_size * 2, lattice_size * 2, 1))
+        elif configuration_shape == 'plain':
+            x_train = np.reshape(x_train, (len(x_train), lattice_size, lattice_size, 1))
+            x_test = np.reshape(x_test, (len(x_test), lattice_size, lattice_size, 1))
+        else:
+            raise ValueError(f"No way to handle shape specification provided by user: {configuration_shape}")
 
-        y_train = data_labels[: n_records - int(n_records / 4)]
-        y_test = data_labels[int(n_records / 4):]
+        y_train = data_labels[: int(n_records * train_percent/100.0)]
+        y_test = data_labels[int(n_records * train_percent/100.0):]
 
         if train:
             return x_train, y_train

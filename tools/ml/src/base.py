@@ -123,13 +123,15 @@ class MLToolMixin:
                 train=True,
                 train_percent=80,
                 path_list=path_list,
-                L=self.L
+                lattice_size=self.L,
+                configuration_shape=self.config['Data']['SHAPE'].lower().strip()
             )
             self.data_test, self.data_test_labels = PhysicsDataset(
                 train=False,
                 train_percent=80,
                 path_list=path_list,
-                L=self.L
+                lattice_size=self.L,
+                configuration_shape = self.config['Data']['SHAPE'].lower().strip()
             )
 
         self.checkpointer = ModelCheckpoint(

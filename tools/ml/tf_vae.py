@@ -3,6 +3,68 @@ import numpy as np
 import time
 
 
+class CVAECustom(tf.keras.Model):
+    """Convolutional variational autoencoder."""
+    def __init__(self, latent_dim):
+
+        super(CVAECustom, self).__init__()
+        self.gradients = None
+        self.latent_dim = latent_dim
+        self.encoder = tf.keras.Sequential(
+            [
+                tf.keras.layers.InputLayer(input_shape=(40, 40, 1)),
+                tf.keras.layers.Conv2D(
+                    filters=32, kernel_size=3, strides=(1, 1), activation='relu'),
+                tf.keras.layers.Conv2D(
+                    filters=64, kernel_size=3, strides=(2, 2), activation='relu'),
+                tf.keras.layers.Conv2D(
+                    filters=64, kernel_size=3, strides=(2, 2), activation='relu'),
+                tf.keras.layers.Conv2D(
+                    filters=64, kernel_size=3, strides=(1, 1), activation='relu'),
+                tf.keras.layers.Flatten(),
+                # No activation
+                tf.keras.layers.Dense(latent_dim + latent_dim),
+            ]
+        )
+
+        self.decoder = tf.keras.Sequential(
+            [
+                tf.keras.layers.InputLayer(input_shape=(latent_dim,)),
+                tf.keras.layers.Dense(units=10*10*32, activation=tf.nn.relu),
+                tf.keras.layers.Reshape(target_shape=(10, 10, 32)),
+                tf.keras.layers.Conv2DTranspose(
+                    filters=64, kernel_size=3, strides=1, padding='same',
+                    activation='relu'),
+                tf.keras.layers.Conv2DTranspose(
+                    filters=64, kernel_size=3, strides=2, padding='same',
+                    activation='relu'),
+                tf.keras.layers.Conv2DTranspose(
+                    filters=32, kernel_size=3, strides=2, padding='same',
+                    activation='relu'),
+                # No activation
+                tf.keras.layers.Conv2DTranspose(
+                    filters=1, kernel_size=3, strides=1, padding='same'),
+            ]
+        )
+
+    def call(self, inputs):
+        mean, log_var = tf.split(self.encoder(inputs), num_or_size_splits=2, axis=1)
+        z = reparameterize(mean=mean, logvar=log_var)
+        return decode(self, z)
+
+    @tf.function
+    def train_step(self, model, x, optimizer):
+        """Executes one training step and returns the loss.
+
+        This function computes the loss and gradients, and uses the latter to
+        update the model's parameters.
+        """
+        with tf.GradientTape() as tape:
+            loss = compute_loss(model, x)
+        self.gradients = tape.gradient(loss, model.trainable_variables)
+        optimizer.apply_gradients(zip(self.gradients, model.trainable_variables))
+
+
 class CVAE(tf.keras.Model):
     """Convolutional variational autoencoder."""
     def __init__(self, latent_dim):
@@ -128,7 +190,7 @@ def metric_compute_loss(model):
 
 
 def main():
-    optimizer = tf.keras.optimizers.Adam(1e-4)
+    optimizer = tf.keras.optimizers.Adam(1e-6)
     (train_images, _), (test_images, _) = tf.keras.datasets.mnist.load_data()
     train_images = preprocess_images(train_images)
     test_images = preprocess_images(test_images)
