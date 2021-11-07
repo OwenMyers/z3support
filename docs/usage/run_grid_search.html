@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Run Grid Search &mdash; autoencode 0.0.1 documentation</title>
+      <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="prev" title="Create Settings File" href="settings_and_config.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="../index.html" class="icon icon-home"> autoencode
+          </a>
+              <div class="version">
+                0.0
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="workflow.html">Workflow</a></li>
+<li class="toctree-l1"><a class="reference internal" href="prepare_data.html">Prepare Data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="prepare_data.html#function-and-code-docs">Function and Code Docs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="settings_and_config.html">Create Settings File</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Run Grid Search</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#ml-tool-mixin">ML Tool MixIn</a></li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">autoencode</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
+      <li>Run Grid Search</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/usage/run_grid_search.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="run-grid-search">
+<h1>Run Grid Search<a class="headerlink" href="#run-grid-search" title="Permalink to this headline"></a></h1>
+<p><code class="xref py py-mod docutils literal notranslate"><span class="pre">src.grid_search</span></code></p>
+<dl class="py class">
+<dt class="sig sig-object py" id="src.grid_search.SearchTool">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">src.grid_search.</span></span><span class="sig-name descname"><span class="pre">SearchTool</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">settings_file</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">working_location</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/src/grid_search.html#SearchTool"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.grid_search.SearchTool" title="Permalink to this definition"></a></dt>
+<dd><p>Grid Search made EZ</p>
+<p>Primary purpose of this class:</p>
+<ul class="simple">
+<li><p>One: Collect high-level run operations in one place</p></li>
+<li><p>Two: Inherit general ML tools from the MLMixin which abstract lower level operations</p></li>
+<li><p>Three: Provide functionality for the grid search, namely the organization and visualization of performance
+of different hyperparameter models.</p></li>
+</ul>
+<p><strong>One</strong></p>
+<p>Example of a run (hopefully this feels simple):</p>
+<p>Example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">python</span> <span class="n">grid_search</span><span class="o">.</span><span class="n">py</span> <span class="o">--</span><span class="n">settings</span> <span class="o">/</span><span class="n">path</span><span class="o">/</span><span class="n">to</span><span class="o">/</span><span class="n">generated</span><span class="o">/</span><span class="n">settings</span><span class="o">/</span><span class="n">file</span><span class="o">.</span><span class="n">yml</span> <span class="o">--</span><span class="n">run</span><span class="o">-</span><span class="n">location</span> <span class="o">./</span>
+</pre></div>
+</div>
+<p>The idea being that everything important is just specified in the yaml file rather than at the command line.</p>
+<p><strong>Two</strong></p>
+<p>See the <code class="docutils literal notranslate"><span class="pre">MLToolMixin</span></code> docs for information on some of the lower level stuff managed by this class. Note that
+one of the things <code class="docutils literal notranslate"><span class="pre">MLToolMixin</span></code> does is provide simple “deserialization” of the yaml file :o. In this class
+you will see attributes with names analogous to those things provided int the settings file and they come from
+the <code class="docutils literal notranslate"><span class="pre">MLToolMixin</span></code>.</p>
+<p><strong>Three</strong></p>
+<p>See <code class="docutils literal notranslate"><span class="pre">main()</span></code> method doc</p>
+<p><strong>Note</strong></p>
+<p>This class/file is meant to be run as a script.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="src.grid_search.SearchTool.main">
+<span class="sig-name descname"><span class="pre">main</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/src/grid_search.html#SearchTool.main"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.grid_search.SearchTool.main" title="Permalink to this definition"></a></dt>
+<dd><p>Looping over hyperparameters and interfacing with <code class="docutils literal notranslate"><span class="pre">aim</span></code>, the experiment tracker, here</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="src.grid_search.SearchTool.run">
+<span class="sig-name descname"><span class="pre">run</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">run_dir</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hyper_params</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">x_test</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">x_train</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">aim_run</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/src/grid_search.html#SearchTool.run"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.grid_search.SearchTool.run" title="Permalink to this definition"></a></dt>
+<dd><p>Just runs the <code class="docutils literal notranslate"><span class="pre">train_test_model</span></code> method</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="src.grid_search.SearchTool.train_test_model">
+<span class="sig-name descname"><span class="pre">train_test_model</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">run_dir</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hyper_params</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">x_test</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">x_train</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">aim_run</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/src/grid_search.html#SearchTool.train_test_model"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.grid_search.SearchTool.train_test_model" title="Permalink to this definition"></a></dt>
+<dd><p>Looping over the epochs happens here</p>
+</dd></dl>
+
+</dd></dl>
+
+<section id="ml-tool-mixin">
+<h2>ML Tool MixIn<a class="headerlink" href="#ml-tool-mixin" title="Permalink to this headline"></a></h2>
+<dl class="field-list simple">
+<dt class="field-odd">mod</dt>
+<dd class="field-odd"><p><cite>src.base</cite></p>
+</dd>
+</dl>
+<span class="target" id="module-src.base"></span><dl class="py class">
+<dt class="sig sig-object py" id="src.base.MLToolMixin">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">src.base.</span></span><span class="sig-name descname"><span class="pre">MLToolMixin</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">settings_file</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">working_location</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/src/base.html#MLToolMixin"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.base.MLToolMixin" title="Permalink to this definition"></a></dt>
+<dd><p>Denotes settings and paths (some from the settings) for modeling of the CNN.
+Currently it is specialized towards hyper-parameter searches to find the best configurations of an autoencoder.
+Hope to generalize more and break the hyper parameter and autoencoder stuff into their own mixins.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="src.base.MLToolMixin.get_all_data_sources">
+<em class="property"><span class="pre">static</span> </em><span class="sig-name descname"><span class="pre">get_all_data_sources</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">settings_file_parser</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/src/base.html#MLToolMixin.get_all_data_sources"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.base.MLToolMixin.get_all_data_sources" title="Permalink to this definition"></a></dt>
+<dd><dl class="simple">
+<dt>Arguments:</dt><dd><p>settings_file_parser (ConfigParser): The config parser instance containing <code class="docutils literal notranslate"><span class="pre">DATA1,</span> <span class="pre">DATA2,</span> <span class="pre">...,</span> <span class="pre">DATA&lt;N&gt;</span></code></p>
+</dd>
+<dt>Returns:</dt><dd><p>A list of the full paths to all <code class="docutils literal notranslate"><span class="pre">.npy</span></code> files. Remember that each file contains the full list of
+configurations for that type (e.g. Z2, Z3, High temp, etc) transformed and ready for the neural network.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="src.base.MLToolMixin.get_best_activations">
+<span class="sig-name descname"><span class="pre">get_best_activations</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/src/base.html#MLToolMixin.get_best_activations"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.base.MLToolMixin.get_best_activations" title="Permalink to this definition"></a></dt>
+<dd><p>Use this to get the activations for the best performing model.
+This could be a property but I’m liking the “getter” paradigm right now.</p>
+<p>Example of use:</p>
+<blockquote>
+<div><p>Consider a class with the <code class="docutils literal notranslate"><span class="pre">MLToolMixin</span></code>. Within some method of this class you may want to get the
+activations for some set of inputs. AKA you may want to get the featur maps for some set of data.
+You can use this to get the feature maps like:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">activation_model</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_best_activations</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">activations</span> <span class="o">=</span> <span class="n">activation_model</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">x_test</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>where <code class="docutils literal notranslate"><span class="pre">x_test</span></code> is the testing data. What you will get is <code class="docutils literal notranslate"><span class="pre">activations</span></code> which are an array of all the
+feature maps for eveyone of the “images” in x_test.</p>
+<p>Depending on the shape of the model you could get a feature map for a layer like:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">layer_activation</span> <span class="ow">in</span> <span class="n">activations</span><span class="p">:</span>
+<span class="gp">... </span>    <span class="n">channel_image</span> <span class="o">=</span> <span class="n">layer_activation</span><span class="p">[</span><span class="n">current_feature</span><span class="p">,</span> <span class="p">:,</span> <span class="p">:,</span> <span class="n">col</span> <span class="o">*</span> <span class="n">images_per_row</span> <span class="o">+</span> <span class="n">row</span><span class="p">]</span>
+</pre></div>
+</div>
+<p>In this project we use the above in <code class="docutils literal notranslate"><span class="pre">visualize.py</span></code></p>
+</div></blockquote>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>the keras activations for the “best” model</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="src.base.MLToolMixin.get_best_autoencoder">
+<span class="sig-name descname"><span class="pre">get_best_autoencoder</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/src/base.html#MLToolMixin.get_best_autoencoder"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.base.MLToolMixin.get_best_autoencoder" title="Permalink to this definition"></a></dt>
+<dd><p>Use this method to get the best performing model (CNN autoencoder)
+This could be a property but I’m liking the “getter” paradigm right now.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>the keras model of the “best” model</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="src.base.MLToolMixin.get_checkpoint_model">
+<span class="sig-name descname"><span class="pre">get_checkpoint_model</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/src/base.html#MLToolMixin.get_checkpoint_model"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.base.MLToolMixin.get_checkpoint_model" title="Permalink to this definition"></a></dt>
+<dd><p>Use to get the current checkpoint model. Probably for use when a parameter sweep is running.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>the keras checkpoint model in the <code class="docutils literal notranslate"><span class="pre">model_checkpoints</span></code> directory.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="src.base.MLToolMixin.get_testing_data">
+<span class="sig-name descname"><span class="pre">get_testing_data</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/src/base.html#MLToolMixin.get_testing_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.base.MLToolMixin.get_testing_data" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="src.base.MLToolMixin.get_testing_data_labels">
+<span class="sig-name descname"><span class="pre">get_testing_data_labels</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/src/base.html#MLToolMixin.get_testing_data_labels"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.base.MLToolMixin.get_testing_data_labels" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="src.base.MLToolMixin.get_training_data">
+<span class="sig-name descname"><span class="pre">get_training_data</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/src/base.html#MLToolMixin.get_training_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.base.MLToolMixin.get_training_data" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="src.base.MLToolMixin.parse_int_list_from_config">
+<em class="property"><span class="pre">static</span> </em><span class="sig-name descname"><span class="pre">parse_int_list_from_config</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">string_in</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/src/base.html#MLToolMixin.parse_int_list_from_config"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.base.MLToolMixin.parse_int_list_from_config" title="Permalink to this definition"></a></dt>
+<dd><p>A list of integers may be provided in the settings file. Create a python list of <a href="#id1"><span class="problematic" id="id2">``</span></a>int``s from the supplied
+numbers.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>string_in</strong> – <code class="docutils literal notranslate"><span class="pre">str</span></code> containing the list of numbers.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>a <code class="docutils literal notranslate"><span class="pre">list</span></code> of <a href="#id3"><span class="problematic" id="id4">``</span></a>int``s</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="src.base.r_loss">
+<span class="sig-prename descclassname"><span class="pre">src.base.</span></span><span class="sig-name descname"><span class="pre">r_loss</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">y_true</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y_pred</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/src/base.html#r_loss"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.base.r_loss" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="src.base.vae_r_loss">
+<span class="sig-prename descclassname"><span class="pre">src.base.</span></span><span class="sig-name descname"><span class="pre">vae_r_loss</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">y_true</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y_pred</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/src/base.html#vae_r_loss"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.base.vae_r_loss" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="settings_and_config.html" class="btn btn-neutral float-left" title="Create Settings File" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2020, Owen Myers.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

@@ -23,12 +23,48 @@ os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
 
 
 class SearchTool(MLToolMixin):
+    """Grid Search made EZ
+
+    Primary purpose of this class:
+
+    * One: Collect high-level run operations in one place
+    * Two: Inherit general ML tools from the MLMixin which abstract lower level operations
+    * Three: Provide functionality for the grid search, namely the organization and visualization of performance
+      of different hyperparameter models.
+
+    **One**
+
+    Example of a run (hopefully this feels simple):
+
+    Example::
+
+        python grid_search.py --settings /path/to/generated/settings/file.yml --run-location ./
+
+    The idea being that everything important is just specified in the yaml file rather than at the command line.
+
+    **Two**
+
+    See the ``MLToolMixin`` docs for information on some of the lower level stuff managed by this class. Note that
+    one of the things ``MLToolMixin`` does is provide simple "deserialization" of the yaml file :o. In this class
+    you will see attributes with names analogous to those things provided int the settings file and they come from
+    the ``MLToolMixin``.
+
+    **Three**
+
+    See ``main()`` method doc
+
+    **Note**
+
+    This class/file is meant to be run as a script.
+    """
 
     def __init__(self, settings_file, working_location):
+
         super().__init__(settings_file, working_location)
         self.early_stopping_patience = int(self.config['Settings']['EARLY_STOPPING_PATIENCE'])
 
     def train_test_model(self, run_dir, hyper_params, x_test, x_train, aim_run):
+        """Looping over the epochs happens here"""
 
         optimizer = tf.keras.optimizers.Adam(1e-5)
 
@@ -75,9 +111,11 @@ class SearchTool(MLToolMixin):
         return model, float(elbo.numpy())
 
     def run(self, run_dir, hyper_params, x_test, x_train, aim_run):
+        """Just runs the ``train_test_model`` method"""
         return self.train_test_model(run_dir, hyper_params, x_test, x_train, aim_run)
 
     def main(self):
+        """Looping over hyperparameters and interfacing with ``aim``, the experiment tracker, here"""
         x_train = self.data_train
         x_test = self.data_test
 

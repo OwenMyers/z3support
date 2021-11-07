@@ -2,6 +2,7 @@ Prepare Data
 ============
 There are several aspects of the lattice configurations that can make
 data prep challenging.
+
 * We are exploring degrees of freedom on the links of the lattice which does not
   fit nicely into a pixel -like matrix
 * The number of degrees of freedom can be different between systems so we need to
@@ -12,7 +13,7 @@ data prep challenging.
 This is a script that makes preperation easy and can be modified to incorperate
 additional prep steps depending on the system. For now it can be used as follows:
 
-Usage notes (asking for help on the script like `python transform_data_for_autoencoder.py --help`
+Usage notes (asking for help on the script like ``python transform_data_for_autoencoder.py --help``
 provides the following as well):
 
 .. code-block:: txt

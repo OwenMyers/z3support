@@ -1,7 +1,9 @@
 import tensorflow as tf
 import time
 
+
 class ArtificialDataset(tf.data.Dataset):
+
     def _generator(num_samples):
         # Opening the file
         time.sleep(0.03)
@@ -15,7 +17,7 @@ class ArtificialDataset(tf.data.Dataset):
     def __new__(cls, num_samples=3):
         return tf.data.Dataset.from_generator(
             cls._generator,
-            output_shapes =  (1,),
-            output_types = tf.int64,
+            output_shapes=(1,),
+            output_types=tf.int64,
             args=(num_samples,)
         )

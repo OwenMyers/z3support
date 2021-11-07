@@ -18,6 +18,7 @@
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Create Settings File" href="settings_and_config.html" />
     <link rel="prev" title="Workflow" href="workflow.html" /> 
 </head>
 
@@ -42,10 +43,13 @@
               <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="workflow.html">Workflow</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#">Prepare Data</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#src-transform-data-for-autoencoder-prepare-data"><code class="xref py py-mod docutils literal notranslate"><span class="pre">src.transform_data_for_autoencoder</span></code> – Prepare Data</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Prepare Data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="#function-and-code-docs">Function and Code Docs</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#module-src.transform_data_for_autoencoder"><code class="xref py py-mod docutils literal notranslate"><span class="pre">src.transform_data_for_autoencoder</span></code> – Prepare Data</a></li>
 </ul>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="settings_and_config.html">Create Settings File</a></li>
+<li class="toctree-l1"><a class="reference internal" href="run_grid_search.html">Run Grid Search</a></li>
 </ul>
 
         </div>
@@ -74,8 +78,197 @@
              
   <section id="prepare-data">
 <h1>Prepare Data<a class="headerlink" href="#prepare-data" title="Permalink to this headline"></a></h1>
-<section id="src-transform-data-for-autoencoder-prepare-data">
-<h2><code class="xref py py-mod docutils literal notranslate"><span class="pre">src.transform_data_for_autoencoder</span></code> – Prepare Data<a class="headerlink" href="#src-transform-data-for-autoencoder-prepare-data" title="Permalink to this headline"></a></h2>
+<p>There are several aspects of the lattice configurations that can make
+data prep challenging.</p>
+<ul class="simple">
+<li><p>We are exploring degrees of freedom on the links of the lattice which does not
+fit nicely into a pixel -like matrix</p></li>
+<li><p>The number of degrees of freedom can be different between systems so we need to
+represent them “fairly” to the algorithm (some kind of normalization)</p></li>
+<li><p>Degrees of freedom may be relative to a vertex</p></li>
+</ul>
+<p>This is a script that makes preperation easy and can be modified to incorperate
+additional prep steps depending on the system. For now it can be used as follows:</p>
+<p>Usage notes (asking for help on the script like <code class="docutils literal notranslate"><span class="pre">python</span> <span class="pre">transform_data_for_autoencoder.py</span> <span class="pre">--help</span></code>
+provides the following as well):</p>
+<div class="highlight-txt notranslate"><div class="highlight"><pre><span></span>usage: transform_data_for_autoencoder.py [-h] --src SRC --parse-type
+                                         PARSE_TYPE --destination DESTINATION
+                                         [--truncate TRUNCATE]
+
+optional arguments:
+  -h, --help            show this help message and exit
+  --src SRC             Path to directory containing configuration files
+  --parse-type PARSE_TYPE What system configurations are you parsing
+  --destination DESTINATION Path to save transformed file
+</pre></div>
+</div>
+<p>The above creates files that can be easily ingested by the rest of the autoencoder. See next
+for setting up and running the autoencoder.</p>
+</section>
+<section id="function-and-code-docs">
+<h1>Function and Code Docs<a class="headerlink" href="#function-and-code-docs" title="Permalink to this headline"></a></h1>
+<p>Below are the function docs for the tools used to prep the data</p>
+<section id="module-src.transform_data_for_autoencoder">
+<span id="src-transform-data-for-autoencoder-prepare-data"></span><h2><a class="reference internal" href="#module-src.transform_data_for_autoencoder" title="src.transform_data_for_autoencoder"><code class="xref py py-mod docutils literal notranslate"><span class="pre">src.transform_data_for_autoencoder</span></code></a> – Prepare Data<a class="headerlink" href="#module-src.transform_data_for_autoencoder" title="Permalink to this headline"></a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="src.transform_data_for_autoencoder.apply_string_to_number_all_directions">
+<span class="sig-prename descclassname"><span class="pre">src.transform_data_for_autoencoder.</span></span><span class="sig-name descname"><span class="pre">apply_string_to_number_all_directions</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">df_in</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/src/transform_data_for_autoencoder.html#apply_string_to_number_all_directions"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.transform_data_for_autoencoder.apply_string_to_number_all_directions" title="Permalink to this definition"></a></dt>
+<dd><p>This function uses the string-to-number mapping functions to convert a matrix with string elements to a matrix
+with number elements. Strings represent some direction in a lattice but we need to represent them numerically
+for the CNN</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>df_in</strong> – the dataframe containing the matrix with string elements</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Returns a copy of the dataframe after the string-to-int mapping has been made</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="src.transform_data_for_autoencoder.check_if_exists">
+<span class="sig-prename descclassname"><span class="pre">src.transform_data_for_autoencoder.</span></span><span class="sig-name descname"><span class="pre">check_if_exists</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cur_val</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">proposed_val</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">v</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/src/transform_data_for_autoencoder.html#check_if_exists"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.transform_data_for_autoencoder.check_if_exists" title="Permalink to this definition"></a></dt>
+<dd><p>Helper function to help check if there are any inconsistencies in the lattice “description”.
+For context A data file that comes from the z3 work will have rows that correspond to a vertex. That means that in
+the data file a given link will be represented in 2 rows, one for each vertex on either side of the link. This
+function helps us check that a links representation is consistent.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>cur_val</strong> – The established (previous) vertex’s notion of this links value</p></li>
+<li><p><strong>proposed_val</strong> – The current “working” vertex’s notion of this links value</p></li>
+<li><p><strong>v</strong> – verbose or not boolean</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>None, but will raise a <code class="docutils literal notranslate"><span class="pre">ValueError</span></code> if there is a problem.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="src.transform_data_for_autoencoder.create_full_numerical_representation">
+<span class="sig-prename descclassname"><span class="pre">src.transform_data_for_autoencoder.</span></span><span class="sig-name descname"><span class="pre">create_full_numerical_representation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">df_in</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lattice_size</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">v</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/src/transform_data_for_autoencoder.html#create_full_numerical_representation"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.transform_data_for_autoencoder.create_full_numerical_representation" title="Permalink to this definition"></a></dt>
+<dd><p>Creates a matrix of numbers that can be interpreted by a CNN auto encoder.</p>
+<p>Requires running the <code class="docutils literal notranslate"><span class="pre">string_to_number_directions</span></code> function first.</p>
+<p>Checks for consistency in the plaquette representations of the configurations.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>df_in</strong> – is the dataframe of a plaquette representation of a configuration for which you have run
+the <code class="docutils literal notranslate"><span class="pre">string_to_number_directions</span></code> on</p></li>
+<li><p><strong>lattice_size</strong> – Lattice length or width (assumed square)</p></li>
+<li><p><strong>v</strong> – Verbose or not</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>A numpy matrix with zeros representing the vertices and centers of plaquetts and the number system as described
+by <code class="docutils literal notranslate"><span class="pre">string_to_number_directions</span></code> representing the links.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="src.transform_data_for_autoencoder.determine_lattice_size">
+<span class="sig-prename descclassname"><span class="pre">src.transform_data_for_autoencoder.</span></span><span class="sig-name descname"><span class="pre">determine_lattice_size</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">df_in</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/src/transform_data_for_autoencoder.html#determine_lattice_size"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.transform_data_for_autoencoder.determine_lattice_size" title="Permalink to this definition"></a></dt>
+<dd><p>Using the input data, determine the size of the lattice.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>df_in</strong> – dataframe containing the data (representation of a lattice configuration.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><code class="docutils literal notranslate"><span class="pre">int</span></code> of the lattice size (assuming square lattice)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="src.transform_data_for_autoencoder.final_output">
+<span class="sig-prename descclassname"><span class="pre">src.transform_data_for_autoencoder.</span></span><span class="sig-name descname"><span class="pre">final_output</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">func</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/src/transform_data_for_autoencoder.html#final_output"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.transform_data_for_autoencoder.final_output" title="Permalink to this definition"></a></dt>
+<dd><p>A decorator to aid in final logging, simple sanity checks, and writing of the final matrix to file</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>func</strong> – The function that is being decorated</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="src.transform_data_for_autoencoder.main">
+<span class="sig-prename descclassname"><span class="pre">src.transform_data_for_autoencoder.</span></span><span class="sig-name descname"><span class="pre">main</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/src/transform_data_for_autoencoder.html#main"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.transform_data_for_autoencoder.main" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="src.transform_data_for_autoencoder.parse_as_rows_z2">
+<span class="sig-prename descclassname"><span class="pre">src.transform_data_for_autoencoder.</span></span><span class="sig-name descname"><span class="pre">parse_as_rows_z2</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/src/transform_data_for_autoencoder.html#parse_as_rows_z2"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.transform_data_for_autoencoder.parse_as_rows_z2" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="src.transform_data_for_autoencoder.parse_owen_z3">
+<span class="sig-prename descclassname"><span class="pre">src.transform_data_for_autoencoder.</span></span><span class="sig-name descname"><span class="pre">parse_owen_z3</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/src/transform_data_for_autoencoder.html#parse_owen_z3"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.transform_data_for_autoencoder.parse_owen_z3" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="src.transform_data_for_autoencoder.string_to_number_directions_1">
+<span class="sig-prename descclassname"><span class="pre">src.transform_data_for_autoencoder.</span></span><span class="sig-name descname"><span class="pre">string_to_number_directions_1</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">r</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">column</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/src/transform_data_for_autoencoder.html#string_to_number_directions_1"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.transform_data_for_autoencoder.string_to_number_directions_1" title="Permalink to this definition"></a></dt>
+<dd><p>If this function is being used then the data has strings representing directions in each element of the “image”
+matrix. This is one way of converting those strings to numbers for the CNN</p>
+<p>Also, this is supposed to be used in a pandas apply; useful context for the arguments.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>r</strong> – a row from a pandas <code class="docutils literal notranslate"><span class="pre">apply</span></code></p></li>
+<li><p><strong>column</strong> – The column of the data to work on</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>integer of the string to int map</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="src.transform_data_for_autoencoder.string_to_number_directions_2">
+<span class="sig-prename descclassname"><span class="pre">src.transform_data_for_autoencoder.</span></span><span class="sig-name descname"><span class="pre">string_to_number_directions_2</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">r</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">column</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/src/transform_data_for_autoencoder.html#string_to_number_directions_2"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.transform_data_for_autoencoder.string_to_number_directions_2" title="Permalink to this definition"></a></dt>
+<dd><p>If this function is being used then the data has strings representing directions in each element of the “image”
+matrix. This is one way of converting those strings to numbers for the CNN</p>
+<p>Also, this is supposed to be used in a pandas apply; useful context for the arguments.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>r</strong> – a row from a pandas <code class="docutils literal notranslate"><span class="pre">apply</span></code></p></li>
+<li><p><strong>column</strong> – The column of the data to work on</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>integer of the string to int map</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="src.transform_data_for_autoencoder.z2_row_to_matrix">
+<span class="sig-prename descclassname"><span class="pre">src.transform_data_for_autoencoder.</span></span><span class="sig-name descname"><span class="pre">z2_row_to_matrix</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">row</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lattice_size</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/src/transform_data_for_autoencoder.html#z2_row_to_matrix"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#src.transform_data_for_autoencoder.z2_row_to_matrix" title="Permalink to this definition"></a></dt>
+<dd><p>Currently the z2 data is organized as a full configuration per line. One file contains multiple configurations
+and each, as a line, can be transformed into a matrix. That transformation, from a row to a matrix is what we
+do in this function.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>row</strong> – row to be transformed into matrix</p></li>
+<li><p><strong>lattice_size</strong> – </p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p></p>
+</dd>
+</dl>
+</dd></dl>
+
 </section>
 </section>
 
@@ -84,6 +277,7 @@
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
         <a href="workflow.html" class="btn btn-neutral float-left" title="Workflow" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="settings_and_config.html" class="btn btn-neutral float-right" title="Create Settings File" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>

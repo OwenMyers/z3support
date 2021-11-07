@@ -7,11 +7,13 @@ Welcome to autoencode's documentation!
 ======================================
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 3
    :caption: Contents:
 
    usage/workflow
    usage/prepare_data
+   usage/settings_and_config
+   usage/run_grid_search
 
 
 Indices and tables

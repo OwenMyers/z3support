@@ -53,7 +53,11 @@ def main():
     Example::
 
         [Data]
-        DATA1=/full/path/to/data1.npy
+        DATA1=generator-MnistDataset
+
+    In the first type of data specification, the lables are determined by the file names. Assumption being that
+    Each different file represents a dataset from a different type of system. In the second case you wrap all
+    that up in the wrapper class and must be able to provide the lables.
 
 
     In section ``[Plotting]`` you can set some plotting options like::
