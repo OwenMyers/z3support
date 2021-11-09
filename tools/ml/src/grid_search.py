@@ -66,7 +66,7 @@ class SearchTool(MLToolMixin):
     def train_test_model(self, run_dir, hyper_params, x_test, x_train, aim_run):
         """Looping over the epochs happens here"""
 
-        optimizer = tf.keras.optimizers.Adam(1e-5)
+        optimizer = tf.keras.optimizers.Adam(1e-4)
 
         batch_size = hyper_params[self.hp_batch_size]
 
@@ -97,14 +97,32 @@ class SearchTool(MLToolMixin):
             end_time = time.time()
 
             loss = tf.keras.metrics.Mean()
+            loss_breakout_px_z = tf.keras.metrics.Mean()
+            loss_breakout_pz = tf.keras.metrics.Mean()
+            loss_breakout_qz_x = tf.keras.metrics.Mean()
             for test_x in test_dataset:
                 loss(tf_vae.compute_loss(model, test_x))
+                loss_breakout_px_z(tf_vae.compute_loss_breakout_px_z(model, test_x))
+                loss_breakout_pz(tf_vae.compute_loss_breakout_pz(model, test_x))
+                loss_breakout_qz_x(tf_vae.compute_loss_breakout_qz_x(model, test_x))
             elbo = -loss.result()
             # display.clear_output(wait=False)
-            print('Epoch: {}, Test set ELBO: {}, time elapse for current epoch: {}'
-                  .format(epoch, elbo, end_time - start_time))
+            print('Epoch: {}\n,'
+                  '    Test set ELBO: {},'
+                  '    Time elapse for current epoch: {},'
+                  '    Test set loss breakout px_z: {},'
+                  '    Test set loss breakout pz: {},'
+                  '    Test set loss breakout qz_x: {}'
+                  .format(epoch, elbo, end_time - start_time, loss_breakout_px_z.result(), loss_breakout_pz.result(),
+                          loss_breakout_qz_x.result()))
 
-            aim_run.track(float(elbo.numpy()), name='loss', epoch=epoch, context={"subset": "train" })
+            aim_run.track(float(elbo.numpy()), name='testing_loss', epoch=epoch, context={"subset": "train"})
+            aim_run.track(float(loss_breakout_px_z.result()), name='breakout_loss_px_z', epoch=epoch,
+                          context={"subset": "train" })
+            aim_run.track(float(loss_breakout_pz.result()), name='breakout_loss_pz', epoch=epoch,
+                          context={"subset": "train" })
+            aim_run.track(float(loss_breakout_qz_x.result()), name='breakout_loss_qz_x', epoch=epoch,
+                          context={"subset": "train"})
             # generate_and_save_images(model, epoch, test_sample)
 
         model.predict(x_train[:1000])

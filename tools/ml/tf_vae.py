@@ -161,7 +161,8 @@ def log_normal_pdf(sample, mean, logvar, raxis=1):
         -.5 * ((sample - mean) ** 2. * tf.exp(-logvar) + logvar + log2pi),
         axis=raxis)
 
-
+# Lots of repeated code for the next several functions. Just being lazy and making a TODO to come back
+# and clean this up.
 def compute_loss(model, x):
     mean, logvar = encode(model, x=x)
     z = reparameterize(mean=mean, logvar=logvar)
@@ -171,6 +172,39 @@ def compute_loss(model, x):
     logpz = log_normal_pdf(z, 0., 0.)
     logqz_x = log_normal_pdf(z, mean, logvar)
     return -tf.reduce_mean(logpx_z + logpz - logqz_x)
+
+
+def compute_loss_breakout_px_z(model, x):
+    mean, logvar = encode(model, x=x)
+    z = reparameterize(mean=mean, logvar=logvar)
+    x_logit = decode(model, z)
+    cross_ent = tf.nn.sigmoid_cross_entropy_with_logits(logits=x_logit, labels=x)
+    logpx_z = -tf.reduce_sum(cross_ent, axis=[1, 2, 3])
+    logpz = log_normal_pdf(z, 0., 0.)
+    logqz_x = log_normal_pdf(z, mean, logvar)
+    return tf.reduce_mean(logpx_z)
+
+
+def compute_loss_breakout_pz(model, x):
+    mean, logvar = encode(model, x=x)
+    z = reparameterize(mean=mean, logvar=logvar)
+    x_logit = decode(model, z)
+    cross_ent = tf.nn.sigmoid_cross_entropy_with_logits(logits=x_logit, labels=x)
+    logpx_z = -tf.reduce_sum(cross_ent, axis=[1, 2, 3])
+    logpz = log_normal_pdf(z, 0., 0.)
+    logqz_x = log_normal_pdf(z, mean, logvar)
+    return tf.reduce_mean(logpz)
+
+
+def compute_loss_breakout_qz_x(model, x):
+    mean, logvar = encode(model, x=x)
+    z = reparameterize(mean=mean, logvar=logvar)
+    x_logit = decode(model, z)
+    cross_ent = tf.nn.sigmoid_cross_entropy_with_logits(logits=x_logit, labels=x)
+    logpx_z = -tf.reduce_sum(cross_ent, axis=[1, 2, 3])
+    logpz = log_normal_pdf(z, 0., 0.)
+    logqz_x = log_normal_pdf(z, mean, logvar)
+    return tf.reduce_mean(logqz_x)
 
 
 # Trying to make a custom metric version of the above compute_loss

@@ -241,7 +241,10 @@ class VizTool(MLToolMixin):
 
         mean, logvar = tf_vae.encode(model, x=x_in)
         z = tf_vae.reparameterize(mean=mean, logvar=logvar)
-        plt.scatter(z[:, 0], z[:, 1], c=y_in, cmap='Set1', s=1)
+        if isinstance(y_in[0], str):
+            plt.scatter(z[:, 0], z[:, 1], cmap='Set1', s=1)
+        else:
+            plt.scatter(z[:, 0], z[:, 1], c=y_in, cmap='Set1', s=1)
         plt.savefig(os.path.join(self.figures_project_dir, f'{model_hash_name}_dense_layer.png'))
         plt.clf()
 

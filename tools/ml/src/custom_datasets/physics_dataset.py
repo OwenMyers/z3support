@@ -50,8 +50,7 @@ class PhysicsDataset:
 
         (We will want to expand and test this if we have time or if we start doing more than just the z2 and z3 data)
 
-        Arguments:
-            Requires list of ``.npy`` files.
+        :param list_data: List of ``.npy`` files (full paths).
 
         This function will load ALL of the data into memory. If the data sets get too large this will be a breaking
         point.
