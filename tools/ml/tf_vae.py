@@ -137,7 +137,7 @@ def encode(model, x=None):
     return mean, log_var
 
 
-def decode(model, z, apply_sigmoid=False):
+def decode(model, z, apply_sigmoid=True):
     logits = model.decoder(z)
     if apply_sigmoid:
         probabilities = tf.sigmoid(logits)
