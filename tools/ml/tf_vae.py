@@ -5,27 +5,40 @@ import time
 
 class CVAECustom(tf.keras.Model):
     """Convolutional variational autoencoder."""
-    def __init__(self, latent_dim):
+    def __init__(self, latent_dim, use_batch_norm=False, use_dropout=False):
 
         super(CVAECustom, self).__init__()
         self.gradients = None
         self.latent_dim = latent_dim
-        self.encoder = tf.keras.Sequential(
-            [
-                tf.keras.layers.InputLayer(input_shape=(40, 40, 1)),
-                tf.keras.layers.Conv2D(
-                    filters=32, kernel_size=3, strides=(1, 1), activation='relu'),
-                tf.keras.layers.Conv2D(
-                    filters=64, kernel_size=3, strides=(2, 2), activation='relu'),
-                tf.keras.layers.Conv2D(
-                    filters=64, kernel_size=3, strides=(2, 2), activation='relu'),
-                tf.keras.layers.Conv2D(
-                    filters=64, kernel_size=3, strides=(1, 1), activation='relu'),
-                tf.keras.layers.Flatten(),
-                # No activation
-                tf.keras.layers.Dense(latent_dim + latent_dim),
-            ]
-        )
+        self.use_batch_norm = use_batch_norm
+        self.use_dropout = use_dropout
+        strides_list = [1, 2, 2, 1]
+        filters_list = [32, 64, 64, 64]
+        kernal_list = [3, 3, 3, 3]
+
+        if (len(strides_list) != len(filters_list)) or (len(filters_list) != len(kernal_list)):
+            raise ValueError("Problem with strides filters or kernal list length mismatch in CVAE")
+        encoder_model = tf.keras.Sequential()
+        encoder_input = tf.keras.layers.InputLayer(input_shape=(40, 40, 1), name='encoder_input')
+        encoder_model.add(encoder_input)
+        for i in range(len(strides_list)):
+            conv_layer = tf.keras.layers.Conv2D(
+                filters=filters_list[i],
+                kernel_size=kernal_list[i],
+                strides=(strides_list[i], strides_list[i]),
+                padding='same',
+                name=f"encoder_conv_{i}"
+            )
+            encoder_model.add(conv_layer)
+            encoder_model.add(tf.keras.layers.LeakyReLU())
+            if self.use_batch_norm:
+                encoder_model.add(tf.keras.layers.BatchNormalization())
+            if self.use_dropout:
+                encoder_model.add(tf.keras.layers.Dropout(rate=0.25))
+
+        encoder_model.add(tf.keras.layers.Flatten())
+        encoder_model.add(tf.keras.layers.Dense(int(latent_dim + latent_dim)))
+        self.encoder = encoder_model
 
         self.decoder = tf.keras.Sequential(
             [
