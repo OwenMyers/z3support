@@ -12,20 +12,24 @@ class CVAECustom(tf.keras.Model):
         self.latent_dim = latent_dim
         self.use_batch_norm = use_batch_norm
         self.use_dropout = use_dropout
-        strides_list = [1, 2, 2, 1]
-        filters_list = [32, 64, 64, 64]
-        kernal_list = [3, 3, 3, 3]
+        encoder_strides_list = [1, 2, 2, 1]
+        encoder_filters_list = [32, 64, 64, 64]
+        encoder_kernal_list = [3, 3, 3, 3]
 
-        if (len(strides_list) != len(filters_list)) or (len(filters_list) != len(kernal_list)):
+        decoder_strides_list = [1, 2, 2, 1]
+        decoder_filters_list = [64, 64, 32, 1]
+        decoder_kernal_list = [3, 3, 3, 3]
+
+        if (len(encoder_strides_list) != len(encoder_filters_list)) or (len(encoder_filters_list) != len(encoder_kernal_list)):
             raise ValueError("Problem with strides filters or kernal list length mismatch in CVAE")
         encoder_model = tf.keras.Sequential()
         encoder_input = tf.keras.layers.InputLayer(input_shape=(40, 40, 1), name='encoder_input')
         encoder_model.add(encoder_input)
-        for i in range(len(strides_list)):
+        for i in range(len(encoder_strides_list)):
             conv_layer = tf.keras.layers.Conv2D(
-                filters=filters_list[i],
-                kernel_size=kernal_list[i],
-                strides=(strides_list[i], strides_list[i]),
+                filters=encoder_filters_list[i],
+                kernel_size=encoder_kernal_list[i],
+                strides=(encoder_strides_list[i], encoder_strides_list[i]),
                 padding='same',
                 name=f"encoder_conv_{i}"
             )
@@ -40,25 +44,24 @@ class CVAECustom(tf.keras.Model):
         encoder_model.add(tf.keras.layers.Dense(int(latent_dim + latent_dim)))
         self.encoder = encoder_model
 
-        self.decoder = tf.keras.Sequential(
-            [
-                tf.keras.layers.InputLayer(input_shape=(latent_dim,)),
-                tf.keras.layers.Dense(units=10*10*32, activation=tf.nn.relu),
-                tf.keras.layers.Reshape(target_shape=(10, 10, 32)),
-                tf.keras.layers.Conv2DTranspose(
-                    filters=64, kernel_size=3, strides=1, padding='same',
-                    activation='relu'),
-                tf.keras.layers.Conv2DTranspose(
-                    filters=64, kernel_size=3, strides=2, padding='same',
-                    activation='relu'),
-                tf.keras.layers.Conv2DTranspose(
-                    filters=32, kernel_size=3, strides=2, padding='same',
-                    activation='relu'),
-                # No activation
-                tf.keras.layers.Conv2DTranspose(
-                    filters=1, kernel_size=3, strides=1, padding='same'),
-            ]
-        )
+        decoder_model = tf.keras.Sequential()
+        decoder_model.add(tf.keras.layers.InputLayer(input_shape=(latent_dim,))),
+        decoder_model.add(tf.keras.layers.Dense(units=10*10*32, activation=tf.nn.relu)),
+        decoder_model.add(tf.keras.layers.Reshape(target_shape=(10, 10, 32))),
+        for i in range(len(decoder_strides_list)):
+            conv_transpose_layer = tf.keras.layers.Conv2DTranspose(
+                filters=decoder_filters_list[i],
+                kernel_size=decoder_kernal_list[i],
+                strides=(decoder_strides_list[i], decoder_strides_list[i]),
+                padding='same',
+                name=f"decoder_conv_transpose_{i}"
+            )
+            decoder_model.add(conv_transpose_layer)
+            if self.use_batch_norm:
+                decoder_model.add(tf.keras.layers.BatchNormalization())
+            if self.use_dropout:
+                decoder_model.add(tf.keras.layers.Dropout(rate=0.25))
+        self.decoder = decoder_model
 
     def call(self, inputs):
         mean, log_var = tf.split(self.encoder(inputs), num_or_size_splits=2, axis=1)
