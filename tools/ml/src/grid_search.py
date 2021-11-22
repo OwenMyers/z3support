@@ -66,9 +66,11 @@ class SearchTool(MLToolMixin):
     def train_test_model(self, run_dir, hyper_params, x_test, x_train, aim_run):
         """Looping over the epochs happens here"""
 
-        optimizer = tf.keras.optimizers.Adam(1e-4)
+        optimizer = tf.keras.optimizers.Adam(1e-5)
 
         batch_size = hyper_params[self.hp_batch_size]
+        use_batch_norm = hyper_params[self.hp_use_batch_normalization]
+        use_drop_out = hyper_params[self.hp_use_dropout]
 
         train_dataset = (tf.data.Dataset.from_tensor_slices(x_train).batch(batch_size))
         test_dataset = (tf.data.Dataset.from_tensor_slices(x_test).batch(batch_size))
@@ -83,7 +85,9 @@ class SearchTool(MLToolMixin):
         # improvement.
         random_vector_for_generation = tf.random.normal(
             shape=[num_examples_to_generate, latent_dim])
-        model = tf_vae.CVAECustom(latent_dim)
+        model = tf_vae.CVAECustom(latent_dim,
+                                  use_dropout=use_drop_out,
+                                  use_batch_norm=use_batch_norm)
         assert batch_size >= num_examples_to_generate
         for test_batch in test_dataset.take(1):
             test_sample = test_batch[0:num_examples_to_generate, :, :, :]
@@ -118,9 +122,9 @@ class SearchTool(MLToolMixin):
 
             aim_run.track(float(elbo.numpy()), name='testing_loss', epoch=epoch, context={"subset": "train"})
             aim_run.track(float(loss_breakout_px_z.result()), name='breakout_loss_px_z', epoch=epoch,
-                          context={"subset": "train" })
+                          context={"subset": "train"})
             aim_run.track(float(loss_breakout_pz.result()), name='breakout_loss_pz', epoch=epoch,
-                          context={"subset": "train" })
+                          context={"subset": "train"})
             aim_run.track(float(loss_breakout_qz_x.result()), name='breakout_loss_qz_x', epoch=epoch,
                           context={"subset": "train"})
             # generate_and_save_images(model, epoch, test_sample)

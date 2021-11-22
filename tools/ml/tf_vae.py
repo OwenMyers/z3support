@@ -61,6 +61,7 @@ class CVAECustom(tf.keras.Model):
                 decoder_model.add(tf.keras.layers.BatchNormalization())
             if self.use_dropout:
                 decoder_model.add(tf.keras.layers.Dropout(rate=0.25))
+        decoder_model.add(tf.keras.layers.Activation('sigmoid'))
         self.decoder = decoder_model
 
     def call(self, inputs):
@@ -153,7 +154,7 @@ def encode(model, x=None):
     return mean, log_var
 
 
-def decode(model, z, apply_sigmoid=True):
+def decode(model, z, apply_sigmoid=False):
     logits = model.decoder(z)
     if apply_sigmoid:
         probabilities = tf.sigmoid(logits)
@@ -177,14 +178,21 @@ def log_normal_pdf(sample, mean, logvar, raxis=1):
         -.5 * ((sample - mean) ** 2. * tf.exp(-logvar) + logvar + log2pi),
         axis=raxis)
 
+
+def vae_r_loss(y_true, y_pred, r_loss_factor=500):
+    r_loss = tf.keras.backend.mean(tf.keras.backend.square(y_true - y_pred), axis=[1, 2, 3])
+    return r_loss_factor * r_loss
+
 # Lots of repeated code for the next several functions. Just being lazy and making a TODO to come back
 # and clean this up.
 def compute_loss(model, x):
     mean, logvar = encode(model, x=x)
     z = reparameterize(mean=mean, logvar=logvar)
     x_logit = decode(model, z)
-    cross_ent = tf.nn.sigmoid_cross_entropy_with_logits(logits=x_logit, labels=x)
-    logpx_z = -tf.reduce_sum(cross_ent, axis=[1, 2, 3])
+    #cross_ent = tf.nn.sigmoid_cross_entropy_with_logits(logits=x_logit, labels=x)
+    #logpx_z = -tf.reduce_sum(cross_ent, axis=[1, 2, 3])
+    cross_ent = -vae_r_loss(x, x_logit)
+    logpx_z = cross_ent
     logpz = log_normal_pdf(z, 0., 0.)
     logqz_x = log_normal_pdf(z, mean, logvar)
     return -tf.reduce_mean(logpx_z + logpz - logqz_x)

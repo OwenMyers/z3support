@@ -154,20 +154,31 @@ class VizTool(MLToolMixin):
             plt.savefig(os.path.join(self.figures_project_dir, layer_name + 'layer_weights.png'))
 
     def plot_input_and_output(self, autoencoder, x_test, model_hash_name, model_is_split=False):
-        x1 = next(iter(x_test))
-        x2 = next(iter(x_test))
-        x = np.array([x1, x2])
-        if model_is_split:
-            mean, logvar = tf_vae.encode(autoencoder, x=x)
-            z_points = tf_vae.reparameterize(mean=mean, logvar=logvar)
-            y = tf_vae.decode(autoencoder, z_points, apply_sigmoid=True)
-        else:
-            y = autoencoder.predict(x)
-        plt.imshow(x[0], aspect='auto', cmap='viridis')
-        plt.savefig(os.path.join(self.figures_project_dir, f'{model_hash_name}_example_in.png'))
-        plt.imshow(y[0], aspect='auto', cmap='viridis')
-        plt.savefig(os.path.join(self.figures_project_dir, f'{model_hash_name}_example_out.png'))
-        plt.clf()
+        in_out_dir = os.path.join(self.figures_project_dir, f'{model_hash_name}_in_out_images')
+        if not os.path.exists(in_out_dir):
+            os.mkdir(in_out_dir)
+        # You will get double the number specified in the range. 10 makes 20 images
+        for i in range(10):
+            print(f"Plotting input and output images {i}")
+            x1 = next(iter(x_test))
+            x2 = next(iter(x_test))
+            x = np.array([x1, x2])
+            if model_is_split:
+                mean, logvar = tf_vae.encode(autoencoder, x=x)
+                z_points = tf_vae.reparameterize(mean=mean, logvar=logvar)
+                y = tf_vae.decode(autoencoder, z_points, apply_sigmoid=True)
+            else:
+                y = autoencoder.predict(x)
+            plt.imshow(x[0], aspect='auto', cmap='viridis')
+            plt.savefig(os.path.join(in_out_dir, f'{i}_0_x_example_in.png'))
+            plt.imshow(y[0], aspect='auto', cmap='viridis')
+            plt.savefig(os.path.join(in_out_dir, f'{i}_0_y_example_out.png'))
+            plt.clf()
+            plt.imshow(x[1], aspect='auto', cmap='viridis')
+            plt.savefig(os.path.join(in_out_dir, f'{i}_1_x_example_in.png'))
+            plt.imshow(y[1], aspect='auto', cmap='viridis')
+            plt.savefig(os.path.join(in_out_dir, f'{i}_1_y_example_out.png'))
+            plt.clf()
 
     def plot_decoder_result_from_input(self, autoencoder, start_loc=(-1, -1), end_loc=(1, 1), layer_names=None,
                                        model_is_split=False):
@@ -192,7 +203,7 @@ class VizTool(MLToolMixin):
             decoder = Model(inputs=decoder_input, outputs=decoder)
 
         # create the path that that we want to cut across
-        num_steps = 300
+        num_steps = 3
         loc_list = []
         x_step_size = (end_loc[0] - start_loc[0])/num_steps
         y_step_size = (end_loc[1] - start_loc[1])/num_steps
