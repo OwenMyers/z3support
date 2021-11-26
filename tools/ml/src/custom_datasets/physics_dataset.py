@@ -82,23 +82,49 @@ class PhysicsDataset:
         max_list = []
         min_list = []
         for current_dataset in loaded_data_list:
-            max_list.append(np.max(current_dataset))
-            min_list.append(np.min(current_dataset))
+            max_list.append(np.max(np.abs(current_dataset)))
+            min_list.append(np.min(np.abs(current_dataset)))
         logging.debug(f"    Max values in data: {max_list}")
         logging.debug(f"    Min values in data: {min_list}")
-        for current_max in max_list:
-            for second_max in max_list:
+
+        logging.debug(f"    Moving minimum up to zero for each dataset")
+        for i in range(len(loaded_data_list)):
+            if max_list[i] == min_list[i]:
+                logging.warning("    Looks like a static dataset, completely homogeneous. (in subtracting min)")
+                continue
+            current_dataset = loaded_data_list[i]
+            current_dataset -= min_list[i]
+            loaded_data_list[i] = current_dataset
+
+        # * Normalize all data (divide by std)
+        skip_check_index_list = []
+        normalized_data_list = []
+        for i in range(len(loaded_data_list)):
+            if max_list[i] == min_list[i]:
+                logging.warning("    Looks like a static dataset, completely homogeneous. (in normalization)"
+                                "\n Must be for testing so we are going to skip")
+                skip_check_index_list.append(i)
+                normalized_data_list.append(loaded_data_list[i])
+                continue
+            current_dataset = loaded_data_list[i]
+            normalized_data_list.append(current_dataset / np.std(current_dataset) - np.mean(current_dataset))
+
+        for i, current_max in enumerate(max_list):
+            if i in skip_check_index_list:
+                continue
+            for k, second_max in enumerate(max_list):
+                if k in skip_check_index_list:
+                    continue
                 if current_max != second_max:
                     raise ValueError("Different maximums")
-        for current_min in min_list:
-            for second_min in min_list:
+        for i, current_min in enumerate(min_list):
+            if i in skip_check_index_list:
+                continue
+            for k, second_min in enumerate(min_list):
+                if k in skip_check_index_list:
+                    continue
                 if current_min != second_min:
                     raise ValueError("Different minimums")
-
-        # * Normalize all data (divide by max)
-        normalized_data_list = []
-        for current_dataset in loaded_data_list:
-            normalized_data_list.append(current_dataset / max_list[0])
 
         # * Balance the data sets (under sample to the lowest number of configurations)
         # At the end of this the balanced_dataset will be a list of the number of full data sets that have been passed
@@ -118,8 +144,10 @@ class PhysicsDataset:
             data_labels += [current_label] * len(balanced_dataset[0])
         concatenated = np.vstack(balanced_dataset)
 
+        # Final centering and normalization
         data_set_with_indices = list(zip(concatenated, data_labels))
         # * Scramble but keep original labels in separate list
+        np.random.RandomState(1)
         np.random.shuffle(data_set_with_indices)
         # * Return both the scrambled data set and the separate list... separately.
         concatenated, data_labels = zip(*data_set_with_indices)

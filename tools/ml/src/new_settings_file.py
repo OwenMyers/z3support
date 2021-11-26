@@ -31,6 +31,9 @@ def main():
         FEATURE_MAP_STEPS=2, 4, 8, 16
         STRIDE_SIZES=1
         EARLY_STOPPING_PATIENCE=5
+        USE_BATCH_NORMALIZATION=True,False
+        USE_DROPOUT=False # optional ,True
+        OPTIMIZE_STEP_SIZE=1e-4
 
     Note that the ``timestamp`` is set by the script. Don't change this.
 
@@ -47,8 +50,8 @@ def main():
         DATA1=/full/path/to/data1.npy
         DATA2=/full/path/to/data2.npy
 
-    * Two: you have a way of generating the data on the fly or you want a wrapper for existing TF datasets. In which
-      case you will want to prefix with "generator-" and only supply data for "DATA1"
+    * Two: you have a way of generating the data on the fly or you want a more complete wrapper for a dataset,
+      you will want to prefix with "generator-" and only supply data for "DATA1"
 
     Example::
 
@@ -58,7 +61,6 @@ def main():
     In the first type of data specification, the lables are determined by the file names. Assumption being that
     Each different file represents a dataset from a different type of system. In the second case you wrap all
     that up in the wrapper class and must be able to provide the lables.
-
 
     In section ``[Plotting]`` you can set some plotting options like::
 

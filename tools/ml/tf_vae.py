@@ -3,27 +3,119 @@ import numpy as np
 import time
 
 
-class CVAECustom(tf.keras.Model):
+class CVAEGeneralized(tf.keras.Model):
     """Convolutional variational autoencoder."""
-    def __init__(self, latent_dim, use_batch_norm=False, use_dropout=False):
+    def __init__(self,
+                 latent_dim,
+                 encoder_strides_list=[2, 2],
+                 encoder_filters_list=[5, 10],
+                 encoder_kernal_list=[3, 3],
+                 decoder_strides_list=[2, 2, 1],
+                 decoder_filters_list=[10, 5,1],
+                 decoder_kernal_list=[3, 3, 3],
+                 use_batch_norm=False,
+                 use_dropout=False,
+                 ):
 
         super(CVAECustom, self).__init__()
         self.gradients = None
         self.latent_dim = latent_dim
         self.use_batch_norm = use_batch_norm
         self.use_dropout = use_dropout
-        encoder_strides_list = [1, 2, 2, 1]
-        encoder_filters_list = [32, 64, 64, 64]
-        encoder_kernal_list = [3, 3, 3, 3]
-
-        decoder_strides_list = [1, 2, 2, 1]
-        decoder_filters_list = [64, 64, 32, 1]
-        decoder_kernal_list = [3, 3, 3, 3]
+        self.encoder_strides_list = encoder_strides_list
+        self.encoder_filters_list = encoder_filters_list
+        self.encoder_kernal_list = encoder_kernal_list
+        self.decoder_strides_list = decoder_strides_list
+        self.decoder_filters_list = decoder_filters_list
+        self.decoder_kernal_list = decoder_kernal_list
 
         if (len(encoder_strides_list) != len(encoder_filters_list)) or (len(encoder_filters_list) != len(encoder_kernal_list)):
             raise ValueError("Problem with strides filters or kernal list length mismatch in CVAE")
         encoder_model = tf.keras.Sequential()
-        encoder_input = tf.keras.layers.InputLayer(input_shape=(40, 40, 1), name='encoder_input')
+        encoder_input = tf.keras.layers.InputLayer(input_shape=(12, 12, 1), name='encoder_input')
+        encoder_model.add(encoder_input)
+        for i in range(len(encoder_strides_list)):
+            conv_layer = tf.keras.layers.Conv2D(
+                filters=encoder_filters_list[i],
+                kernel_size=encoder_kernal_list[i],
+                strides=(encoder_strides_list[i], encoder_strides_list[i]),
+                padding='same',
+                name=f"encoder_conv_{i}"
+            )
+            encoder_model.add(conv_layer)
+            encoder_model.add(tf.keras.layers.LeakyReLU())
+            if self.use_batch_norm:
+                encoder_model.add(tf.keras.layers.BatchNormalization())
+            if self.use_dropout:
+                encoder_model.add(tf.keras.layers.Dropout(rate=0.40))
+
+        encoder_model.add(tf.keras.layers.Flatten())
+        encoder_model.add(tf.keras.layers.Dense(int(latent_dim + latent_dim)))
+        self.encoder = encoder_model
+
+        decoder_model = tf.keras.Sequential()
+        decoder_model.add(tf.keras.layers.InputLayer(input_shape=(latent_dim,))),
+        decoder_model.add(tf.keras.layers.Dense(units=3*3*10, activation=tf.nn.relu)),
+        decoder_model.add(tf.keras.layers.Reshape(target_shape=(3, 3, 10))),
+        for i in range(len(decoder_strides_list)):
+            conv_transpose_layer = tf.keras.layers.Conv2DTranspose(
+                filters=decoder_filters_list[i],
+                kernel_size=decoder_kernal_list[i],
+                strides=(decoder_strides_list[i], decoder_strides_list[i]),
+                padding='same',
+                name=f"decoder_conv_transpose_{i}"
+            )
+            decoder_model.add(conv_transpose_layer)
+            encoder_model.add(tf.keras.layers.LeakyReLU())
+            if self.use_batch_norm:
+                decoder_model.add(tf.keras.layers.BatchNormalization())
+            if self.use_dropout:
+                decoder_model.add(tf.keras.layers.Dropout(rate=0.40))
+        decoder_model.add(tf.keras.layers.Activation('sigmoid'))
+        self.decoder = decoder_model
+
+    def call(self, inputs):
+        mean, log_var = tf.split(self.encoder(inputs), num_or_size_splits=2, axis=1)
+        z = reparameterize(mean=mean, logvar=log_var)
+        return decode(self, z)
+
+    @tf.function
+    def train_step(self, model, x, optimizer):
+        """Executes one training step and returns the loss.
+
+        This function computes the loss and gradients, and uses the latter to
+        update the model's parameters.
+        """
+        with tf.GradientTape() as tape:
+            loss = compute_loss(model, x)
+        self.gradients = tape.gradient(loss, model.trainable_variables)
+        optimizer.apply_gradients(zip(self.gradients, model.trainable_variables))
+
+
+class CVAECustom(tf.keras.Model):
+    """Convolutional variational autoencoder."""
+    def __init__(self,
+                 latent_dim,
+                 use_batch_norm=False,
+                 use_dropout=False):
+
+        super(CVAECustom, self).__init__()
+        self.gradients = None
+        self.latent_dim = latent_dim
+        self.use_batch_norm = use_batch_norm
+        self.use_dropout = use_dropout
+        encoder_strides_list = [2, 2]
+        encoder_filters_list = [2, 5]
+        encoder_kernal_list = [3, 3]
+
+        decoder_strides_list = [2, 2, 1]
+        decoder_filters_list = [5, 2, 1]
+        decoder_kernal_list = [3, 3, 3]
+
+        if (len(encoder_strides_list) != len(encoder_filters_list)) or (len(encoder_filters_list) != len(encoder_kernal_list)):
+            raise ValueError("Problem with strides filters or kernal list length mismatch in CVAE")
+        encoder_model = tf.keras.Sequential()
+        encoder_input = tf.keras.layers.InputLayer(input_shape=(12, 12, 1), name='encoder_input')
         encoder_model.add(encoder_input)
         for i in range(len(encoder_strides_list)):
             conv_layer = tf.keras.layers.Conv2D(
@@ -46,8 +138,8 @@ class CVAECustom(tf.keras.Model):
 
         decoder_model = tf.keras.Sequential()
         decoder_model.add(tf.keras.layers.InputLayer(input_shape=(latent_dim,))),
-        decoder_model.add(tf.keras.layers.Dense(units=10*10*32, activation=tf.nn.relu)),
-        decoder_model.add(tf.keras.layers.Reshape(target_shape=(10, 10, 32))),
+        decoder_model.add(tf.keras.layers.Dense(units=3*3*10, activation=tf.nn.relu)),
+        decoder_model.add(tf.keras.layers.Reshape(target_shape=(3, 3, 10))),
         for i in range(len(decoder_strides_list)):
             conv_transpose_layer = tf.keras.layers.Conv2DTranspose(
                 filters=decoder_filters_list[i],
@@ -57,6 +149,7 @@ class CVAECustom(tf.keras.Model):
                 name=f"decoder_conv_transpose_{i}"
             )
             decoder_model.add(conv_transpose_layer)
+            encoder_model.add(tf.keras.layers.LeakyReLU())
             if self.use_batch_norm:
                 decoder_model.add(tf.keras.layers.BatchNormalization())
             if self.use_dropout:
@@ -179,9 +272,26 @@ def log_normal_pdf(sample, mean, logvar, raxis=1):
         axis=raxis)
 
 
-def vae_r_loss(y_true, y_pred, r_loss_factor=500):
+def gl_vae_r_loss(y_true, y_pred, r_loss_factor=500):
     r_loss = tf.keras.backend.mean(tf.keras.backend.square(y_true - y_pred), axis=[1, 2, 3])
+    print(f"---------------> GL R loss: {r_loss}")
     return r_loss_factor * r_loss
+
+
+def gl_vae_kl_loss(log_var, mu):
+    kl_loss = -0.5 * tf.keras.backend.sum(1.0 + log_var - tf.keras.backend.square(mu) - tf.keras.backend.exp(log_var),
+                                          axis=1)
+    print(f"---------------> GL KL loss: {kl_loss}")
+    return kl_loss
+
+
+def gl_compute_loss(model, x):
+    mean, logvar = encode(model, x=x)
+    z = reparameterize(mean=mean, logvar=logvar)
+    x_logit = decode(model, z)
+    r_loss = gl_vae_r_loss(x, x_logit)
+    kl_loss = gl_vae_kl_loss(logvar, mean)
+    return r_loss + kl_loss
 
 # Lots of repeated code for the next several functions. Just being lazy and making a TODO to come back
 # and clean this up.
@@ -189,10 +299,10 @@ def compute_loss(model, x):
     mean, logvar = encode(model, x=x)
     z = reparameterize(mean=mean, logvar=logvar)
     x_logit = decode(model, z)
-    #cross_ent = tf.nn.sigmoid_cross_entropy_with_logits(logits=x_logit, labels=x)
-    #logpx_z = -tf.reduce_sum(cross_ent, axis=[1, 2, 3])
-    cross_ent = -vae_r_loss(x, x_logit)
-    logpx_z = cross_ent
+    cross_ent = tf.nn.sigmoid_cross_entropy_with_logits(logits=x_logit, labels=x)
+    logpx_z = -tf.reduce_sum(cross_ent, axis=[1, 2, 3])
+    #cross_ent = -vae_r_loss(x, x_logit)
+    #logpx_z = cross_ent
     logpz = log_normal_pdf(z, 0., 0.)
     logqz_x = log_normal_pdf(z, mean, logvar)
     return -tf.reduce_mean(logpx_z + logpz - logqz_x)

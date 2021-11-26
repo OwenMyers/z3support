@@ -14,6 +14,7 @@ from tensorboard.plugins.hparams import api as hp
 from custom_datasets.s3_image_dataset import ImageDataset
 from custom_datasets.minst_dataset import MnistDataset
 from custom_datasets.physics_dataset import PhysicsDataset
+from custom_datasets.artificial_dataset import ArtificialDataset
 
 
 class MLToolMixin:
@@ -51,6 +52,7 @@ class MLToolMixin:
         if int(self.config['Settings']['Lx']) != int(self.config['Settings']['Ly']):
             raise ValueError("Can't handle non-square lattice shapes")
         self.L = int(self.config['Settings']['Lx'])
+        self.optimize_step_size = float(self.config['Settings']['OPTIMIZE_STEP_SIZE'])
         self.feature_map_start = int(self.config['Settings']['FEATURE_MAP_START'])
         self.epochs = int(self.config['Settings']['EPOCHS'])
         self.latent_dim = int(self.config['Settings']['LATENT_DIMENSION'])
@@ -62,11 +64,12 @@ class MLToolMixin:
         self.hp_feature_map_step = hp.HParam('feature_map_step', hp.Discrete(feature_map_steps))
         stride_sizes = self.parse_int_list_from_config(self.config['Settings']['STRIDE_SIZES'])
         self.hp_stride_size = hp.HParam('stride', hp.Discrete(stride_sizes))
-        self.hp_use_batch_normalization = hp.HParam('use_batch_normalization', hp.Discrete([0, 1]))
-        self.hp_use_dropout = hp.HParam('use_dropout', hp.Discrete([0, 1]))
-        #self.hp_use_batch_normalization = hp.HParam('use_batch_normalization', hp.Discrete([0]))
-        #self.hp_use_dropout = hp.HParam('use_dropout', hp.Discrete([0]))
-        #self.hp_use_dense = hp.HParam('use_dropout', hp.Discrete([1, 0]))
+        self.hp_use_batch_normalization = hp.HParam('use_batch_normalization', hp.Discrete(
+            self.parse_bool_list_from_config(self.config['Settings']['USE_BATCH_NORMALIZATION'])
+        ))
+        self.hp_use_dropout = hp.HParam('use_dropout', hp.Discrete(
+            self.parse_bool_list_from_config(self.config['Settings']['USE_DROPOUT'])
+        ))
         self.is_image = eval(self.config['Settings']['IS_IMAGE'].title())
         self.z_dim = int(self.config['Settings']['LATENT_DIMENSION'])
         # quick run of single param or full param sweep. Use True for testing.
@@ -157,6 +160,27 @@ class MLToolMixin:
             self.hp_feature_map_step = hp.HParam('feature_map_step', hp.Discrete([16]))
             self.hp_stride_size = hp.HParam('stride', hp.Discrete([1]))
             self.tensorboard_sub_dir = 'quick_run'
+
+    @staticmethod
+    def parse_bool_list_from_config(string_in):
+        """
+        A list of booleans may be provided in the settings file. Create a python list of ``bool``s from the supplied
+        booleans.
+
+        :param string_in: ``str`` containing the list of bools.
+        :return: a ``list`` of ``int``s
+        """
+
+        is_split = string_in.strip(',').split(',')
+        to_return = []
+        for cur in is_split:
+            if 'true' in cur.lower():
+                to_return.append(True)
+            elif 'false' in cur.lower():
+                to_return.append(False)
+            else:
+                raise ValueError("Unexpected token in boolean list")
+        return to_return
 
     @staticmethod
     def parse_int_list_from_config(string_in):

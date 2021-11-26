@@ -1,23 +1,32 @@
 import tensorflow as tf
-import time
+import numpy as np
 
 
 class ArtificialDataset(tf.data.Dataset):
 
-    def _generator(num_samples):
-        # Opening the file
-        time.sleep(0.03)
+    def __new__(cls, train=True, train_percent=80):
+        d1 = np.zeros([1000, 12, 12, 1]) - 1.0
+        d2 = np.zeros([1000, 12, 12, 1]) + 1.0
+        np.random.seed(1)
+        d3 = np.random.normal(0.0, 0.15, size=(1000, 12, 12, 1))
 
-        for sample_idx in range(num_samples):
-            # Reading data (line, record) from the file
-            time.sleep(0.015)
+        final = np.append(d1, d2, axis=0)
+        final = np.append(final, d3, axis=0)
 
-            yield (sample_idx,)
+        labels = np.zeros(1000) + 1.0
+        labels = np.append(labels, np.zeros(1000) + 2.0)
+        labels = np.append(labels, np.zeros(1000) + 3.0)
 
-    def __new__(cls, num_samples=3):
-        return tf.data.Dataset.from_generator(
-            cls._generator,
-            output_shapes=(1,),
-            output_types=tf.int64,
-            args=(num_samples,)
-        )
+        zipped = list(zip(final, labels))
+        np.random.shuffle(zipped)
+        final_o, labels_o = zip(*zipped)
+
+        n_records = len(final_o)
+
+        x_train = final_o[: int(n_records * train_percent/100.0)]
+        x_test = final_o[int(n_records * train_percent/100.0):]
+        y_train = labels_o[: int(n_records * train_percent/100.0)]
+        y_test = labels_o[int(n_records * train_percent/100.0):]
+        if train:
+            return np.array(x_train).astype('float32'), y_train
+        return np.array(x_test).astype('float32'), y_test

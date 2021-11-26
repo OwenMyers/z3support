@@ -66,7 +66,7 @@ class SearchTool(MLToolMixin):
     def train_test_model(self, run_dir, hyper_params, x_test, x_train, aim_run):
         """Looping over the epochs happens here"""
 
-        optimizer = tf.keras.optimizers.Adam(1e-5)
+        optimizer = tf.keras.optimizers.Adam(self.optimize_step_size)
 
         batch_size = hyper_params[self.hp_batch_size]
         use_batch_norm = hyper_params[self.hp_use_batch_normalization]
@@ -88,6 +88,7 @@ class SearchTool(MLToolMixin):
         model = tf_vae.CVAECustom(latent_dim,
                                   use_dropout=use_drop_out,
                                   use_batch_norm=use_batch_norm)
+        #model = tf_vae.CVAE(latent_dim)
         assert batch_size >= num_examples_to_generate
         for test_batch in test_dataset.take(1):
             test_sample = test_batch[0:num_examples_to_generate, :, :, :]
@@ -105,10 +106,10 @@ class SearchTool(MLToolMixin):
             loss_breakout_pz = tf.keras.metrics.Mean()
             loss_breakout_qz_x = tf.keras.metrics.Mean()
             for test_x in test_dataset:
-                loss(tf_vae.compute_loss(model, test_x))
-                loss_breakout_px_z(tf_vae.compute_loss_breakout_px_z(model, test_x))
-                loss_breakout_pz(tf_vae.compute_loss_breakout_pz(model, test_x))
-                loss_breakout_qz_x(tf_vae.compute_loss_breakout_qz_x(model, test_x))
+                loss(tf_vae.gl_compute_loss(model, test_x))
+                #loss_breakout_px_z(tf_vae.compute_loss_breakout_px_z(model, test_x))
+                #loss_breakout_pz(tf_vae.compute_loss_breakout_pz(model, test_x))
+                #loss_breakout_qz_x(tf_vae.compute_loss_breakout_qz_x(model, test_x))
             elbo = -loss.result()
             # display.clear_output(wait=False)
             print('Epoch: {}\n,'
@@ -162,7 +163,13 @@ class SearchTool(MLToolMixin):
                                     'hp_feature_map_step': f_map_step,
                                     'hp_stride_size': stride,
                                     'hp_use_batch_normalization': use_batch_normalization,
-                                    'hp_use_dropout': use_dropout
+                                    'hp_use_dropout': use_dropout,
+                                    # Things that are not taken from the loop are not being iterated over. We are saving
+                                    # Them in this dictionary because they are indeed a hyper parameter but, of this
+                                    # type there will only be one per run. You can see the different values used in
+                                    # different runs in Aim by supplying them here.
+                                    'hp_optimize_step_size': self.optimize_step_size,
+                                    'hp_epochs': self.epochs
                                 }
                                 c += 1
                                 run_name = f"run-{c}"
