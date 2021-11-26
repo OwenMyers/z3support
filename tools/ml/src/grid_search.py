@@ -97,8 +97,11 @@ class SearchTool(MLToolMixin):
         elbo = None
         for epoch in range(1, epochs + 1):
             start_time = time.time()
+            train_loss = tf.keras.metrics.Mean()
             for train_x in train_dataset:
                 model.train_step(model, train_x, optimizer)
+                train_loss(tf_vae.gl_compute_loss(model, train_x))
+            train_elbo = -train_loss.result()
             end_time = time.time()
 
             loss = tf.keras.metrics.Mean()
@@ -111,6 +114,7 @@ class SearchTool(MLToolMixin):
                 #loss_breakout_pz(tf_vae.compute_loss_breakout_pz(model, test_x))
                 #loss_breakout_qz_x(tf_vae.compute_loss_breakout_qz_x(model, test_x))
             elbo = -loss.result()
+
             # display.clear_output(wait=False)
             print('Epoch: {}\n,'
                   '    Test set ELBO: {},'
@@ -122,6 +126,7 @@ class SearchTool(MLToolMixin):
                           loss_breakout_qz_x.result()))
 
             aim_run.track(float(elbo.numpy()), name='testing_loss', epoch=epoch, context={"subset": "train"})
+            aim_run.track(float(train_elbo.numpy()), name='training_loss', epoch=epoch, context={"subset": "train"})
             aim_run.track(float(loss_breakout_px_z.result()), name='breakout_loss_px_z', epoch=epoch,
                           context={"subset": "train"})
             aim_run.track(float(loss_breakout_pz.result()), name='breakout_loss_pz', epoch=epoch,

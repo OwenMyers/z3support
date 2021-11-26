@@ -171,14 +171,26 @@ class VizTool(MLToolMixin):
                 y = tf_vae.decode(autoencoder, z_points, apply_sigmoid=True)
             else:
                 y = autoencoder.predict(x)
-            plt.imshow(x[0], aspect='auto', cmap='viridis')
+
+            gl_vae_r_loss = tf_vae.gl_vae_r_loss(x, y)
+
+            im1 = plt.imshow(x[0], aspect='auto', cmap='viridis')
+            plt.colorbar(im1)
             plt.savefig(os.path.join(in_out_dir, f'{i}_0_x_example_in.png'))
-            plt.imshow(y[0], aspect='auto', cmap='viridis')
+            plt.clf()
+            im2 = plt.imshow(y[0], aspect='auto', cmap='viridis')
+            plt.colorbar(im2)
+            plt.text(0, 0, f"GL VAE R Loss {gl_vae_r_loss[0]}")
             plt.savefig(os.path.join(in_out_dir, f'{i}_0_y_example_out.png'))
             plt.clf()
-            plt.imshow(x[1], aspect='auto', cmap='viridis')
+
+            im1 = plt.imshow(x[1], aspect='auto', cmap='viridis')
+            plt.colorbar(im1)
             plt.savefig(os.path.join(in_out_dir, f'{i}_1_x_example_in.png'))
-            plt.imshow(y[1], aspect='auto', cmap='viridis')
+            plt.clf()
+            im2 = plt.imshow(y[1], aspect='auto', cmap='viridis')
+            plt.text(0, 0, f"GL VAE R Loss {gl_vae_r_loss[1]}")
+            plt.colorbar(im2)
             plt.savefig(os.path.join(in_out_dir, f'{i}_1_y_example_out.png'))
             plt.clf()
 
@@ -265,8 +277,10 @@ class VizTool(MLToolMixin):
                 c_arr.append(number_mapping[i])
         else:
             c_arr = y_in
+
         colours = ListedColormap(['r', 'b', 'g'])
-        scatter = plt.scatter(z[:, 0], z[:, 1], c=c_arr, cmap=colours, s=1)
+        #plt.set_cmap('viridis')
+        scatter = plt.scatter(z[:, 0], z[:, 1], c=c_arr, s=1, cmap=colours)
         plt.legend(handles=scatter.legend_elements()[0], labels=[1, 2, 3])
         plt.savefig(os.path.join(self.figures_project_dir, f'{model_hash_name}_dense_layer.png'))
         plt.clf()

@@ -123,12 +123,13 @@ class CVAECustom(tf.keras.Model):
                 kernel_size=encoder_kernal_list[i],
                 strides=(encoder_strides_list[i], encoder_strides_list[i]),
                 padding='same',
-                name=f"encoder_conv_{i}"
+                name=f"encoder_conv_{i}",
+                kernel_initializer="he_uniform",
             )
             encoder_model.add(conv_layer)
-            encoder_model.add(tf.keras.layers.LeakyReLU())
             if self.use_batch_norm:
                 encoder_model.add(tf.keras.layers.BatchNormalization())
+            encoder_model.add(tf.keras.layers.LeakyReLU())
             if self.use_dropout:
                 encoder_model.add(tf.keras.layers.Dropout(rate=0.25))
 
@@ -146,14 +147,16 @@ class CVAECustom(tf.keras.Model):
                 kernel_size=decoder_kernal_list[i],
                 strides=(decoder_strides_list[i], decoder_strides_list[i]),
                 padding='same',
-                name=f"decoder_conv_transpose_{i}"
+                name=f"decoder_conv_transpose_{i}",
+                kernel_initializer="he_uniform"
             )
             decoder_model.add(conv_transpose_layer)
-            encoder_model.add(tf.keras.layers.LeakyReLU())
-            if self.use_batch_norm:
-                decoder_model.add(tf.keras.layers.BatchNormalization())
-            if self.use_dropout:
-                decoder_model.add(tf.keras.layers.Dropout(rate=0.25))
+            if i < len(decoder_strides_list) - 1:
+                if self.use_batch_norm:
+                    decoder_model.add(tf.keras.layers.BatchNormalization())
+                encoder_model.add(tf.keras.layers.LeakyReLU())
+                if self.use_dropout:
+                    decoder_model.add(tf.keras.layers.Dropout(rate=0.25))
         decoder_model.add(tf.keras.layers.Activation('sigmoid'))
         self.decoder = decoder_model
 
@@ -274,14 +277,14 @@ def log_normal_pdf(sample, mean, logvar, raxis=1):
 
 def gl_vae_r_loss(y_true, y_pred, r_loss_factor=500):
     r_loss = tf.keras.backend.mean(tf.keras.backend.square(y_true - y_pred), axis=[1, 2, 3])
-    print(f"---------------> GL R loss: {r_loss}")
+    #print(f"---------------> GL R loss: {r_loss}")
     return r_loss_factor * r_loss
 
 
 def gl_vae_kl_loss(log_var, mu):
     kl_loss = -0.5 * tf.keras.backend.sum(1.0 + log_var - tf.keras.backend.square(mu) - tf.keras.backend.exp(log_var),
                                           axis=1)
-    print(f"---------------> GL KL loss: {kl_loss}")
+    #print(f"---------------> GL KL loss: {kl_loss}")
     return kl_loss
 
 
