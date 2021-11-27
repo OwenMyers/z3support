@@ -92,6 +92,53 @@ class CVAEGeneralized(tf.keras.Model):
         optimizer.apply_gradients(zip(self.gradients, model.trainable_variables))
 
 
+class CVAEDenseOnly(tf.keras.Model):
+    """Convolutional variational autoencoder."""
+    def __init__(self,
+                 latent_dim,
+                 use_batch_norm=False,
+                 use_dropout=False):
+
+        super(CVAEDenseOnly, self).__init__()
+        self.gradients = None
+        self.latent_dim = latent_dim
+        self.use_batch_norm = use_batch_norm
+        self.use_dropout = use_dropout
+
+        encoder_model = tf.keras.Sequential()
+        encoder_input = tf.keras.layers.InputLayer(input_shape=(12, 12, 1), name='encoder_input')
+        encoder_model.add(encoder_input)
+        encoder_model.add(tf.keras.layers.Flatten())
+        encoder_model.add(tf.keras.layers.Dense(units=100, activation='relu', kernel_initializer='he_uniform'))
+        encoder_model.add(tf.keras.layers.Dense(int(latent_dim + latent_dim), activation='relu', kernel_initializer='he_uniform'))
+        encoder_model.add(tf.keras.layers.LeakyReLU())
+        self.encoder = encoder_model
+        decoder_model = tf.keras.Sequential()
+        decoder_model.add(tf.keras.layers.InputLayer(input_shape=(latent_dim,))),
+        decoder_model.add(tf.keras.layers.Dense(units=100, activation='relu', kernel_initializer='he_uniform'))
+        decoder_model.add(tf.keras.layers.Dense(units=12*12*1, activation=tf.nn.relu, kernel_initializer='he_uniform')),
+        decoder_model.add(tf.keras.layers.Reshape(target_shape=(12, 12, 1))),
+        decoder_model.add(tf.keras.layers.Activation('sigmoid'))
+        self.decoder = decoder_model
+
+    def call(self, inputs):
+        mean, log_var = tf.split(self.encoder(inputs), num_or_size_splits=2, axis=1)
+        z = reparameterize(mean=mean, logvar=log_var)
+        return decode(self, z)
+
+    @tf.function
+    def train_step(self, model, x, optimizer):
+        """Executes one training step and returns the loss.
+
+        This function computes the loss and gradients, and uses the latter to
+        update the model's parameters.
+        """
+        with tf.GradientTape() as tape:
+            loss = compute_loss(model, x)
+        self.gradients = tape.gradient(loss, model.trainable_variables)
+        optimizer.apply_gradients(zip(self.gradients, model.trainable_variables))
+
+
 class CVAECustom(tf.keras.Model):
     """Convolutional variational autoencoder."""
     def __init__(self,
@@ -104,18 +151,19 @@ class CVAECustom(tf.keras.Model):
         self.latent_dim = latent_dim
         self.use_batch_norm = use_batch_norm
         self.use_dropout = use_dropout
+        input_dimension = 12
         encoder_strides_list = [2, 2]
-        encoder_filters_list = [2, 5]
+        encoder_filters_list = [5, 10]
         encoder_kernal_list = [3, 3]
 
-        decoder_strides_list = [2, 2, 1]
-        decoder_filters_list = [5, 2, 1]
+        decoder_strides_list = [1, 2, 2]
+        decoder_filters_list = [10, 5, 1]
         decoder_kernal_list = [3, 3, 3]
 
         if (len(encoder_strides_list) != len(encoder_filters_list)) or (len(encoder_filters_list) != len(encoder_kernal_list)):
             raise ValueError("Problem with strides filters or kernal list length mismatch in CVAE")
         encoder_model = tf.keras.Sequential()
-        encoder_input = tf.keras.layers.InputLayer(input_shape=(12, 12, 1), name='encoder_input')
+        encoder_input = tf.keras.layers.InputLayer(input_shape=(input_dimension, input_dimension, 1), name='encoder_input')
         encoder_model.add(encoder_input)
         for i in range(len(encoder_strides_list)):
             conv_layer = tf.keras.layers.Conv2D(
@@ -134,13 +182,22 @@ class CVAECustom(tf.keras.Model):
                 encoder_model.add(tf.keras.layers.Dropout(rate=0.25))
 
         encoder_model.add(tf.keras.layers.Flatten())
-        encoder_model.add(tf.keras.layers.Dense(int(latent_dim + latent_dim)))
+        encoder_model.add(tf.keras.layers.Dense(int(latent_dim + latent_dim), activation='relu'))
         self.encoder = encoder_model
 
         decoder_model = tf.keras.Sequential()
         decoder_model.add(tf.keras.layers.InputLayer(input_shape=(latent_dim,))),
-        decoder_model.add(tf.keras.layers.Dense(units=3*3*10, activation=tf.nn.relu)),
-        decoder_model.add(tf.keras.layers.Reshape(target_shape=(3, 3, 10))),
+        final_layer_width = int(input_dimension/(2 * len(encoder_filters_list)))
+        dense_num_units = final_layer_width**2 * decoder_filters_list[0]
+        decoder_model.add(
+            tf.keras.layers.Dense(
+                units=dense_num_units,
+                activation=tf.nn.relu
+            )
+        ),
+        decoder_model.add(tf.keras.layers.Reshape(
+            target_shape=(final_layer_width, final_layer_width, decoder_filters_list[0])
+        )),
         for i in range(len(decoder_strides_list)):
             conv_transpose_layer = tf.keras.layers.Conv2DTranspose(
                 filters=decoder_filters_list[i],
@@ -148,13 +205,13 @@ class CVAECustom(tf.keras.Model):
                 strides=(decoder_strides_list[i], decoder_strides_list[i]),
                 padding='same',
                 name=f"decoder_conv_transpose_{i}",
-                kernel_initializer="he_uniform"
+                kernel_initializer="he_uniform",
             )
             decoder_model.add(conv_transpose_layer)
             if i < len(decoder_strides_list) - 1:
                 if self.use_batch_norm:
                     decoder_model.add(tf.keras.layers.BatchNormalization())
-                encoder_model.add(tf.keras.layers.LeakyReLU())
+                decoder_model.add(tf.keras.layers.LeakyReLU())
                 if self.use_dropout:
                     decoder_model.add(tf.keras.layers.Dropout(rate=0.25))
         decoder_model.add(tf.keras.layers.Activation('sigmoid'))
@@ -275,17 +332,17 @@ def log_normal_pdf(sample, mean, logvar, raxis=1):
         axis=raxis)
 
 
-def gl_vae_r_loss(y_true, y_pred, r_loss_factor=500):
+def gl_vae_r_loss(y_true, y_pred, r_loss_factor=10):
     r_loss = tf.keras.backend.mean(tf.keras.backend.square(y_true - y_pred), axis=[1, 2, 3])
-    #print(f"---------------> GL R loss: {r_loss}")
+    #print(f"---------------> GL Total R loss: {tf.keras.backend.sum(r_loss)}")
     return r_loss_factor * r_loss
 
 
 def gl_vae_kl_loss(log_var, mu):
     kl_loss = -0.5 * tf.keras.backend.sum(1.0 + log_var - tf.keras.backend.square(mu) - tf.keras.backend.exp(log_var),
                                           axis=1)
-    #print(f"---------------> GL KL loss: {kl_loss}")
-    return kl_loss
+    #print(f"---------------> GL Total KL loss: {tf.keras.backend.sum(kl_loss)}")
+    return kl_loss * 0.0
 
 
 def gl_compute_loss(model, x):

@@ -2,7 +2,7 @@ import tensorflow as tf
 import numpy as np
 
 
-class ArtificialDataset(tf.data.Dataset):
+class ArtificialDataset1(tf.data.Dataset):
 
     def __new__(cls, train=True, train_percent=80):
         individual_section_size = 1000

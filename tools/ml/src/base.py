@@ -14,7 +14,8 @@ from tensorboard.plugins.hparams import api as hp
 from custom_datasets.s3_image_dataset import ImageDataset
 from custom_datasets.minst_dataset import MnistDataset
 from custom_datasets.physics_dataset import PhysicsDataset
-from custom_datasets.artificial_dataset import ArtificialDataset
+from custom_datasets.artificial_dataset_0 import ArtificialDataset0
+from custom_datasets.artificial_dataset_1 import ArtificialDataset1
 
 
 class MLToolMixin:
