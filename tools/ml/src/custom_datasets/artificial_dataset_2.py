@@ -2,15 +2,16 @@ import tensorflow as tf
 import numpy as np
 
 
-class ArtificialDataset1(tf.data.Dataset):
+class ArtificialDataset2(tf.data.Dataset):
 
     def __new__(cls, train=True, train_percent=80):
         # Can get this to work with step of 2e-5 and 500 epochs
+        const = 1.5
         individual_section_size = 1000
-        d1 = np.zeros([individual_section_size, 12, 12, 1]) + 1.0
-        d2 = np.zeros([individual_section_size, 12, 12, 1]) + 0.5
+        d1 = np.zeros([individual_section_size, 12, 12, 1]) - 1.0 + const
+        d2 = np.zeros([individual_section_size, 12, 12, 1]) + 1.0 + const
         np.random.seed(1)
-        d3 = np.random.normal(2.0, 0.15, size=(individual_section_size, 12, 12, 1))
+        d3 = np.random.normal(0.0 + const, 0.25, size=(individual_section_size, 12, 12, 1))
 
         final = np.append(d1, d2, axis=0)
         final = np.append(final, d3, axis=0)

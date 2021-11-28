@@ -16,6 +16,7 @@ from custom_datasets.minst_dataset import MnistDataset
 from custom_datasets.physics_dataset import PhysicsDataset
 from custom_datasets.artificial_dataset_0 import ArtificialDataset0
 from custom_datasets.artificial_dataset_1 import ArtificialDataset1
+from custom_datasets.artificial_dataset_2 import ArtificialDataset2
 
 
 class MLToolMixin:

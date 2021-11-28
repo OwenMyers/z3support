@@ -100,7 +100,8 @@ class SearchTool(MLToolMixin):
             train_loss = tf.keras.metrics.Mean()
             for train_x in train_dataset:
                 model.train_step(model, train_x, optimizer)
-                train_loss(tf_vae.gl_compute_loss(model, train_x))
+                #train_loss(tf_vae.gl_compute_loss(model, train_x))
+                train_loss(tf_vae.compute_loss(model, train_x))
             train_elbo = -train_loss.result()
             end_time = time.time()
 
@@ -109,7 +110,8 @@ class SearchTool(MLToolMixin):
             loss_breakout_pz = tf.keras.metrics.Mean()
             loss_breakout_qz_x = tf.keras.metrics.Mean()
             for test_x in test_dataset:
-                loss(tf_vae.gl_compute_loss(model, test_x))
+                #loss(tf_vae.gl_compute_loss(model, test_x))
+                loss(tf_vae.compute_loss(model, test_x))
                 #loss_breakout_px_z(tf_vae.compute_loss_breakout_px_z(model, test_x))
                 #loss_breakout_pz(tf_vae.compute_loss_breakout_pz(model, test_x))
                 #loss_breakout_qz_x(tf_vae.compute_loss_breakout_qz_x(model, test_x))

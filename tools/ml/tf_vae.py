@@ -182,19 +182,16 @@ class CVAECustom(tf.keras.Model):
                 encoder_model.add(tf.keras.layers.Dropout(rate=0.25))
 
         encoder_model.add(tf.keras.layers.Flatten())
-        encoder_model.add(tf.keras.layers.Dense(int(latent_dim + latent_dim), activation='relu'))
+        encoder_model.add(tf.keras.layers.Dense(int(latent_dim + latent_dim), kernel_initializer="he_uniform"))
+        encoder_model.add(tf.keras.layers.LeakyReLU())
         self.encoder = encoder_model
 
         decoder_model = tf.keras.Sequential()
         decoder_model.add(tf.keras.layers.InputLayer(input_shape=(latent_dim,))),
         final_layer_width = int(input_dimension/(2 * len(encoder_filters_list)))
         dense_num_units = final_layer_width**2 * decoder_filters_list[0]
-        decoder_model.add(
-            tf.keras.layers.Dense(
-                units=dense_num_units,
-                activation=tf.nn.relu
-            )
-        ),
+        decoder_model.add(tf.keras.layers.Dense(units=dense_num_units, kernel_initializer="he_uniform"))
+        decoder_model.add(tf.keras.layers.LeakyReLU())
         decoder_model.add(tf.keras.layers.Reshape(
             target_shape=(final_layer_width, final_layer_width, decoder_filters_list[0])
         )),

@@ -107,7 +107,7 @@ class PhysicsDataset:
                 normalized_data_list.append(loaded_data_list[i])
                 continue
             current_dataset = loaded_data_list[i]
-            normalized_data_list.append(current_dataset / np.std(current_dataset) - np.mean(current_dataset))
+            normalized_data_list.append(current_dataset / 1.0) #np.std(current_dataset) - np.mean(current_dataset))
 
         for i, current_max in enumerate(max_list):
             if i in skip_check_index_list:
@@ -144,10 +144,9 @@ class PhysicsDataset:
             data_labels += [current_label] * len(balanced_dataset[0])
         concatenated = np.vstack(balanced_dataset)
 
-        # Final centering and normalization
         data_set_with_indices = list(zip(concatenated, data_labels))
         # * Scramble but keep original labels in separate list
-        np.random.RandomState(1)
+        np.random.seed(1)
         np.random.shuffle(data_set_with_indices)
         # * Return both the scrambled data set and the separate list... separately.
         concatenated, data_labels = zip(*data_set_with_indices)

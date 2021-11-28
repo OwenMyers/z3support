@@ -217,7 +217,7 @@ class VizTool(MLToolMixin):
             decoder = Model(inputs=decoder_input, outputs=decoder)
 
         # create the path that that we want to cut across
-        num_steps = 10
+        num_steps = 320
         loc_list = []
         x_step_size = (end_loc[0] - start_loc[0])/num_steps
         y_step_size = (end_loc[1] - start_loc[1])/num_steps
@@ -249,7 +249,7 @@ class VizTool(MLToolMixin):
 
         # self.plot_feature_maps(autoencoder, activations, x_test, encoder_layer_names, images_per_row)
         # self.plot_weights(autoencoder, encoder_layer_names, images_per_row)
-        self.plot_decoder_result_from_input(model, start_loc=[0.0, 0.0], end_loc=[3.0, 2.0], model_is_split=True)
+        self.plot_decoder_result_from_input(model, start_loc=[-1.0, 0.0], end_loc=[2.0, 0.0], model_is_split=True)
         #self.plot_decoder_result_from_input(model, start_loc=[1.0, 1.5], end_loc=[-1.0, -1.5], model_is_split=True)
         self.simple_plot_dense_layer(model, model_hash_name, x_test, y_test)
         self.plot_input_and_output(model, x_test, model_hash_name, model_is_split=True)
