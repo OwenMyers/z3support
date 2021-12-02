@@ -217,7 +217,7 @@ class VizTool(MLToolMixin):
             decoder = Model(inputs=decoder_input, outputs=decoder)
 
         # create the path that that we want to cut across
-        num_steps = 320
+        num_steps = 5
         loc_list = []
         x_step_size = (end_loc[0] - start_loc[0])/num_steps
         y_step_size = (end_loc[1] - start_loc[1])/num_steps

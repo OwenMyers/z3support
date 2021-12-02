@@ -107,7 +107,7 @@ class PhysicsDataset:
                 normalized_data_list.append(loaded_data_list[i])
                 continue
             current_dataset = loaded_data_list[i]
-            normalized_data_list.append(current_dataset / 1.0) #np.std(current_dataset) - np.mean(current_dataset))
+            normalized_data_list.append(current_dataset + 1.5/ 1.0) #np.std(current_dataset) - np.mean(current_dataset))
 
         for i, current_max in enumerate(max_list):
             if i in skip_check_index_list:
