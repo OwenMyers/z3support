@@ -9,8 +9,15 @@ import numpy as np
 from tensorflow.keras.callbacks import ModelCheckpoint
 from tensorflow import keras
 from tensorboard.plugins.hparams import api as hp
-from tf_dataset.s3_image_dataset import ImageDataset
-from tf_dataset.minst_dataset import MnistDataset
+# Your linter might show some datasets as unused but you will need them imported. We use the name supplied in the
+# settings file to create an instance of the class but it has to be imported
+from custom_datasets.s3_image_dataset import ImageDataset
+from custom_datasets.minst_dataset import MnistDataset
+from custom_datasets.physics_dataset import PhysicsDataset
+from custom_datasets.artificial_dataset_0 import ArtificialDataset0
+from custom_datasets.artificial_dataset_1 import ArtificialDataset1
+from custom_datasets.artificial_dataset_2 import ArtificialDataset2
+from custom_datasets.artificial_dataset_3 import ArtificialDataset3
 
 
 class MLToolMixin:
@@ -45,8 +52,10 @@ class MLToolMixin:
         assert os.path.exists(os.path.join(working_location, 'study_data'))
 
         self.timestamp = self.config['Settings']['timestamp']
-        self.Lx = int(self.config['Settings']['Lx'])
-        self.Ly = int(self.config['Settings']['Ly'])
+        if int(self.config['Settings']['Lx']) != int(self.config['Settings']['Ly']):
+            raise ValueError("Can't handle non-square lattice shapes")
+        self.L = int(self.config['Settings']['Lx'])
+        self.optimize_step_size = float(self.config['Settings']['OPTIMIZE_STEP_SIZE'])
         self.feature_map_start = int(self.config['Settings']['FEATURE_MAP_START'])
         self.epochs = int(self.config['Settings']['EPOCHS'])
         self.latent_dim = int(self.config['Settings']['LATENT_DIMENSION'])
@@ -58,11 +67,12 @@ class MLToolMixin:
         self.hp_feature_map_step = hp.HParam('feature_map_step', hp.Discrete(feature_map_steps))
         stride_sizes = self.parse_int_list_from_config(self.config['Settings']['STRIDE_SIZES'])
         self.hp_stride_size = hp.HParam('stride', hp.Discrete(stride_sizes))
-        #self.hp_use_batch_normalization = hp.HParam('use_batch_normalization', hp.Discrete([0, 1]))
-        #self.hp_use_dropout = hp.HParam('use_dropout', hp.Discrete([0, 1]))
-        self.hp_use_batch_normalization = hp.HParam('use_batch_normalization', hp.Discrete([0]))
-        self.hp_use_dropout = hp.HParam('use_dropout', hp.Discrete([0]))
-        #self.hp_use_dense = hp.HParam('use_dropout', hp.Discrete([1, 0]))
+        self.hp_use_batch_normalization = hp.HParam('use_batch_normalization', hp.Discrete(
+            self.parse_bool_list_from_config(self.config['Settings']['USE_BATCH_NORMALIZATION'])
+        ))
+        self.hp_use_dropout = hp.HParam('use_dropout', hp.Discrete(
+            self.parse_bool_list_from_config(self.config['Settings']['USE_DROPOUT'])
+        ))
         self.is_image = eval(self.config['Settings']['IS_IMAGE'].title())
         self.z_dim = int(self.config['Settings']['LATENT_DIMENSION'])
         # quick run of single param or full param sweep. Use True for testing.
@@ -107,12 +117,29 @@ class MLToolMixin:
             os.mkdir(self.study_data_location)
 
         if 'generator-' in self.config['Data']['Data1']:
-            self.data_train, self.data_train_labels = globals()[self.config['Data']['Data1'].split('-')[1]](train=True, train_percent=80)
-            self.data_test, self.data_test_labels = globals()[self.config['Data']['Data1'].split('-')[1]](train=False, train_percent=80)
+            self.data_train, self.data_train_labels = globals()[self.config['Data']['Data1'].split('-')[1]](
+                train=True, train_percent=80)
+            self.data_test, self.data_test_labels = globals()[self.config['Data']['Data1'].split('-')[1]](
+                train=False, train_percent=80)
         else:
             # This will be a list of the different sources, e.g. path to transformed Z3 data, and path to transformed Z2
             # data.
-            self.data = self.get_all_data_sources(self.config)
+            path_list = self.get_all_data_sources(self.config)
+            self.data_train, self.data_train_labels = PhysicsDataset(
+                train=True,
+                train_percent=80,
+                path_list=path_list,
+                lattice_size=self.L,
+                configuration_shape=self.config['Data']['SHAPE'].lower().strip()
+            )
+            self.data_test, self.data_test_labels = PhysicsDataset(
+                train=False,
+                train_percent=80,
+                path_list=path_list,
+                lattice_size=self.L,
+                configuration_shape = self.config['Data']['SHAPE'].lower().strip()
+            )
+
         self.checkpointer = ModelCheckpoint(
             filepath=self.checkpoint_file,
             monitor='loss',
@@ -126,7 +153,8 @@ class MLToolMixin:
         self.run_location = working_location
 
         if self.tensorboard_debugging:
-            tf.debugging.experimental.enable_dump_debug_info(os.path.join(working_location, 'tensorboard_raw/hp_autoencoder/'), tensor_debug_mode="FULL_HEALTH",
+            tf.debugging.experimental.enable_dump_debug_info(os.path.join(working_location, 'tensorboard_raw/hp_autoencoder/'),
+                                                             tensor_debug_mode="FULL_HEALTH",
                                                              circular_buffer_size=-1)
 
         if self.quick_run:
@@ -135,6 +163,27 @@ class MLToolMixin:
             self.hp_feature_map_step = hp.HParam('feature_map_step', hp.Discrete([16]))
             self.hp_stride_size = hp.HParam('stride', hp.Discrete([1]))
             self.tensorboard_sub_dir = 'quick_run'
+
+    @staticmethod
+    def parse_bool_list_from_config(string_in):
+        """
+        A list of booleans may be provided in the settings file. Create a python list of ``bool``s from the supplied
+        booleans.
+
+        :param string_in: ``str`` containing the list of bools.
+        :return: a ``list`` of ``int``s
+        """
+
+        is_split = string_in.strip(',').split(',')
+        to_return = []
+        for cur in is_split:
+            if 'true' in cur.lower():
+                to_return.append(True)
+            elif 'false' in cur.lower():
+                to_return.append(False)
+            else:
+                raise ValueError("Unexpected token in boolean list")
+        return to_return
 
     @staticmethod
     def parse_int_list_from_config(string_in):
@@ -220,88 +269,7 @@ class MLToolMixin:
         else:
             return np.load(self.training_data_location)
 
-    @staticmethod
-    def import_data(list_data):
-        """
-        Get all the data from different systems into one place to be passed into the machine learning algorithm.
 
-        (We will want to expand and test this if we have time or if we start doing more than just the z2 and z3 data)
-
-        Arguments:
-            Requires list of ``.npy`` files.
-
-        This function will load ALL of the data into memory. If the data sets get too large this will be a breaking
-        point.
-
-        Steps:
-            * Load all data into memory
-            * Find what the maximum and minimum values of each are. Check equivalency
-            * Normalize all data (divide by max)
-            * Balance the data sets (under sample to the lowest number of configurations)
-            * Put together into a single entity
-            * Scramble but keep original labels in separate list
-            * Return both the scrambled data set and the separate list... separately.
-
-        Returns:
-            Array of all configurations. numpy, float32 as first element. Original indices of the data as the second.
-        """
-        logging.info("Starting data import")
-        logging.info("    Loading data")
-        # * Load all data into memory
-        loaded_data_list = []
-        length_list = []
-        for current_data_path in list_data:
-            logging.debug(f"        Current path to data being loaded {current_data_path}")
-            current_loaded = np.load(current_data_path)
-            loaded_data_list.append(current_loaded)
-            length_list.append(len(current_loaded))
-        logging.info("    Data loaded")
-        # * Find what the maximum and minimum values of each are. Check equivalency
-        max_list = []
-        min_list = []
-        for current_dataset in loaded_data_list:
-            max_list.append(np.max(current_dataset))
-            min_list.append(np.min(current_dataset))
-        logging.debug(f"    Max values in data: {max_list}")
-        logging.debug(f"    Min values in data: {min_list}")
-        for current_max in max_list:
-            for second_max in max_list:
-                if current_max != second_max:
-                    raise ValueError("Different maximums")
-        for current_min in min_list:
-            for second_min in min_list:
-                if current_min != second_min:
-                    raise ValueError("Different minimums")
-
-        # * Normalize all data (divide by max)
-        normalized_data_list = []
-        for current_dataset in loaded_data_list:
-            normalized_data_list.append(current_dataset / max_list[0])
-
-        # * Balance the data sets (under sample to the lowest number of configurations)
-        # At the end of this the balanced_dataset will be a list of the number of full data sets that have been passed
-        # in. These still need to be put together as a single entity.
-        balanced_dataset = []
-        for current_dataset in normalized_data_list:
-            if len(current_dataset) > min(length_list):
-                random_indices = np.random.choice(current_dataset.shape[0], min(length_list), replace=False)
-                balanced_dataset.append(current_dataset[random_indices, :])
-            else:
-                balanced_dataset.append(current_dataset)
-
-        # * Put together into a single entity
-        data_labels = []
-        for i, current_data_path in enumerate(list_data):
-            current_label = os.path.basename(os.path.normpath(current_data_path))
-            data_labels += [current_label] * len(balanced_dataset[0])
-        concatenated = np.vstack(balanced_dataset)
-
-        data_set_with_indices = list(zip(concatenated, data_labels))
-        # * Scramble but keep original labels in separate list
-        np.random.shuffle(data_set_with_indices)
-        # * Return both the scrambled data set and the separate list... separately.
-        concatenated, data_labels = zip(*data_set_with_indices)
-        return np.array(concatenated).astype('float32'), data_labels
 
     @staticmethod
     def get_all_data_sources(settings_file_parser):
@@ -328,7 +296,6 @@ class MLToolMixin:
                 got_all = True
 
         return path_list
-
 
 
 def r_loss(y_true, y_pred):

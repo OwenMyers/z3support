@@ -6,6 +6,7 @@ class MnistDataset:
 
     @staticmethod
     def __new__(cls, train=True, train_percent=80):
+        """Just a wrapper for MNIST dataset which is convenient for making the encoder dataset "stuff" more general"""
         (x_train, y_train), (x_test, y_test) = mnist.load_data()
 
         x_train = x_train.astype('float32') / 255.

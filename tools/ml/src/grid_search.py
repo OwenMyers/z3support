@@ -19,20 +19,58 @@ from tools.ml.src.base import MLToolMixin, r_loss, vae_r_loss
 from tools.ml.src.custom_callbacks import CustomCallbacks, step_decay_schedule
 #from tensorflow.keras.datasets import mnist
 from tensorflow.keras.layers import Input, Conv2D, Conv2DTranspose, BatchNormalization, LeakyReLU, Dropout, Activation, Flatten, Dense, Reshape, Lambda
-os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
+#os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
 
 
 class SearchTool(MLToolMixin):
+    """Grid Search made EZ
+
+    Primary purpose of this class:
+
+    * One: Collect high-level run operations in one place
+    * Two: Inherit general ML tools from the MLMixin which abstract lower level operations
+    * Three: Provide functionality for the grid search, namely the organization and visualization of performance
+      of different hyperparameter models.
+
+    **One**
+
+    Example of a run (hopefully this feels simple):
+
+    Example::
+
+        python grid_search.py --settings /path/to/generated/settings/file.yml --run-location ./
+
+    The idea being that everything important is just specified in the yaml file rather than at the command line.
+
+    **Two**
+
+    See the ``MLToolMixin`` docs for information on some of the lower level stuff managed by this class. Note that
+    one of the things ``MLToolMixin`` does is provide simple "deserialization" of the yaml file :o. In this class
+    you will see attributes with names analogous to those things provided int the settings file and they come from
+    the ``MLToolMixin``.
+
+    **Three**
+
+    See ``main()`` method doc
+
+    **Note**
+
+    This class/file is meant to be run as a script.
+    """
 
     def __init__(self, settings_file, working_location):
+
         super().__init__(settings_file, working_location)
         self.early_stopping_patience = int(self.config['Settings']['EARLY_STOPPING_PATIENCE'])
 
     def train_test_model(self, run_dir, hyper_params, x_test, x_train, aim_run):
+        """Looping over the epochs happens here"""
 
-        optimizer = tf.keras.optimizers.Adam(1e-5)
+        optimizer = tf.keras.optimizers.Adam(self.optimize_step_size)
 
         batch_size = hyper_params[self.hp_batch_size]
+        use_batch_norm = hyper_params[self.hp_use_batch_normalization]
+        use_drop_out = hyper_params[self.hp_use_dropout]
 
         train_dataset = (tf.data.Dataset.from_tensor_slices(x_train).batch(batch_size))
         test_dataset = (tf.data.Dataset.from_tensor_slices(x_test).batch(batch_size))
@@ -42,12 +80,15 @@ class SearchTool(MLToolMixin):
         latent_dim = self.latent_dim
         num_examples_to_generate = 4
 
-        # TODO revisit this section. May want to remove it depending on how we decide to create the plots
-        # keeping the random vector constant for generation (prediction) so
-        # it will be easier to see the improvement.
+        # TODO revisit this section. May want to remove it depending on how we decide to create the plots (unused!)
+        # (Post TODO) keeping the random vector constant for generation (prediction) so it will be easier to see the
+        # improvement.
         random_vector_for_generation = tf.random.normal(
             shape=[num_examples_to_generate, latent_dim])
-        model = tf_vae.CVAE(latent_dim)
+        model = tf_vae.CVAECustom(latent_dim,
+                                  use_dropout=use_drop_out,
+                                  use_batch_norm=use_batch_norm)
+        #model = tf_vae.CVAE(latent_dim)
         assert batch_size >= num_examples_to_generate
         for test_batch in test_dataset.take(1):
             test_sample = test_batch[0:num_examples_to_generate, :, :, :]
@@ -56,48 +97,57 @@ class SearchTool(MLToolMixin):
         elbo = None
         for epoch in range(1, epochs + 1):
             start_time = time.time()
+            train_loss = tf.keras.metrics.Mean()
             for train_x in train_dataset:
                 model.train_step(model, train_x, optimizer)
+                #train_loss(tf_vae.gl_compute_loss(model, train_x))
+                train_loss(tf_vae.compute_loss(model, train_x))
+            train_elbo = -train_loss.result()
             end_time = time.time()
 
             loss = tf.keras.metrics.Mean()
+            loss_breakout_px_z = tf.keras.metrics.Mean()
+            loss_breakout_pz = tf.keras.metrics.Mean()
+            loss_breakout_qz_x = tf.keras.metrics.Mean()
             for test_x in test_dataset:
+                #loss(tf_vae.gl_compute_loss(model, test_x))
                 loss(tf_vae.compute_loss(model, test_x))
+                #loss_breakout_px_z(tf_vae.compute_loss_breakout_px_z(model, test_x))
+                #loss_breakout_pz(tf_vae.compute_loss_breakout_pz(model, test_x))
+                #loss_breakout_qz_x(tf_vae.compute_loss_breakout_qz_x(model, test_x))
             elbo = -loss.result()
-            # display.clear_output(wait=False)
-            print('Epoch: {}, Test set ELBO: {}, time elapse for current epoch: {}'
-                  .format(epoch, elbo, end_time - start_time))
 
-            aim_run.track(float(elbo.numpy()), name='loss', epoch=epoch, context={"subset": "train" })
+            # display.clear_output(wait=False)
+            print('Epoch: {}\n,'
+                  '    Test set ELBO: {},'
+                  '    Time elapse for current epoch: {},'
+                  '    Test set loss breakout px_z: {},'
+                  '    Test set loss breakout pz: {},'
+                  '    Test set loss breakout qz_x: {}'
+                  .format(epoch, elbo, end_time - start_time, loss_breakout_px_z.result(), loss_breakout_pz.result(),
+                          loss_breakout_qz_x.result()))
+
+            aim_run.track(float(elbo.numpy()), name='testing_loss', epoch=epoch, context={"subset": "train"})
+            aim_run.track(float(train_elbo.numpy()), name='training_loss', epoch=epoch, context={"subset": "train"})
+            aim_run.track(float(loss_breakout_px_z.result()), name='breakout_loss_px_z', epoch=epoch,
+                          context={"subset": "train"})
+            aim_run.track(float(loss_breakout_pz.result()), name='breakout_loss_pz', epoch=epoch,
+                          context={"subset": "train"})
+            aim_run.track(float(loss_breakout_qz_x.result()), name='breakout_loss_qz_x', epoch=epoch,
+                          context={"subset": "train"})
             # generate_and_save_images(model, epoch, test_sample)
 
         model.predict(x_train[:1000])
         return model, float(elbo.numpy())
 
     def run(self, run_dir, hyper_params, x_test, x_train, aim_run):
+        """Just runs the ``train_test_model`` method"""
         return self.train_test_model(run_dir, hyper_params, x_test, x_train, aim_run)
 
     def main(self):
-        if hasattr(self, "data_train"):
-            x_train = self.data_train
-            x_test = self.data_test
-        else:
-            # DATA will contain a list of the paths to different binary data files. There should be one for each of the
-            # "different types of systems" (e.g. z3, z2, high temp, etc). There is no guarantee that there are the same
-            # number of configurations in each file though but the function below takes care of all of that for us to
-            # make sure we get a balanced dataset and that it meets some basic requirements.
-            # all_data = np.load(DATA)
-            all_data, data_labels = self.import_data(self.data)
-
-            n_records = len(all_data)
-            x_train = all_data[: n_records - int(n_records / 4)]
-            x_test = all_data[int(n_records / 4):]
-            x_train = np.reshape(x_train, (len(x_train), self.L * 2, self.L * 2, 1))
-            x_test = np.reshape(x_test, (len(x_test), self.L * 2, self.L * 2, 1))
-
-            np.save(self.training_data_location, x_train)
-            np.save(self.testing_data_location, x_test)
-            np.save(self.data_label_location, data_labels)
+        """Looping over hyperparameters and interfacing with ``aim``, the experiment tracker, here"""
+        x_train = self.data_train
+        x_test = self.data_test
 
         c = 0
         for batch_size in self.hp_batch_size.domain.values:
@@ -120,7 +170,13 @@ class SearchTool(MLToolMixin):
                                     'hp_feature_map_step': f_map_step,
                                     'hp_stride_size': stride,
                                     'hp_use_batch_normalization': use_batch_normalization,
-                                    'hp_use_dropout': use_dropout
+                                    'hp_use_dropout': use_dropout,
+                                    # Things that are not taken from the loop are not being iterated over. We are saving
+                                    # Them in this dictionary because they are indeed a hyper parameter but, of this
+                                    # type there will only be one per run. You can see the different values used in
+                                    # different runs in Aim by supplying them here.
+                                    'hp_optimize_step_size': self.optimize_step_size,
+                                    'hp_epochs': self.epochs
                                 }
                                 c += 1
                                 run_name = f"run-{c}"

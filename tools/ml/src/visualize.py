@@ -1,5 +1,6 @@
 import logging
 import pickle
+from matplotlib.colors import ListedColormap
 from tensorflow.keras.layers import Input
 from tensorflow.keras.models import Model
 import tensorflow as tf
@@ -154,20 +155,44 @@ class VizTool(MLToolMixin):
             plt.savefig(os.path.join(self.figures_project_dir, layer_name + 'layer_weights.png'))
 
     def plot_input_and_output(self, autoencoder, x_test, model_hash_name, model_is_split=False):
-        x1 = next(iter(x_test))
-        x2 = next(iter(x_test))
-        x = np.array([x1, x2])
-        if model_is_split:
-            mean, logvar = tf_vae.encode(autoencoder, x=x)
-            z_points = tf_vae.reparameterize(mean=mean, logvar=logvar)
-            y = tf_vae.decode(autoencoder, z_points, apply_sigmoid=True)
-        else:
-            y = autoencoder.predict(x)
-        plt.imshow(x[0], aspect='auto', cmap='viridis')
-        plt.savefig(os.path.join(self.figures_project_dir, f'{model_hash_name}_example_in.png'))
-        plt.imshow(y[0], aspect='auto', cmap='viridis')
-        plt.savefig(os.path.join(self.figures_project_dir, f'{model_hash_name}_example_out.png'))
-        plt.clf()
+        in_out_dir = os.path.join(self.figures_project_dir, f'{model_hash_name}_in_out_images')
+        if not os.path.exists(in_out_dir):
+            os.mkdir(in_out_dir)
+        # You will get double the number specified in the range. 10 makes 20 images
+        x_test_iter = iter(x_test)
+        for i in range(10):
+            print(f"Plotting input and output images {i}")
+            x1 = next(x_test_iter)
+            x2 = next(x_test_iter)
+            x = np.array([x1, x2])
+            if model_is_split:
+                mean, logvar = tf_vae.encode(autoencoder, x=x)
+                z_points = tf_vae.reparameterize(mean=mean, logvar=logvar)
+                y = tf_vae.decode(autoencoder, z_points, apply_sigmoid=True)
+            else:
+                y = autoencoder.predict(x)
+
+            gl_vae_r_loss = tf_vae.gl_vae_r_loss(x, y)
+
+            im1 = plt.imshow(x[0], aspect='auto', cmap='viridis')
+            plt.colorbar(im1)
+            plt.savefig(os.path.join(in_out_dir, f'{i}_0_x_example_in.png'))
+            plt.clf()
+            im2 = plt.imshow(y[0], aspect='auto', cmap='viridis')
+            plt.colorbar(im2)
+            plt.text(0, 0, f"GL VAE R Loss {gl_vae_r_loss[0]}")
+            plt.savefig(os.path.join(in_out_dir, f'{i}_0_y_example_out.png'))
+            plt.clf()
+
+            im1 = plt.imshow(x[1], aspect='auto', cmap='viridis')
+            plt.colorbar(im1)
+            plt.savefig(os.path.join(in_out_dir, f'{i}_1_x_example_in.png'))
+            plt.clf()
+            im2 = plt.imshow(y[1], aspect='auto', cmap='viridis')
+            plt.text(0, 0, f"GL VAE R Loss {gl_vae_r_loss[1]}")
+            plt.colorbar(im2)
+            plt.savefig(os.path.join(in_out_dir, f'{i}_1_y_example_out.png'))
+            plt.clf()
 
     def plot_decoder_result_from_input(self, autoencoder, start_loc=(-1, -1), end_loc=(1, 1), layer_names=None,
                                        model_is_split=False):
@@ -192,7 +217,7 @@ class VizTool(MLToolMixin):
             decoder = Model(inputs=decoder_input, outputs=decoder)
 
         # create the path that that we want to cut across
-        num_steps = 3
+        num_steps = 5
         loc_list = []
         x_step_size = (end_loc[0] - start_loc[0])/num_steps
         y_step_size = (end_loc[1] - start_loc[1])/num_steps
@@ -224,7 +249,8 @@ class VizTool(MLToolMixin):
 
         # self.plot_feature_maps(autoencoder, activations, x_test, encoder_layer_names, images_per_row)
         # self.plot_weights(autoencoder, encoder_layer_names, images_per_row)
-        self.plot_decoder_result_from_input(model, start_loc=[-1.0, -1.0], end_loc=[1.0, 1.0], model_is_split=True)
+        self.plot_decoder_result_from_input(model, start_loc=[-1.0, 0.0], end_loc=[2.0, 0.0], model_is_split=True)
+        #self.plot_decoder_result_from_input(model, start_loc=[1.0, 1.5], end_loc=[-1.0, -1.5], model_is_split=True)
         self.simple_plot_dense_layer(model, model_hash_name, x_test, y_test)
         self.plot_input_and_output(model, x_test, model_hash_name, model_is_split=True)
 
@@ -236,12 +262,26 @@ class VizTool(MLToolMixin):
                 plt.savefig(os.path.join(self.figures_project_dir, 'dense_layer.png'))
 
     def simple_plot_dense_layer(self, model, model_hash_name, x_test, y_test):
-        x_in = self.get_testing_data()[:50000]
-        y_in = self.get_testing_data_labels()[:50000]
+        x_in = self.get_testing_data()
+        y_in = self.get_testing_data_labels()
 
         mean, logvar = tf_vae.encode(model, x=x_in)
         z = tf_vae.reparameterize(mean=mean, logvar=logvar)
-        plt.scatter(z[:, 0], z[:, 1], c=y_in, cmap='Set1', s=1)
+        if isinstance(y_in[0], str):
+            unique_lables = {i for i in y_in}
+            number_mapping = {}
+            for i, j in enumerate(unique_lables):
+                number_mapping[j] = i
+            c_arr = []
+            for i in y_in:
+                c_arr.append(number_mapping[i])
+        else:
+            c_arr = y_in
+
+        colours = ListedColormap(['r', 'b', 'g'])
+        #plt.set_cmap('viridis')
+        scatter = plt.scatter(z[:, 0], z[:, 1], c=c_arr, s=1, cmap=colours)
+        plt.legend(handles=scatter.legend_elements()[0], labels=[1, 2, 3])
         plt.savefig(os.path.join(self.figures_project_dir, f'{model_hash_name}_dense_layer.png'))
         plt.clf()
 
