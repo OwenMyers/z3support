@@ -109,13 +109,13 @@ class CVAEDenseOnly(tf.keras.Model):
         encoder_input = tf.keras.layers.InputLayer(input_shape=(12, 12, 1), name='encoder_input')
         encoder_model.add(encoder_input)
         encoder_model.add(tf.keras.layers.Flatten())
-        encoder_model.add(tf.keras.layers.Dense(int(latent_dim + latent_dim), kernel_initializer='he_uniform'))
-        encoder_model.add(tf.keras.layers.LeakyReLU())
+        encoder_model.add(tf.keras.layers.Dense(int(latent_dim + latent_dim)))
+        #encoder_model.add(tf.keras.layers.LeakyReLU())
         self.encoder = encoder_model
         decoder_model = tf.keras.Sequential()
         decoder_model.add(tf.keras.layers.InputLayer(input_shape=(latent_dim,))),
-        decoder_model.add(tf.keras.layers.Dense(units=12*12*1, kernel_initializer='he_uniform')),
-        decoder_model.add(tf.keras.layers.LeakyReLU())
+        decoder_model.add(tf.keras.layers.Dense(units=12*12*1)),
+        #decoder_model.add(tf.keras.layers.LeakyReLU())
         decoder_model.add(tf.keras.layers.Reshape(target_shape=(12, 12, 1))),
         decoder_model.add(tf.keras.layers.Activation('sigmoid'))
         self.decoder = decoder_model

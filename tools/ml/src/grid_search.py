@@ -85,9 +85,10 @@ class SearchTool(MLToolMixin):
         # improvement.
         random_vector_for_generation = tf.random.normal(
             shape=[num_examples_to_generate, latent_dim])
-        model = tf_vae.CVAECustom(latent_dim,
-                                  use_dropout=use_drop_out,
-                                  use_batch_norm=use_batch_norm)
+        model = tf_vae.CVAEDenseOnly(latent_dim)
+        #model = tf_vae.CVAECustom(latent_dim,
+        #                          use_dropout=use_drop_out,
+        #                          use_batch_norm=use_batch_norm)
         #model = tf_vae.CVAE(latent_dim)
         assert batch_size >= num_examples_to_generate
         for test_batch in test_dataset.take(1):
