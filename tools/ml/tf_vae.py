@@ -140,24 +140,30 @@ class CVAEDenseOnly(tf.keras.Model):
 
 class CVAECustom(tf.keras.Model):
     """Convolutional variational autoencoder."""
-    def __init__(self,
-                 latent_dim,
-                 use_batch_norm=False,
-                 use_dropout=False):
+    def __init__(self, params):
 
         super(CVAECustom, self).__init__()
         self.gradients = None
-        self.latent_dim = latent_dim
-        self.use_batch_norm = use_batch_norm
-        self.use_dropout = use_dropout
-        input_dimension = 12
-        encoder_strides_list = [2, 2]
-        encoder_filters_list = [5, 10]
-        encoder_kernal_list = [3, 3]
+        self.latent_dim = params.latent_dim
+        self.use_batch_norm = params.use_batch_norm
+        self.use_dropout = params.use_dropout
+        input_dimension = params.input_dimension
+        encoder_strides_list = params.encoder_strides_list
+        encoder_filters_list = params.encoder_filters_list
+        encoder_kernal_list = params.encoder_kernal_list
 
-        decoder_strides_list = [1, 2, 2]
-        decoder_filters_list = [10, 5, 1]
-        decoder_kernal_list = [3, 3, 3]
+        decoder_strides_list = params.decoder_strides_list
+        decoder_filters_list = params.decoder_filters_list
+        decoder_kernal_list = params.decoder_kernal_list
+
+        # input_dimension = 12
+        # encoder_strides_list = [2, 2]
+        # encoder_filters_list = [5, 10]
+        # encoder_kernal_list = [3, 3]
+
+        # decoder_strides_list = [1, 2, 2]
+        # decoder_filters_list = [10, 5, 1]
+        # decoder_kernal_list = [3, 3, 3]
 
         if (len(encoder_strides_list) != len(encoder_filters_list)) or (len(encoder_filters_list) != len(encoder_kernal_list)):
             raise ValueError("Problem with strides filters or kernal list length mismatch in CVAE")

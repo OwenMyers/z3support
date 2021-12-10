@@ -164,6 +164,17 @@ class MLToolMixin:
             self.hp_stride_size = hp.HParam('stride', hp.Discrete([1]))
             self.tensorboard_sub_dir = 'quick_run'
 
+        self.model_params = self.create_model_params()
+
+    def create_model_params(self):
+        i = 1
+        cur_section_name = f'ModelParams{i}'
+        while cur_section_name in self.config:
+            model_params_conf_section = self.config[cur_section_name]
+
+            if model_params_conf_section['MODEL_NAME']:
+
+
     @staticmethod
     def parse_bool_list_from_config(string_in):
         """
