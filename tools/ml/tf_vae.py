@@ -11,7 +11,7 @@ class CVAEGeneralized(tf.keras.Model):
                  encoder_filters_list=[5, 10],
                  encoder_kernal_list=[3, 3],
                  decoder_strides_list=[2, 2, 1],
-                 decoder_filters_list=[10, 5,1],
+                 decoder_filters_list=[10, 5, 1],
                  decoder_kernal_list=[3, 3, 3],
                  use_batch_norm=False,
                  use_dropout=False,
@@ -95,10 +95,14 @@ class CVAEGeneralized(tf.keras.Model):
 class CVAEDenseOnly(tf.keras.Model):
     """Convolutional variational autoencoder."""
     def __init__(self,
+                 params,
                  latent_dim,
                  use_batch_norm=False,
                  use_dropout=False):
-
+        if use_dropout:
+            raise ValueError("No implementation of dropout in DenseOnly")
+        if use_batch_norm:
+            raise ValueError("No implementation of batch normalization in DenseOnly")
         super(CVAEDenseOnly, self).__init__()
         self.gradients = None
         self.latent_dim = latent_dim
@@ -140,13 +144,13 @@ class CVAEDenseOnly(tf.keras.Model):
 
 class CVAECustom(tf.keras.Model):
     """Convolutional variational autoencoder."""
-    def __init__(self, params):
+    def __init__(self, params, latent_dim=2, use_dropout=False, use_batch_norm=False):
 
         super(CVAECustom, self).__init__()
         self.gradients = None
+        self.use_batch_norm = use_batch_norm
+        self.use_dropout = use_dropout
         self.latent_dim = params.latent_dim
-        self.use_batch_norm = params.use_batch_norm
-        self.use_dropout = params.use_dropout
         input_dimension = params.input_dimension
         encoder_strides_list = params.encoder_strides_list
         encoder_filters_list = params.encoder_filters_list

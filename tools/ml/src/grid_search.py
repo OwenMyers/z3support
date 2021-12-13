@@ -2,6 +2,7 @@ import pickle
 from aim import Run
 import json
 import tf_vae
+from tf_vae import CVAEDenseOnly, CVAECustom
 import time
 import os
 from hashlib import sha1
@@ -63,7 +64,7 @@ class SearchTool(MLToolMixin):
         super().__init__(settings_file, working_location)
         self.early_stopping_patience = int(self.config['Settings']['EARLY_STOPPING_PATIENCE'])
 
-    def train_test_model(self, run_dir, hyper_params, x_test, x_train, aim_run):
+    def train_test_model(self, run_dir, hyper_params, model_params, x_test, x_train, aim_run):
         """Looping over the epochs happens here"""
 
         optimizer = tf.keras.optimizers.Adam(self.optimize_step_size)
@@ -85,11 +86,7 @@ class SearchTool(MLToolMixin):
         # improvement.
         random_vector_for_generation = tf.random.normal(
             shape=[num_examples_to_generate, latent_dim])
-        model = tf_vae.CVAEDenseOnly(latent_dim)
-        #model = tf_vae.CVAECustom(latent_dim,
-        #                          use_dropout=use_drop_out,
-        #                          use_batch_norm=use_batch_norm)
-        #model = tf_vae.CVAE(latent_dim)
+        model = globals()[model_params.__class__.__name__.strip("Params")](model_params, latent_dim, use_dropout=False, use_batch_norm=False)
         assert batch_size >= num_examples_to_generate
         for test_batch in test_dataset.take(1):
             test_sample = test_batch[0:num_examples_to_generate, :, :, :]
@@ -111,11 +108,11 @@ class SearchTool(MLToolMixin):
             loss_breakout_pz = tf.keras.metrics.Mean()
             loss_breakout_qz_x = tf.keras.metrics.Mean()
             for test_x in test_dataset:
-                #loss(tf_vae.gl_compute_loss(model, test_x))
+                loss(tf_vae.gl_compute_loss(model, test_x))
                 loss(tf_vae.compute_loss(model, test_x))
-                #loss_breakout_px_z(tf_vae.compute_loss_breakout_px_z(model, test_x))
-                #loss_breakout_pz(tf_vae.compute_loss_breakout_pz(model, test_x))
-                #loss_breakout_qz_x(tf_vae.compute_loss_breakout_qz_x(model, test_x))
+                loss_breakout_px_z(tf_vae.compute_loss_breakout_px_z(model, test_x))
+                loss_breakout_pz(tf_vae.compute_loss_breakout_pz(model, test_x))
+                loss_breakout_qz_x(tf_vae.compute_loss_breakout_qz_x(model, test_x))
             elbo = -loss.result()
 
             # display.clear_output(wait=False)
@@ -141,9 +138,11 @@ class SearchTool(MLToolMixin):
         model.predict(x_train[:1000])
         return model, float(elbo.numpy())
 
-    def run(self, run_dir, hyper_params, x_test, x_train, aim_run):
-        """Just runs the ``train_test_model`` method"""
-        return self.train_test_model(run_dir, hyper_params, x_test, x_train, aim_run)
+    def run(self, run_dir, hyper_params, model_params, x_test, x_train, aim_run):
+        """Just runs the ``train_test_model`` method
+
+        Note, we are going to eventualy depricate hyper_params in favor of simp_hyper_params"""
+        return self.train_test_model(run_dir, hyper_params, model_params, x_test, x_train, aim_run)
 
     def main(self):
         """Looping over hyperparameters and interfacing with ``aim``, the experiment tracker, here"""
@@ -152,56 +151,50 @@ class SearchTool(MLToolMixin):
 
         c = 0
         for batch_size in self.hp_batch_size.domain.values:
-            for n_layers in self.hp_n_layers.domain.values:
-                for f_map_step in self.hp_feature_map_step.domain.values:
-                    for stride in self.hp_stride_size.domain.values:
-                        for use_batch_normalization in self.hp_use_batch_normalization.domain.values:
-                            for use_dropout in self.hp_use_dropout.domain.values:
-                                hyper_params = {
-                                    self.hp_batch_size: batch_size,
-                                    self.hp_n_layers: n_layers,
-                                    self.hp_feature_map_step: f_map_step,
-                                    self.hp_stride_size: stride,
-                                    self.hp_use_batch_normalization: use_batch_normalization,
-                                    self.hp_use_dropout: use_dropout
-                                }
-                                simp_hyper_params = {
-                                    'hp_batch_size': batch_size,
-                                    'hp_n_layers': n_layers,
-                                    'hp_feature_map_step': f_map_step,
-                                    'hp_stride_size': stride,
-                                    'hp_use_batch_normalization': use_batch_normalization,
-                                    'hp_use_dropout': use_dropout,
-                                    # Things that are not taken from the loop are not being iterated over. We are saving
-                                    # Them in this dictionary because they are indeed a hyper parameter but, of this
-                                    # type there will only be one per run. You can see the different values used in
-                                    # different runs in Aim by supplying them here.
-                                    'hp_optimize_step_size': self.optimize_step_size,
-                                    'hp_epochs': self.epochs
-                                }
-                                c += 1
-                                run_name = f"run-{c}"
-                                print('--- Starting trial: %s' % run_name)
-                                print({h.name: hyper_params[h] for h in hyper_params})
-                                aim_run = Run()
-                                run_result, loss = self.run(
-                                    os.path.join(self.run_location, 'tensorboard_raw', self.tensorboard_sub_dir,
-                                                 run_name),
-                                    hyper_params,
-                                    x_test,
-                                    x_train,
-                                    aim_run
-                                )
-                                # After each run lets attempt to log a sample of activations for the different layers
-                                simp_hyper_params['loss'] = loss
+            for use_batch_normalization in self.hp_use_batch_normalization.domain.values:
+                for use_dropout in self.hp_use_dropout.domain.values:
+                    for cur_model_params in self.model_params_list:
+                        hyper_params = {
+                            self.hp_batch_size: batch_size,
+                            self.hp_use_batch_normalization: use_batch_normalization,
+                            self.hp_use_dropout: use_dropout
+                        }
+                        simp_hyper_params = {
+                            'hp_batch_size': batch_size,
+                            'hp_use_batch_normalization': use_batch_normalization,
+                            'hp_use_dropout': use_dropout,
+                            # Things that are not taken from the loop are not being iterated over. We are saving
+                            # Them in this dictionary because they are indeed a hyper parameter but, of this
+                            # type there will only be one per run. You can see the different values used in
+                            # different runs in Aim by supplying them here.
+                            'hp_optimize_step_size': self.optimize_step_size,
+                            'hp_epochs': self.epochs,
+                        }
+                        simp_hyper_params.update(cur_model_params.get_hp_dict_for_aim())
+                        c += 1
+                        run_name = f"run-{c}"
+                        print('--- Starting trial: %s' % run_name)
+                        print({h.name: hyper_params[h] for h in hyper_params})
+                        aim_run = Run()
+                        run_result, loss = self.run(
+                            os.path.join(self.run_location, 'tensorboard_raw', self.tensorboard_sub_dir,
+                                         run_name),
+                            hyper_params,
+                            cur_model_params,
+                            x_test,
+                            x_train,
+                            aim_run
+                        )
+                        # After each run lets attempt to log a sample of activations for the different layers
+                        simp_hyper_params['loss'] = loss
 
-                                aim_run["hparams"] = simp_hyper_params
-                                if not self.tensorboard_debugging:
-                                    hash_name = aim_run.hashname
-                                    # Creates two output lines telling us the "asset" was created. Just a note so I
-                                    # don't go digging into why later
-                                    run_result.save(os.path.join(self.run_location, 'models', f'{hash_name}.tf'),
-                                                    save_format='tf', save_traces=True)
+                        aim_run["hparams"] = simp_hyper_params
+                        if not self.tensorboard_debugging:
+                            hash_name = aim_run.hashname
+                            # Creates two output lines telling us the "asset" was created. Just a note so I
+                            # don't go digging into why later
+                            run_result.save(os.path.join(self.run_location, 'models', f'{hash_name}.tf'),
+                                            save_format='tf', save_traces=True)
 
 
 if __name__ == "__main__":

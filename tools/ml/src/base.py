@@ -18,6 +18,7 @@ from custom_datasets.artificial_dataset_0 import ArtificialDataset0
 from custom_datasets.artificial_dataset_1 import ArtificialDataset1
 from custom_datasets.artificial_dataset_2 import ArtificialDataset2
 from custom_datasets.artificial_dataset_3 import ArtificialDataset3
+from model_params import CVAECustomParams, CVAEDenseOnlyParams
 
 
 class MLToolMixin:
@@ -56,17 +57,10 @@ class MLToolMixin:
             raise ValueError("Can't handle non-square lattice shapes")
         self.L = int(self.config['Settings']['Lx'])
         self.optimize_step_size = float(self.config['Settings']['OPTIMIZE_STEP_SIZE'])
-        self.feature_map_start = int(self.config['Settings']['FEATURE_MAP_START'])
         self.epochs = int(self.config['Settings']['EPOCHS'])
         self.latent_dim = int(self.config['Settings']['LATENT_DIMENSION'])
         batch_sizes = self.parse_int_list_from_config(self.config['Settings']['BATCH_SIZES'])
         self.hp_batch_size = hp.HParam('batch_size', hp.Discrete(batch_sizes))
-        n_layers = self.parse_int_list_from_config(self.config['Settings']['N_LAYERS'])
-        self.hp_n_layers = hp.HParam('n_layers', hp.Discrete(n_layers))
-        feature_map_steps = self.parse_int_list_from_config(self.config['Settings']['FEATURE_MAP_STEPS'])
-        self.hp_feature_map_step = hp.HParam('feature_map_step', hp.Discrete(feature_map_steps))
-        stride_sizes = self.parse_int_list_from_config(self.config['Settings']['STRIDE_SIZES'])
-        self.hp_stride_size = hp.HParam('stride', hp.Discrete(stride_sizes))
         self.hp_use_batch_normalization = hp.HParam('use_batch_normalization', hp.Discrete(
             self.parse_bool_list_from_config(self.config['Settings']['USE_BATCH_NORMALIZATION'])
         ))
@@ -164,16 +158,48 @@ class MLToolMixin:
             self.hp_stride_size = hp.HParam('stride', hp.Discrete([1]))
             self.tensorboard_sub_dir = 'quick_run'
 
-        self.model_params = self.create_model_params()
+        self.model_params_list = self.create_model_params()
 
     def create_model_params(self):
+        to_return_params_list = []
         i = 1
         cur_section_name = f'ModelParams{i}'
         while cur_section_name in self.config:
             model_params_conf_section = self.config[cur_section_name]
 
-            if model_params_conf_section['MODEL_NAME']:
+            params = None
+            if model_params_conf_section['MODEL_NAME'] == "CVAECustom":
+                params = self.create_cvae_custom_params(model_params_conf_section)
+            elif model_params_conf_section['MODEL_NAME'] == "CVAEDenseOnly":
+                params = self.create_cvae_dense_only_params(model_params_conf_section)
+            else:
+                raise ValueError("No known specified model configurations in settings file")
 
+            to_return_params_list.append(params)
+            i += 1
+            cur_section_name = f'ModelParams{i}'
+
+        return to_return_params_list
+
+    def create_cvae_custom_params(self, model_params_conf_section):
+        encoder_strides_list = self.parse_int_list_from_config(model_params_conf_section['ENCODER_STRIDES_LIST'])
+        encoder_filters_list = self.parse_int_list_from_config(model_params_conf_section['encoder_filters_list']),
+        encoder_kernal_list = self.parse_int_list_from_config(model_params_conf_section['encoder_kernal_list']),
+        decoder_strides_list = self.parse_int_list_from_config(model_params_conf_section['decoder_strides_list']),
+        decoder_filters_list = self.parse_int_list_from_config(model_params_conf_section['decoder_filters_list']),
+        decoder_kernal_list = self.parse_int_list_from_config(model_params_conf_section['decoder_kernal_list']),
+        return CVAECustomParams(
+            encoder_strides_list=encoder_strides_list,
+            encoder_filters_list=encoder_filters_list,
+            encoder_kernal_list=encoder_kernal_list,
+            decoder_strides_list=decoder_strides_list,
+            decoder_filters_list=decoder_filters_list,
+            decoder_kernal_list=decoder_kernal_list,
+        )
+
+    def create_cvae_dense_only_params(self, model_params_conf_section):
+        # Nothing needs to happen for this one
+        return CVAEDenseOnlyParams()
 
     @staticmethod
     def parse_bool_list_from_config(string_in):
