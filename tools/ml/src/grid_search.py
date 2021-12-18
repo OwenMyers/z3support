@@ -86,7 +86,7 @@ class SearchTool(MLToolMixin):
         # improvement.
         random_vector_for_generation = tf.random.normal(
             shape=[num_examples_to_generate, latent_dim])
-        model = globals()[model_params.__class__.__name__.strip("Params")](model_params, latent_dim, use_dropout=False, use_batch_norm=False)
+        model = globals()[model_params.__class__.__name__[:model_params.__class__.__name__.find("Params")]](model_params, latent_dim, use_dropout=False, use_batch_norm=False)
         assert batch_size >= num_examples_to_generate
         for test_batch in test_dataset.take(1):
             test_sample = test_batch[0:num_examples_to_generate, :, :, :]

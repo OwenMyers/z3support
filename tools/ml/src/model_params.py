@@ -8,8 +8,10 @@ class ParamsMixin:
 
     def get_hp_dict_for_aim(self):
         d = {}
-        for k, v in self.kwargs_in_dict:
+        for k, v in self.kwargs_in_dict.items():
             d[f"hp_{k}"] = v
+
+        d["hp_model_name"] = self.__class__.__name__
 
         return d
 
@@ -18,8 +20,7 @@ class CVAEDenseOnlyParams(ParamsMixin):
 
     def __init__(self, **kwargs):
         super(CVAEDenseOnlyParams, self).__init__(**kwargs)
-        print("Warning: No parameter setting for the Dense Only model at this time")
-        print("    only connects input to latent space")
+        self.input_edge_length = kwargs['input_edge_length']
 
 
 class CVAECustomParams(ParamsMixin):
@@ -30,6 +31,7 @@ class CVAECustomParams(ParamsMixin):
 
     def __init__(self, **kwargs):
         super(CVAECustomParams, self).__init__(**kwargs)
+        self.input_edge_length = kwargs['input_edge_length']
         self.encoder_strides_list = kwargs['encoder_strides_list']
         self.encoder_filters_list = kwargs['encoder_filters_list']
         self.encoder_kernal_list = kwargs['encoder_kernal_list']

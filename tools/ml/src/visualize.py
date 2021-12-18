@@ -251,7 +251,8 @@ class VizTool(MLToolMixin):
         # self.plot_weights(autoencoder, encoder_layer_names, images_per_row)
         self.plot_decoder_result_from_input(model, start_loc=[-1.0, 0.0], end_loc=[2.0, 0.0], model_is_split=True)
         #self.plot_decoder_result_from_input(model, start_loc=[1.0, 1.5], end_loc=[-1.0, -1.5], model_is_split=True)
-        self.simple_plot_dense_layer(model, model_hash_name, x_test, y_test)
+        #self.simple_plot_dense_layer(model, model_hash_name, x_test, y_test)
+        self.cont_plot_dense_layer(model, model_hash_name, x_test, y_test)
         self.plot_input_and_output(model, x_test, model_hash_name, model_is_split=True)
 
     def old_plot_dense_layer(self, autoencoder, layer_names, activations, labels):
@@ -262,6 +263,14 @@ class VizTool(MLToolMixin):
                 plt.savefig(os.path.join(self.figures_project_dir, 'dense_layer.png'))
 
     def simple_plot_dense_layer(self, model, model_hash_name, x_test, y_test):
+        """
+        For plotting with discrete labels
+        :param model:
+        :param model_hash_name:
+        :param x_test:
+        :param y_test:
+        :return:
+        """
         x_in = self.get_testing_data()
         y_in = self.get_testing_data_labels()
 
@@ -282,6 +291,26 @@ class VizTool(MLToolMixin):
         #plt.set_cmap('viridis')
         scatter = plt.scatter(z[:, 0], z[:, 1], c=c_arr, s=1, cmap=colours)
         plt.legend(handles=scatter.legend_elements()[0], labels=[1, 2, 3])
+        plt.savefig(os.path.join(self.figures_project_dir, f'{model_hash_name}_dense_layer.png'))
+        plt.clf()
+
+    def cont_plot_dense_layer(self, model, model_hash_name, x_test, y_test):
+        """
+        For plotting with continuous labels
+        :param model:
+        :param model_hash_name:
+        :param x_test:
+        :param y_test:
+        :return:
+        """
+        x_in = self.get_testing_data()
+        y_in = self.get_testing_data_labels()
+
+        mean, logvar = tf_vae.encode(model, x=x_in)
+        z = tf_vae.reparameterize(mean=mean, logvar=logvar)
+
+        plt.set_cmap('viridis')
+        scatter = plt.scatter(z[:, 0], z[:, 1], c=y_in, s=1)
         plt.savefig(os.path.join(self.figures_project_dir, f'{model_hash_name}_dense_layer.png'))
         plt.clf()
 

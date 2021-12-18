@@ -18,6 +18,7 @@ from custom_datasets.artificial_dataset_0 import ArtificialDataset0
 from custom_datasets.artificial_dataset_1 import ArtificialDataset1
 from custom_datasets.artificial_dataset_2 import ArtificialDataset2
 from custom_datasets.artificial_dataset_3 import ArtificialDataset3
+from custom_datasets.ising_dataset import IsingDataset
 from model_params import CVAECustomParams, CVAEDenseOnlyParams
 
 
@@ -183,12 +184,13 @@ class MLToolMixin:
 
     def create_cvae_custom_params(self, model_params_conf_section):
         encoder_strides_list = self.parse_int_list_from_config(model_params_conf_section['ENCODER_STRIDES_LIST'])
-        encoder_filters_list = self.parse_int_list_from_config(model_params_conf_section['encoder_filters_list']),
-        encoder_kernal_list = self.parse_int_list_from_config(model_params_conf_section['encoder_kernal_list']),
-        decoder_strides_list = self.parse_int_list_from_config(model_params_conf_section['decoder_strides_list']),
-        decoder_filters_list = self.parse_int_list_from_config(model_params_conf_section['decoder_filters_list']),
-        decoder_kernal_list = self.parse_int_list_from_config(model_params_conf_section['decoder_kernal_list']),
+        encoder_filters_list = self.parse_int_list_from_config(model_params_conf_section['ENCODER_FILTERS_LIST']),
+        encoder_kernal_list = self.parse_int_list_from_config(model_params_conf_section['ENCODER_KERNAL_LIST']),
+        decoder_strides_list = self.parse_int_list_from_config(model_params_conf_section['DECODER_STRIDES_LIST']),
+        decoder_filters_list = self.parse_int_list_from_config(model_params_conf_section['DECODER_FILTERS_LIST']),
+        decoder_kernal_list = self.parse_int_list_from_config(model_params_conf_section['DECODER_KERNAL_LIST']),
         return CVAECustomParams(
+            input_edge_length=self.L,
             encoder_strides_list=encoder_strides_list,
             encoder_filters_list=encoder_filters_list,
             encoder_kernal_list=encoder_kernal_list,
@@ -199,7 +201,9 @@ class MLToolMixin:
 
     def create_cvae_dense_only_params(self, model_params_conf_section):
         # Nothing needs to happen for this one
-        return CVAEDenseOnlyParams()
+        return CVAEDenseOnlyParams(
+            input_edge_length=self.L
+        )
 
     @staticmethod
     def parse_bool_list_from_config(string_in):

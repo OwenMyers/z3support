@@ -108,9 +108,10 @@ class CVAEDenseOnly(tf.keras.Model):
         self.latent_dim = latent_dim
         self.use_batch_norm = use_batch_norm
         self.use_dropout = use_dropout
+        self.input_edge_length = params.input_edge_length
 
         encoder_model = tf.keras.Sequential()
-        encoder_input = tf.keras.layers.InputLayer(input_shape=(12, 12, 1), name='encoder_input')
+        encoder_input = tf.keras.layers.InputLayer(input_shape=(self.input_edge_length, self.input_edge_length, 1), name='encoder_input')
         encoder_model.add(encoder_input)
         encoder_model.add(tf.keras.layers.Flatten())
         encoder_model.add(tf.keras.layers.Dense(int(latent_dim + latent_dim)))
@@ -118,9 +119,9 @@ class CVAEDenseOnly(tf.keras.Model):
         self.encoder = encoder_model
         decoder_model = tf.keras.Sequential()
         decoder_model.add(tf.keras.layers.InputLayer(input_shape=(latent_dim,))),
-        decoder_model.add(tf.keras.layers.Dense(units=12*12*1)),
+        decoder_model.add(tf.keras.layers.Dense(units=self.input_edge_length*self.input_edge_length*1)),
         #decoder_model.add(tf.keras.layers.LeakyReLU())
-        decoder_model.add(tf.keras.layers.Reshape(target_shape=(12, 12, 1))),
+        decoder_model.add(tf.keras.layers.Reshape(target_shape=(self.input_edge_length, self.input_edge_length, 1))),
         decoder_model.add(tf.keras.layers.Activation('sigmoid'))
         self.decoder = decoder_model
 
@@ -150,8 +151,8 @@ class CVAECustom(tf.keras.Model):
         self.gradients = None
         self.use_batch_norm = use_batch_norm
         self.use_dropout = use_dropout
-        self.latent_dim = params.latent_dim
-        input_dimension = params.input_dimension
+        self.latent_dim = latent_dim
+        input_dimension = params.input_edge_length
         encoder_strides_list = params.encoder_strides_list
         encoder_filters_list = params.encoder_filters_list
         encoder_kernal_list = params.encoder_kernal_list
