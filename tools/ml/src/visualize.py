@@ -217,7 +217,7 @@ class VizTool(MLToolMixin):
             decoder = Model(inputs=decoder_input, outputs=decoder)
 
         # create the path that that we want to cut across
-        num_steps = 5
+        num_steps = 100
         loc_list = []
         x_step_size = (end_loc[0] - start_loc[0])/num_steps
         y_step_size = (end_loc[1] - start_loc[1])/num_steps
@@ -249,7 +249,7 @@ class VizTool(MLToolMixin):
 
         # self.plot_feature_maps(autoencoder, activations, x_test, encoder_layer_names, images_per_row)
         # self.plot_weights(autoencoder, encoder_layer_names, images_per_row)
-        self.plot_decoder_result_from_input(model, start_loc=[-1.0, 0.0], end_loc=[2.0, 0.0], model_is_split=True)
+        self.plot_decoder_result_from_input(model, start_loc=[-95.0, 98.0], end_loc=[-40.0, 40.0], model_is_split=True)
         #self.plot_decoder_result_from_input(model, start_loc=[1.0, 1.5], end_loc=[-1.0, -1.5], model_is_split=True)
         #self.simple_plot_dense_layer(model, model_hash_name, x_test, y_test)
         self.cont_plot_dense_layer(model, model_hash_name, x_test, y_test)
@@ -311,6 +311,7 @@ class VizTool(MLToolMixin):
 
         plt.set_cmap('viridis')
         scatter = plt.scatter(z[:, 0], z[:, 1], c=y_in, s=1)
+        plt.colorbar(scatter)
         plt.savefig(os.path.join(self.figures_project_dir, f'{model_hash_name}_dense_layer.png'))
         plt.clf()
 

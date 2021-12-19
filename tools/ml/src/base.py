@@ -184,11 +184,11 @@ class MLToolMixin:
 
     def create_cvae_custom_params(self, model_params_conf_section):
         encoder_strides_list = self.parse_int_list_from_config(model_params_conf_section['ENCODER_STRIDES_LIST'])
-        encoder_filters_list = self.parse_int_list_from_config(model_params_conf_section['ENCODER_FILTERS_LIST']),
-        encoder_kernal_list = self.parse_int_list_from_config(model_params_conf_section['ENCODER_KERNAL_LIST']),
-        decoder_strides_list = self.parse_int_list_from_config(model_params_conf_section['DECODER_STRIDES_LIST']),
-        decoder_filters_list = self.parse_int_list_from_config(model_params_conf_section['DECODER_FILTERS_LIST']),
-        decoder_kernal_list = self.parse_int_list_from_config(model_params_conf_section['DECODER_KERNAL_LIST']),
+        encoder_filters_list = self.parse_int_list_from_config(model_params_conf_section['ENCODER_FILTERS_LIST'])
+        encoder_kernal_list = self.parse_int_list_from_config(model_params_conf_section['ENCODER_KERNAL_LIST'])
+        decoder_strides_list = self.parse_int_list_from_config(model_params_conf_section['DECODER_STRIDES_LIST'])
+        decoder_filters_list = self.parse_int_list_from_config(model_params_conf_section['DECODER_FILTERS_LIST'])
+        decoder_kernal_list = self.parse_int_list_from_config(model_params_conf_section['DECODER_KERNAL_LIST'])
         return CVAECustomParams(
             input_edge_length=self.L,
             encoder_strides_list=encoder_strides_list,
@@ -201,8 +201,19 @@ class MLToolMixin:
 
     def create_cvae_dense_only_params(self, model_params_conf_section):
         # Nothing needs to happen for this one
+        final_sigmoid = None
+        if model_params_conf_section['FINAL_SIGMOID'].lower() == 'true':
+            final_sigmoid = True
+        elif model_params_conf_section['FINAL_SIGMOID'].lower() == 'false':
+            final_sigmoid = False
+        else:
+            raise ValueError("Final sigmoid input not recognized")
+
         return CVAEDenseOnlyParams(
-            input_edge_length=self.L
+            input_edge_length=self.L,
+            hidden_layers=self.parse_int_list_from_config(model_params_conf_section['HIDDEN_LAYERS']),
+            activation_function=model_params_conf_section['ACTIVATION_FUNCTION'],
+            final_sigmoid=final_sigmoid
         )
 
     @staticmethod
@@ -235,6 +246,8 @@ class MLToolMixin:
         :param string_in: ``str`` containing the list of numbers.
         :return: a ``list`` of ``int``s
         """
+        if string_in == '':
+            return []
         is_split = string_in.strip(',').split(',')
         return [int(i.strip()) for i in is_split]
 

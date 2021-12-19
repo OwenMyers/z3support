@@ -3,95 +3,6 @@ import numpy as np
 import time
 
 
-class CVAEGeneralized(tf.keras.Model):
-    """Incomplete"""
-    def __init__(self,
-                 latent_dim,
-                 encoder_strides_list=[2, 2],
-                 encoder_filters_list=[5, 10],
-                 encoder_kernal_list=[3, 3],
-                 decoder_strides_list=[2, 2, 1],
-                 decoder_filters_list=[10, 5, 1],
-                 decoder_kernal_list=[3, 3, 3],
-                 use_batch_norm=False,
-                 use_dropout=False,
-                 ):
-
-        super(CVAECustom, self).__init__()
-        self.gradients = None
-        self.latent_dim = latent_dim
-        self.use_batch_norm = use_batch_norm
-        self.use_dropout = use_dropout
-        self.encoder_strides_list = encoder_strides_list
-        self.encoder_filters_list = encoder_filters_list
-        self.encoder_kernal_list = encoder_kernal_list
-        self.decoder_strides_list = decoder_strides_list
-        self.decoder_filters_list = decoder_filters_list
-        self.decoder_kernal_list = decoder_kernal_list
-
-        if (len(encoder_strides_list) != len(encoder_filters_list)) or (len(encoder_filters_list) != len(encoder_kernal_list)):
-            raise ValueError("Problem with strides filters or kernal list length mismatch in CVAE")
-        encoder_model = tf.keras.Sequential()
-        encoder_input = tf.keras.layers.InputLayer(input_shape=(12, 12, 1), name='encoder_input')
-        encoder_model.add(encoder_input)
-        for i in range(len(encoder_strides_list)):
-            conv_layer = tf.keras.layers.Conv2D(
-                filters=encoder_filters_list[i],
-                kernel_size=encoder_kernal_list[i],
-                strides=(encoder_strides_list[i], encoder_strides_list[i]),
-                padding='same',
-                name=f"encoder_conv_{i}"
-            )
-            encoder_model.add(conv_layer)
-            encoder_model.add(tf.keras.layers.LeakyReLU())
-            if self.use_batch_norm:
-                encoder_model.add(tf.keras.layers.BatchNormalization())
-            if self.use_dropout:
-                encoder_model.add(tf.keras.layers.Dropout(rate=0.40))
-
-        encoder_model.add(tf.keras.layers.Flatten())
-        encoder_model.add(tf.keras.layers.Dense(int(latent_dim + latent_dim)))
-        self.encoder = encoder_model
-
-        decoder_model = tf.keras.Sequential()
-        decoder_model.add(tf.keras.layers.InputLayer(input_shape=(latent_dim,))),
-        decoder_model.add(tf.keras.layers.Dense(units=3*3*10, activation=tf.nn.relu)),
-        decoder_model.add(tf.keras.layers.Reshape(target_shape=(3, 3, 10))),
-        for i in range(len(decoder_strides_list)):
-            conv_transpose_layer = tf.keras.layers.Conv2DTranspose(
-                filters=decoder_filters_list[i],
-                kernel_size=decoder_kernal_list[i],
-                strides=(decoder_strides_list[i], decoder_strides_list[i]),
-                padding='same',
-                name=f"decoder_conv_transpose_{i}"
-            )
-            decoder_model.add(conv_transpose_layer)
-            encoder_model.add(tf.keras.layers.LeakyReLU())
-            if self.use_batch_norm:
-                decoder_model.add(tf.keras.layers.BatchNormalization())
-            if self.use_dropout:
-                decoder_model.add(tf.keras.layers.Dropout(rate=0.40))
-        decoder_model.add(tf.keras.layers.Activation('sigmoid'))
-        self.decoder = decoder_model
-
-    def call(self, inputs):
-        mean, log_var = tf.split(self.encoder(inputs), num_or_size_splits=2, axis=1)
-        z = reparameterize(mean=mean, logvar=log_var)
-        return decode(self, z)
-
-    @tf.function
-    def train_step(self, model, x, optimizer):
-        """Executes one training step and returns the loss.
-
-        This function computes the loss and gradients, and uses the latter to
-        update the model's parameters.
-        """
-        with tf.GradientTape() as tape:
-            loss = compute_loss(model, x)
-        self.gradients = tape.gradient(loss, model.trainable_variables)
-        optimizer.apply_gradients(zip(self.gradients, model.trainable_variables))
-
-
 class CVAEDenseOnly(tf.keras.Model):
     """Convolutional variational autoencoder."""
     def __init__(self,
@@ -113,16 +24,41 @@ class CVAEDenseOnly(tf.keras.Model):
         encoder_model = tf.keras.Sequential()
         encoder_input = tf.keras.layers.InputLayer(input_shape=(self.input_edge_length, self.input_edge_length, 1), name='encoder_input')
         encoder_model.add(encoder_input)
+        if params.activation_function.lower() == 'sigmoid':
+            encoder_model.add(tf.keras.layers.Activation('sigmoid'))
+        elif (params.activation_function.lower() == 'none') or (params.activation_function.lower() == 'linear'):
+            pass
+        elif params.activation_function.lower() == 'leakyrelu':
+            encoder_model.add(tf.keras.layers.LeakyReLU())
         encoder_model.add(tf.keras.layers.Flatten())
+        if not len(params.hidden_layers) == 0:
+            for cur_hidden_layer in params.hidden_layers:
+                encoder_model.add(tf.keras.layers.Dense(cur_hidden_layer))
+                if params.activation_function.lower() == 'sigmoid':
+                    encoder_model.add(tf.keras.layers.Activation('sigmoid'))
+                elif (params.activation_function.lower() == 'none') or (params.activation_function.lower() == 'linear'):
+                    pass
+                elif params.activation_function.lower() == 'leakyrelu':
+                    encoder_model.add(tf.keras.layers.LeakyReLU())
         encoder_model.add(tf.keras.layers.Dense(int(latent_dim + latent_dim)))
         #encoder_model.add(tf.keras.layers.LeakyReLU())
         self.encoder = encoder_model
         decoder_model = tf.keras.Sequential()
         decoder_model.add(tf.keras.layers.InputLayer(input_shape=(latent_dim,))),
+        if not len(params.hidden_layers) == 0:
+            for cur_hidden_layer in reversed(params.hidden_layers):
+                decoder_model.add(tf.keras.layers.Dense(cur_hidden_layer))
+                if params.activation_function.lower() == 'sigmoid':
+                    decoder_model.add(tf.keras.layers.Activation('sigmoid'))
+                elif (params.activation_function.lower() == 'none') or (params.activation_function.lower() == 'linear'):
+                    pass
+                elif params.activation_function.lower() == 'leakyrelu':
+                    decoder_model.add(tf.keras.layers.LeakyReLU())
         decoder_model.add(tf.keras.layers.Dense(units=self.input_edge_length*self.input_edge_length*1)),
         #decoder_model.add(tf.keras.layers.LeakyReLU())
         decoder_model.add(tf.keras.layers.Reshape(target_shape=(self.input_edge_length, self.input_edge_length, 1))),
-        decoder_model.add(tf.keras.layers.Activation('sigmoid'))
+        if params.final_sigmoid:
+            decoder_model.add(tf.keras.layers.Activation('sigmoid'))
         self.decoder = decoder_model
 
     def call(self, inputs):
@@ -372,7 +308,7 @@ def compute_loss(model, x):
     #logpx_z = cross_ent
     logpz = log_normal_pdf(z, 0., 0.)
     logqz_x = log_normal_pdf(z, mean, logvar)
-    return -tf.reduce_mean(1000.0 * logpx_z + logpz - logqz_x)
+    return -tf.reduce_mean(5000.0 * logpx_z + logpz - logqz_x)
 
 
 def compute_loss_breakout_px_z(model, x):

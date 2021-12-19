@@ -21,6 +21,9 @@ class CVAEDenseOnlyParams(ParamsMixin):
     def __init__(self, **kwargs):
         super(CVAEDenseOnlyParams, self).__init__(**kwargs)
         self.input_edge_length = kwargs['input_edge_length']
+        self.hidden_layers = kwargs['hidden_layers']
+        self.activation_function = kwargs['activation_function']
+        self.final_sigmoid = kwargs['final_sigmoid']
 
 
 class CVAECustomParams(ParamsMixin):
