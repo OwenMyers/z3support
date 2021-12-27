@@ -9,7 +9,10 @@ class ParamsMixin:
     def get_hp_dict_for_aim(self):
         d = {}
         for k, v in self.kwargs_in_dict.items():
-            d[f"hp_{k}"] = v
+            if isinstance(v, list):
+                d[f"hp_{k}"] = str(v)
+            else:
+                d[f"hp_{k}"] = v
 
         d["hp_model_name"] = self.__class__.__name__
 
