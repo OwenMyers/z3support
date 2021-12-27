@@ -10,10 +10,6 @@ class CVAEDenseOnly(tf.keras.Model):
                  latent_dim,
                  use_batch_norm=False,
                  use_dropout=False):
-        if use_dropout:
-            raise ValueError("No implementation of dropout in DenseOnly")
-        if use_batch_norm:
-            raise ValueError("No implementation of batch normalization in DenseOnly")
         super(CVAEDenseOnly, self).__init__()
         self.gradients = None
         self.latent_dim = latent_dim
@@ -24,6 +20,7 @@ class CVAEDenseOnly(tf.keras.Model):
         encoder_model = tf.keras.Sequential()
         encoder_input = tf.keras.layers.InputLayer(input_shape=(self.input_edge_length, self.input_edge_length, 1), name='encoder_input')
         encoder_model.add(encoder_input)
+
         if params.activation_function.lower() == 'sigmoid':
             encoder_model.add(tf.keras.layers.Activation('sigmoid'))
         elif (params.activation_function.lower() == 'none') or (params.activation_function.lower() == 'linear'):
@@ -33,13 +30,25 @@ class CVAEDenseOnly(tf.keras.Model):
         encoder_model.add(tf.keras.layers.Flatten())
         if not len(params.hidden_layers) == 0:
             for cur_hidden_layer in params.hidden_layers:
+
                 encoder_model.add(tf.keras.layers.Dense(cur_hidden_layer))
+
+                # batchnorm
+                if self.use_batch_norm:
+                    encoder_model.add(tf.keras.layers.BatchNormalization())
+
+                # activation
                 if params.activation_function.lower() == 'sigmoid':
                     encoder_model.add(tf.keras.layers.Activation('sigmoid'))
                 elif (params.activation_function.lower() == 'none') or (params.activation_function.lower() == 'linear'):
                     pass
                 elif params.activation_function.lower() == 'leakyrelu':
                     encoder_model.add(tf.keras.layers.LeakyReLU())
+
+                #dropout
+                if self.use_dropout:
+                    encoder_model.add(tf.keras.layers.Dropout(rate=0.25))
+
         encoder_model.add(tf.keras.layers.Dense(int(latent_dim + latent_dim)))
         #encoder_model.add(tf.keras.layers.LeakyReLU())
         self.encoder = encoder_model
@@ -48,12 +57,23 @@ class CVAEDenseOnly(tf.keras.Model):
         if not len(params.hidden_layers) == 0:
             for cur_hidden_layer in reversed(params.hidden_layers):
                 decoder_model.add(tf.keras.layers.Dense(cur_hidden_layer))
+
+                # batchnorm
+                if self.use_batch_norm:
+                    decoder_model.add(tf.keras.layers.BatchNormalization())
+
+                # batchnorm
                 if params.activation_function.lower() == 'sigmoid':
                     decoder_model.add(tf.keras.layers.Activation('sigmoid'))
                 elif (params.activation_function.lower() == 'none') or (params.activation_function.lower() == 'linear'):
                     pass
                 elif params.activation_function.lower() == 'leakyrelu':
                     decoder_model.add(tf.keras.layers.LeakyReLU())
+
+                #dropout
+                if self.use_dropout:
+                    decoder_model.add(tf.keras.layers.Dropout(rate=0.25))
+
         decoder_model.add(tf.keras.layers.Dense(units=self.input_edge_length*self.input_edge_length*1)),
         #decoder_model.add(tf.keras.layers.LeakyReLU())
         decoder_model.add(tf.keras.layers.Reshape(target_shape=(self.input_edge_length, self.input_edge_length, 1))),

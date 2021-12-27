@@ -160,7 +160,7 @@ class VizTool(MLToolMixin):
             os.mkdir(in_out_dir)
         # You will get double the number specified in the range. 10 makes 20 images
         x_test_iter = iter(x_test)
-        for i in range(10):
+        for i in range(5):
             print(f"Plotting input and output images {i}")
             x1 = next(x_test_iter)
             x2 = next(x_test_iter)
@@ -217,7 +217,7 @@ class VizTool(MLToolMixin):
             decoder = Model(inputs=decoder_input, outputs=decoder)
 
         # create the path that that we want to cut across
-        num_steps = 100
+        num_steps = 10
         loc_list = []
         x_step_size = (end_loc[0] - start_loc[0])/num_steps
         y_step_size = (end_loc[1] - start_loc[1])/num_steps
@@ -249,7 +249,7 @@ class VizTool(MLToolMixin):
 
         # self.plot_feature_maps(autoencoder, activations, x_test, encoder_layer_names, images_per_row)
         # self.plot_weights(autoencoder, encoder_layer_names, images_per_row)
-        self.plot_decoder_result_from_input(model, start_loc=[-95.0, 98.0], end_loc=[-40.0, 40.0], model_is_split=True)
+        #self.plot_decoder_result_from_input(model, start_loc=[-95.0, 98.0], end_loc=[-40.0, 40.0], model_is_split=True)
         #self.plot_decoder_result_from_input(model, start_loc=[1.0, 1.5], end_loc=[-1.0, -1.5], model_is_split=True)
         #self.simple_plot_dense_layer(model, model_hash_name, x_test, y_test)
         self.cont_plot_dense_layer(model, model_hash_name, x_test, y_test)

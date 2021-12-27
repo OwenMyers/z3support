@@ -42,6 +42,7 @@ class MLToolMixin:
         """
         if not os.path.exists(settings_file):
             raise ValueError(f"Can't find specified settings file {settings_file}")
+        self.settings_file = settings_file
         self.config = configparser.ConfigParser()
         self.config.read(settings_file)
 
@@ -199,21 +200,26 @@ class MLToolMixin:
             decoder_kernal_list=decoder_kernal_list,
         )
 
+    @staticmethod
+    def parse_bool_from_config(in_str):
+        final_bool = None
+        if in_str.lower() == 'true':
+            final_bool = True
+        elif in_str.lower() == 'false':
+            final_bool = False
+        else:
+            raise ValueError(f"String {in_str} could not be converted to bool")
+        return final_bool
+
     def create_cvae_dense_only_params(self, model_params_conf_section):
         # Nothing needs to happen for this one
-        final_sigmoid = None
-        if model_params_conf_section['FINAL_SIGMOID'].lower() == 'true':
-            final_sigmoid = True
-        elif model_params_conf_section['FINAL_SIGMOID'].lower() == 'false':
-            final_sigmoid = False
-        else:
-            raise ValueError("Final sigmoid input not recognized")
+        final_sigmoid = self.parse_bool_from_config(model_params_conf_section['FINAL_SIGMOID'])
 
         return CVAEDenseOnlyParams(
             input_edge_length=self.L,
             hidden_layers=self.parse_int_list_from_config(model_params_conf_section['HIDDEN_LAYERS']),
             activation_function=model_params_conf_section['ACTIVATION_FUNCTION'],
-            final_sigmoid=final_sigmoid
+            final_sigmoid=final_sigmoid,
         )
 
     @staticmethod

@@ -41,9 +41,25 @@ class IsingDataset:
         y_train = data_labels[: int(n_records * train_percent/100.0)]
         y_test = data_labels[int(n_records * train_percent/100.0):]
 
+        x_train, y_train = cls.augment_data(x_train, y_train)
+        x_test, y_test = cls.augment_data(x_test, y_test)
+
         if train:
             return x_train, y_train
         return x_test, y_test
+
+    @staticmethod
+    def augment_data(x, y):
+        to_add_x_list = []
+        to_add_y_list = []
+        for cur_x, cur_y in zip(x,y):
+            to_add_x_list.append(np.fliplr(cur_x))
+            to_add_y_list.append(cur_y)
+            to_add_x_list.append(np.rot90(cur_x))
+            to_add_y_list.append(cur_y)
+
+        return np.append(x, to_add_x_list, axis=0), np.append(y, to_add_y_list, axis=0)
+
 
     @staticmethod
     def import_data(list_data):

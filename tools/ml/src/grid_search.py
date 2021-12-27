@@ -1,4 +1,5 @@
 import pickle
+import visualize
 from aim import Run
 import json
 import tf_vae
@@ -86,7 +87,9 @@ class SearchTool(MLToolMixin):
         # improvement.
         random_vector_for_generation = tf.random.normal(
             shape=[num_examples_to_generate, latent_dim])
-        model = globals()[model_params.__class__.__name__[:model_params.__class__.__name__.find("Params")]](model_params, latent_dim, use_dropout=False, use_batch_norm=False)
+        model = globals()[model_params.__class__.__name__[:model_params.__class__.__name__.find("Params")]](
+            model_params, latent_dim, use_dropout=use_drop_out, use_batch_norm=use_batch_norm
+        )
         assert batch_size >= num_examples_to_generate
         for test_batch in test_dataset.take(1):
             test_sample = test_batch[0:num_examples_to_generate, :, :, :]
@@ -141,7 +144,7 @@ class SearchTool(MLToolMixin):
     def run(self, run_dir, hyper_params, model_params, x_test, x_train, aim_run):
         """Just runs the ``train_test_model`` method
 
-        Note, we are going to eventualy depricate hyper_params in favor of simp_hyper_params"""
+        Note, we are going to eventually deprecate hyper_params in favor of simp_hyper_params"""
         return self.train_test_model(run_dir, hyper_params, model_params, x_test, x_train, aim_run)
 
     def main(self):
@@ -189,12 +192,16 @@ class SearchTool(MLToolMixin):
                         simp_hyper_params['loss'] = loss
 
                         aim_run["hparams"] = simp_hyper_params
+
                         if not self.tensorboard_debugging:
                             hash_name = aim_run.hashname
                             # Creates two output lines telling us the "asset" was created. Just a note so I
                             # don't go digging into why later
                             run_result.save(os.path.join(self.run_location, 'models', f'{hash_name}.tf'),
                                             save_format='tf', save_traces=True)
+
+                        my_viz_tool = visualize.VizTool(self.settings_file, self.run_location, False)
+                        my_viz_tool.main(model_path=os.path.join(self.run_location, 'models', f'{hash_name}.tf'))
 
 
 if __name__ == "__main__":
