@@ -41,8 +41,8 @@ class IsingDataset:
         y_train = data_labels[: int(n_records * train_percent/100.0)]
         y_test = data_labels[int(n_records * train_percent/100.0):]
 
-        x_train, y_train = cls.augment_data(x_train, y_train)
-        x_test, y_test = cls.augment_data(x_test, y_test)
+        #x_train, y_train = cls.augment_data(x_train, y_train)
+        #x_test, y_test = cls.augment_data(x_test, y_test)
 
         if train:
             return x_train, y_train
