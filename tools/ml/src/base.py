@@ -190,6 +190,7 @@ class MLToolMixin:
         decoder_strides_list = self.parse_int_list_from_config(model_params_conf_section['DECODER_STRIDES_LIST'])
         decoder_filters_list = self.parse_int_list_from_config(model_params_conf_section['DECODER_FILTERS_LIST'])
         decoder_kernal_list = self.parse_int_list_from_config(model_params_conf_section['DECODER_KERNAL_LIST'])
+        final_sigmoid = self.parse_bool_from_config(model_params_conf_section['FINAL_SIGMOID'])
         return CVAECustomParams(
             input_edge_length=self.L,
             encoder_strides_list=encoder_strides_list,
@@ -198,6 +199,8 @@ class MLToolMixin:
             decoder_strides_list=decoder_strides_list,
             decoder_filters_list=decoder_filters_list,
             decoder_kernal_list=decoder_kernal_list,
+            final_sigmoid=final_sigmoid,
+            activation_function=model_params_conf_section['ACTIVATION_FUNCTION'],
         )
 
     @staticmethod

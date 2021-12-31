@@ -45,3 +45,4 @@ class CVAECustomParams(ParamsMixin):
         self.decoder_strides_list = kwargs['decoder_strides_list']
         self.decoder_filters_list = kwargs['decoder_filters_list']
         self.decoder_kernal_list = kwargs['decoder_kernal_list']
+        self.final_sigmoid = kwargs['final_sigmoid']
