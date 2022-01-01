@@ -15,5 +15,9 @@ class MnistDataset:
         x_test = x_test.reshape(x_test.shape + (1,))
 
         if train:
-            return x_train, y_train
-        return x_test, y_test
+            return x_train[:2000], y_train[:2000]
+        return x_test[:2000], y_test[:2000]
+
+        #if train:
+        #    return x_train, y_train
+        #return x_test, y_test

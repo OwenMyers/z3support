@@ -3,7 +3,7 @@ import visualize
 from aim import Run
 import json
 import tf_vae
-from tf_vae import CVAEDenseOnly, CVAECustom
+from tf_vae import CVAEDenseOnly, CVAECustom, OrigCVAE
 import time
 import os
 from hashlib import sha1
@@ -111,7 +111,7 @@ class SearchTool(MLToolMixin):
             loss_breakout_pz = tf.keras.metrics.Mean()
             loss_breakout_qz_x = tf.keras.metrics.Mean()
             for test_x in test_dataset:
-                loss(tf_vae.gl_compute_loss(model, test_x))
+                #loss(tf_vae.gl_compute_loss(model, test_x))
                 loss(tf_vae.compute_loss(model, test_x))
                 loss_breakout_px_z(tf_vae.compute_loss_breakout_px_z(model, test_x))
                 loss_breakout_pz(tf_vae.compute_loss_breakout_pz(model, test_x))

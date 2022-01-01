@@ -46,3 +46,4 @@ class CVAECustomParams(ParamsMixin):
         self.decoder_filters_list = kwargs['decoder_filters_list']
         self.decoder_kernal_list = kwargs['decoder_kernal_list']
         self.final_sigmoid = kwargs['final_sigmoid']
+        self.activation_function = kwargs['activation_function']

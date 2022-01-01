@@ -2,6 +2,48 @@ import tensorflow as tf
 import numpy as np
 import time
 
+class OrigCVAE(tf.keras.Model):
+    """Convolutional variational autoencoder."""
+
+    def __init__(self, latent_dim):
+        super(CVAE, self).__init__()
+        self.latent_dim = latent_dim
+        self.encoder = tf.keras.Sequential(
+            [
+                tf.keras.layers.InputLayer(input_shape=(28, 28, 1)),
+                tf.keras.layers.Conv2D(
+                    filters=32, kernel_size=3, strides=(2, 2), activation='relu'),
+                tf.keras.layers.Conv2D(
+                    filters=64, kernel_size=3, strides=(2, 2), activation='relu'),
+                tf.keras.layers.Flatten(),
+                # No activation
+                tf.keras.layers.Dense(latent_dim + latent_dim),
+            ]
+        )
+
+        self.decoder = tf.keras.Sequential(
+            [
+                tf.keras.layers.InputLayer(input_shape=(latent_dim,)),
+                tf.keras.layers.Dense(units=7*7*32, activation=tf.nn.relu),
+                tf.keras.layers.Reshape(target_shape=(7, 7, 32)),
+                tf.keras.layers.Conv2DTranspose(
+                    filters=64, kernel_size=3, strides=2, padding='same',
+                    activation='relu'),
+                tf.keras.layers.Conv2DTranspose(
+                    filters=32, kernel_size=3, strides=2, padding='same',
+                    activation='relu'),
+                # No activation
+                tf.keras.layers.Conv2DTranspose(
+                    filters=1, kernel_size=3, strides=1, padding='same'),
+            ]
+        )
+
+    @tf.function
+    def sample(self, eps=None):
+        if eps is None:
+            eps = tf.random.normal(shape=(100, self.latent_dim))
+        return self.decode(eps, apply_sigmoid=True)
+
 
 class CVAEDenseOnly(tf.keras.Model):
     """Convolutional variational autoencoder."""
@@ -357,7 +399,7 @@ def compute_loss(model, x):
     #logpx_z = cross_ent
     logpz = log_normal_pdf(z, 0., 0.)
     logqz_x = log_normal_pdf(z, mean, logvar)
-    return -tf.reduce_mean(5000.0 * logpx_z + logpz - logqz_x)
+    return -tf.reduce_mean(logpx_z + logpz - logqz_x)
 
 
 def compute_loss_breakout_px_z(model, x):
