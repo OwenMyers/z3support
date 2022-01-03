@@ -19,7 +19,7 @@ from custom_datasets.artificial_dataset_1 import ArtificialDataset1
 from custom_datasets.artificial_dataset_2 import ArtificialDataset2
 from custom_datasets.artificial_dataset_3 import ArtificialDataset3
 from custom_datasets.ising_dataset import IsingDataset
-from model_params import CVAECustomParams, CVAEDenseOnlyParams
+from model_params import CVAECustomParams, CVAEDenseOnlyParams, CVAEOrigParams
 
 
 class MLToolMixin:
@@ -174,6 +174,8 @@ class MLToolMixin:
                 params = self.create_cvae_custom_params(model_params_conf_section)
             elif model_params_conf_section['MODEL_NAME'] == "CVAEDenseOnly":
                 params = self.create_cvae_dense_only_params(model_params_conf_section)
+            elif model_params_conf_section['MODEL_NAME'] == "CVAEOrig":
+                params = self.create_orig_cvae_params(model_params_conf_section)
             else:
                 raise ValueError("No known specified model configurations in settings file")
 
@@ -182,6 +184,9 @@ class MLToolMixin:
             cur_section_name = f'ModelParams{i}'
 
         return to_return_params_list
+
+    def create_orig_cvae_params(self, model_params_conf_section):
+        return CVAEOrigParams()
 
     def create_cvae_custom_params(self, model_params_conf_section):
         encoder_strides_list = self.parse_int_list_from_config(model_params_conf_section['ENCODER_STRIDES_LIST'])

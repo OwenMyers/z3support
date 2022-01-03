@@ -2,11 +2,20 @@ import tensorflow as tf
 import numpy as np
 import time
 
-class OrigCVAE(tf.keras.Model):
+
+class CVAEOrig(tf.keras.Model):
     """Convolutional variational autoencoder."""
 
-    def __init__(self, latent_dim):
-        super(CVAE, self).__init__()
+    def __init__(self,
+                 params,
+                 latent_dim,
+                 use_batch_norm=False,
+                 use_dropout=False):
+        if use_dropout:
+            raise ValueError("Dropout not implemented in original model")
+        if use_batch_norm:
+            raise ValueError("Batch norm not implemented in original model")
+        super(CVAEOrig, self).__init__()
         self.latent_dim = latent_dim
         self.encoder = tf.keras.Sequential(
             [
@@ -43,6 +52,23 @@ class OrigCVAE(tf.keras.Model):
         if eps is None:
             eps = tf.random.normal(shape=(100, self.latent_dim))
         return self.decode(eps, apply_sigmoid=True)
+
+    def call(self, inputs):
+        mean, log_var = tf.split(self.encoder(inputs), num_or_size_splits=2, axis=1)
+        z = reparameterize(mean=mean, logvar=log_var)
+        return decode(self, z)
+
+    @tf.function
+    def train_step(self, model, x, optimizer):
+        """Executes one training step and returns the loss.
+
+        This function computes the loss and gradients, and uses the latter to
+        update the model's parameters.
+        """
+        with tf.GradientTape() as tape:
+            loss = compute_loss(model, x)
+        self.gradients = tape.gradient(loss, model.trainable_variables)
+        optimizer.apply_gradients(zip(self.gradients, model.trainable_variables))
 
 
 class CVAEDenseOnly(tf.keras.Model):
@@ -270,7 +296,10 @@ class CVAECustom(tf.keras.Model):
 
 
 class CVAE(tf.keras.Model):
-    """Convolutional variational autoencoder."""
+    """
+    Convolutional variational autoencoder from the tensorflow article, Doesn't work with current code setup.
+    See CVAEOrig class above for a version of this that works with the current setup.
+    """
     def __init__(self, latent_dim):
         super(CVAE, self).__init__()
         self.gradients = None
@@ -399,7 +428,7 @@ def compute_loss(model, x):
     #logpx_z = cross_ent
     logpz = log_normal_pdf(z, 0., 0.)
     logqz_x = log_normal_pdf(z, mean, logvar)
-    return -tf.reduce_mean(logpx_z + logpz - logqz_x)
+    return -tf.reduce_mean(500.0*logpx_z + logpz - logqz_x)
 
 
 def compute_loss_breakout_px_z(model, x):

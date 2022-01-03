@@ -3,7 +3,7 @@ import visualize
 from aim import Run
 import json
 import tf_vae
-from tf_vae import CVAEDenseOnly, CVAECustom, OrigCVAE
+from tf_vae import CVAEDenseOnly, CVAECustom, CVAEOrig
 import time
 import os
 from hashlib import sha1
