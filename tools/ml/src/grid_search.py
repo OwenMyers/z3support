@@ -138,8 +138,10 @@ class SearchTool(MLToolMixin):
         return model, float(elbo.numpy())
 
     def plot_loss(self, elbo_list):
+        if not os.path.exists(os.path.join(self.run_location, 'figures', self.timestamp.replace(':', '-'), str(self.hash_name))):
+            os.mkdir(os.path.join(self.run_location, 'figures', self.timestamp.replace(':', '-'), str(self.hash_name)))
         plt.plot(elbo_list)
-        plt.savefig(os.path.join(self.run_location, 'figures', str(self.hash_name) + '_loss.png'))
+        plt.savefig(os.path.join(self.run_location, 'figures', self.timestamp.replace(':', '-'), str(self.hash_name), str(self.hash_name) + '_loss.png'))
         plt.clf()
 
     def run(self, run_dir, hyper_params, model_params, x_test, x_train):
@@ -190,8 +192,6 @@ class SearchTool(MLToolMixin):
                         )
                         # After each run lets attempt to log a sample of activations for the different layers
                         simp_hyper_params['loss'] = loss
-                        with open(os.path.join(self.run_location, 'figures', f'{self.hash_name}'), 'w') as hparm_file:
-                            json.dumps(simp_hyper_params, hparm_file)
 
                         if not self.tensorboard_debugging:
                             # Creates two output lines telling us the "asset" was created. Just a note so I
@@ -200,7 +200,11 @@ class SearchTool(MLToolMixin):
                                             save_format='tf', save_traces=True)
 
                         my_viz_tool = visualize.VizTool(self.settings_file, self.run_location, False)
-                        my_viz_tool.main(model_path=os.path.join(self.run_location, 'models', f'{self.hash_name}.tf'))
+                        my_viz_tool.main(
+                            model_path=os.path.join(self.run_location, 'models', f'{self.hash_name}.tf'))
+                        with open(os.path.join(self.run_location, 'figures', self.timestamp.replace(':', '-'), f'{self.hash_name}', 'run_params.txt'),
+                                  'w') as hparm_file:
+                            json.dump(simp_hyper_params, hparm_file)
 
 
 if __name__ == "__main__":

@@ -19,7 +19,7 @@ class VizTool(MLToolMixin):
         assert os.path.exists(os.path.join(working_location, 'figures'))
         self.n_feature_maps = int(self.config['Plotting']['N_FEATURE_MAPS'])
 
-        self.figures_project_dir = os.path.join(working_location, 'figures', self.timestamp)
+        self.figures_project_dir = os.path.join(working_location, 'figures', self.timestamp.replace(':', '-'))
         if not os.path.exists(self.figures_project_dir):
             os.mkdir(self.figures_project_dir)
 
@@ -155,7 +155,7 @@ class VizTool(MLToolMixin):
             plt.savefig(os.path.join(self.figures_project_dir, layer_name + 'layer_weights.png'))
 
     def plot_input_and_output(self, autoencoder, x_test, model_hash_name, model_is_split=False):
-        in_out_dir = os.path.join(self.figures_project_dir, f'{model_hash_name}_in_out_images')
+        in_out_dir = os.path.join(self.figures_project_dir, model_hash_name, f'{model_hash_name}_in_out_images')
         if not os.path.exists(in_out_dir):
             os.mkdir(in_out_dir)
         # You will get double the number specified in the range. 10 makes 20 images
@@ -194,7 +194,7 @@ class VizTool(MLToolMixin):
             plt.savefig(os.path.join(in_out_dir, f'{i}_1_y_example_out.png'))
             plt.clf()
 
-    def plot_decoder_result_from_input(self, autoencoder, start_loc=(-1, -1), end_loc=(1, 1), layer_names=None,
+    def plot_decoder_result_from_input(self, autoencoder, model_hash_name, start_loc=(-1, -1), end_loc=(1, 1), layer_names=None,
                                        model_is_split=False):
         # Trying to do this using suggestion:
         # https://stackoverflow.com/questions/49193510/how-to-split-a-model-trained-in-keras
@@ -230,11 +230,11 @@ class VizTool(MLToolMixin):
             results = tf_vae.decode(autoencoder, np.matrix(loc_list), apply_sigmoid=True)
         else:
             results = decoder.predict(loc_list)
-        if not os.path.exists(os.path.join(self.figures_project_dir, 'latent_slice_video')):
-            os.mkdir(os.path.join(self.figures_project_dir, 'latent_slice_video'))
+        if not os.path.exists(os.path.join(self.figures_project_dir, model_hash_name, 'latent_slice_video')):
+            os.mkdir(os.path.join(self.figures_project_dir, model_hash_name, 'latent_slice_video'))
         for index, cur_result in enumerate(results):
             plt.imshow(cur_result, aspect='auto', cmap='viridis')
-            plt.savefig(os.path.join(self.figures_project_dir, 'latent_slice_video', f'slice_{index}.png'))
+            plt.savefig(os.path.join(self.figures_project_dir, model_hash_name, 'latent_slice_video', f'slice_{index}.png'))
             plt.clf()
 
     def main(self, model_path):
@@ -243,14 +243,17 @@ class VizTool(MLToolMixin):
         else:
             model = tf.keras.models.load_model(model_path, custom_objects={'compute_loss': tf_vae.compute_loss})
 
-        model_hash_name = model_path.strip('/').split('/')[-1].split('.')[0]
+        model_hash_name = model_path[-35:-3]
+        if not os.path.exists(os.path.join(self.figures_project_dir, model_hash_name)):
+            os.mkdir(os.path.join(self.figures_project_dir, model_hash_name))
+
         x_test = self.get_testing_data()
         y_test = self.get_testing_data_labels()
 
         # self.plot_feature_maps(autoencoder, activations, x_test, encoder_layer_names, images_per_row)
         # self.plot_weights(autoencoder, encoder_layer_names, images_per_row)
-        #self.plot_decoder_result_from_input(model, start_loc=[-95.0, 98.0], end_loc=[-40.0, 40.0], model_is_split=True)
-        #self.plot_decoder_result_from_input(model, start_loc=[1.0, 1.5], end_loc=[-1.0, -1.5], model_is_split=True)
+        #self.plot_decoder_result_from_input(model, model_hash_name, start_loc=[-95.0, 98.0], end_loc=[-40.0, 40.0], model_is_split=True)
+        #self.plot_decoder_result_from_input(model, model_hash_name, start_loc=[1.0, 1.5], end_loc=[-1.0, -1.5], model_is_split=True)
         #self.simple_plot_dense_layer(model, model_hash_name, x_test, y_test)
         self.cont_plot_dense_layer(model, model_hash_name, x_test, y_test)
         self.plot_input_and_output(model, x_test, model_hash_name, model_is_split=True)
@@ -291,7 +294,7 @@ class VizTool(MLToolMixin):
         #plt.set_cmap('viridis')
         scatter = plt.scatter(z[:, 0], z[:, 1], c=c_arr, s=1, cmap=colours)
         plt.legend(handles=scatter.legend_elements()[0], labels=[1, 2, 3])
-        plt.savefig(os.path.join(self.figures_project_dir, f'{model_hash_name}_dense_layer.png'))
+        plt.savefig(os.path.join(self.figures_project_dir, model_hash_name, f'{model_hash_name}_dense_layer.png'))
         plt.clf()
 
     def cont_plot_dense_layer(self, model, model_hash_name, x_test, y_test):

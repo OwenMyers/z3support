@@ -149,7 +149,7 @@ class MLToolMixin:
         self.run_location = working_location
 
         if self.tensorboard_debugging:
-            tf.debugging.experimental.enable_dump_debug_info(os.path.join(working_location, 'tensorboard_raw/hp_autoencoder/'),
+            tf.debugging.experimental.enable_dump_debug_info(os.path.join(working_location, 'tensorboard_raw', 'hp_autoencoder'),
                                                              tensor_debug_mode="FULL_HEALTH",
                                                              circular_buffer_size=-1)
 
