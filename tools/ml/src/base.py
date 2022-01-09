@@ -104,7 +104,7 @@ class MLToolMixin:
         self.study_data_location = os.path.join(
             working_location,
             'study_data',
-            self.config['Settings']['timestamp']
+            self.config['Settings']['timestamp'].replace(':', '-')
         )
         self.training_data_location = os.path.join(self.study_data_location, 'training_data.npy')
         self.testing_data_location = os.path.join(self.study_data_location, 'testing_data.npy')

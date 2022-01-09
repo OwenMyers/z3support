@@ -95,6 +95,7 @@ class SearchTool(MLToolMixin):
 
         model.compile(loss=tf_vae.compute_loss)
         elbo = None
+        elbo_list = []
         for epoch in range(1, epochs + 1):
             start_time = time.time()
             train_loss = tf.keras.metrics.Mean()
@@ -128,9 +129,18 @@ class SearchTool(MLToolMixin):
                           loss_breakout_qz_x.result()))
 
             # generate_and_save_images(model, epoch, test_sample)
+            elbo_list.append(float(elbo.numpy()))
+            # plot loss
+            if epoch % 5 == 0:
+                self.plot_loss(elbo_list)
 
         model.predict(x_train[:1000])
         return model, float(elbo.numpy())
+
+    def plot_loss(self, elbo_list):
+        plt.plot(elbo_list)
+        plt.savefig(os.path.join(self.run_location, 'figures', str(self.hash_name) + '_loss.png'))
+        plt.clf()
 
     def run(self, run_dir, hyper_params, model_params, x_test, x_train):
         """Just runs the ``train_test_model`` method
@@ -169,6 +179,7 @@ class SearchTool(MLToolMixin):
                         run_name = f"run-{c}"
                         print('--- Starting trial: %s' % run_name)
                         print({h.name: hyper_params[h] for h in hyper_params})
+                        self.hash_name = uuid.uuid4().hex
                         run_result, loss = self.run(
                             os.path.join(self.run_location, 'tensorboard_raw', self.tensorboard_sub_dir,
                                          run_name),
@@ -179,18 +190,17 @@ class SearchTool(MLToolMixin):
                         )
                         # After each run lets attempt to log a sample of activations for the different layers
                         simp_hyper_params['loss'] = loss
-                        hash_name = uuid.uuid4().hex
-                        with open(os.path.join(self.run_location, 'figures', f'{hash_name}'), 'w') as hparm_file:
+                        with open(os.path.join(self.run_location, 'figures', f'{self.hash_name}'), 'w') as hparm_file:
                             json.dumps(simp_hyper_params, hparm_file)
 
                         if not self.tensorboard_debugging:
                             # Creates two output lines telling us the "asset" was created. Just a note so I
                             # don't go digging into why later
-                            run_result.save(os.path.join(self.run_location, 'models', f'{hash_name}.tf'),
+                            run_result.save(os.path.join(self.run_location, 'models', f'{self.hash_name}.tf'),
                                             save_format='tf', save_traces=True)
 
                         my_viz_tool = visualize.VizTool(self.settings_file, self.run_location, False)
-                        my_viz_tool.main(model_path=os.path.join(self.run_location, 'models', f'{hash_name}.tf'))
+                        my_viz_tool.main(model_path=os.path.join(self.run_location, 'models', f'{self.hash_name}.tf'))
 
 
 if __name__ == "__main__":
