@@ -1,7 +1,6 @@
-import pickle
 import visualize
-from aim import Run
 import json
+import uuid
 import tf_vae
 from tf_vae import CVAEDenseOnly, CVAECustom, CVAEOrig
 import time
@@ -65,7 +64,7 @@ class SearchTool(MLToolMixin):
         super().__init__(settings_file, working_location)
         self.early_stopping_patience = int(self.config['Settings']['EARLY_STOPPING_PATIENCE'])
 
-    def train_test_model(self, run_dir, hyper_params, model_params, x_test, x_train, aim_run):
+    def train_test_model(self, run_dir, hyper_params, model_params, x_test, x_train):
         """Looping over the epochs happens here"""
 
         optimizer = tf.keras.optimizers.Adam(self.optimize_step_size)
@@ -128,24 +127,16 @@ class SearchTool(MLToolMixin):
                   .format(epoch, elbo, end_time - start_time, loss_breakout_px_z.result(), loss_breakout_pz.result(),
                           loss_breakout_qz_x.result()))
 
-            aim_run.track(float(elbo.numpy()), name='testing_loss', epoch=epoch, context={"subset": "train"})
-            aim_run.track(float(train_elbo.numpy()), name='training_loss', epoch=epoch, context={"subset": "train"})
-            aim_run.track(float(loss_breakout_px_z.result()), name='breakout_loss_px_z', epoch=epoch,
-                          context={"subset": "train"})
-            aim_run.track(float(loss_breakout_pz.result()), name='breakout_loss_pz', epoch=epoch,
-                          context={"subset": "train"})
-            aim_run.track(float(loss_breakout_qz_x.result()), name='breakout_loss_qz_x', epoch=epoch,
-                          context={"subset": "train"})
             # generate_and_save_images(model, epoch, test_sample)
 
         model.predict(x_train[:1000])
         return model, float(elbo.numpy())
 
-    def run(self, run_dir, hyper_params, model_params, x_test, x_train, aim_run):
+    def run(self, run_dir, hyper_params, model_params, x_test, x_train):
         """Just runs the ``train_test_model`` method
 
         Note, we are going to eventually deprecate hyper_params in favor of simp_hyper_params"""
-        return self.train_test_model(run_dir, hyper_params, model_params, x_test, x_train, aim_run)
+        return self.train_test_model(run_dir, hyper_params, model_params, x_test, x_train)
 
     def main(self):
         """Looping over hyperparameters and interfacing with ``aim``, the experiment tracker, here"""
@@ -178,7 +169,6 @@ class SearchTool(MLToolMixin):
                         run_name = f"run-{c}"
                         print('--- Starting trial: %s' % run_name)
                         print({h.name: hyper_params[h] for h in hyper_params})
-                        aim_run = Run()
                         run_result, loss = self.run(
                             os.path.join(self.run_location, 'tensorboard_raw', self.tensorboard_sub_dir,
                                          run_name),
@@ -186,15 +176,14 @@ class SearchTool(MLToolMixin):
                             cur_model_params,
                             x_test,
                             x_train,
-                            aim_run
                         )
                         # After each run lets attempt to log a sample of activations for the different layers
                         simp_hyper_params['loss'] = loss
-
-                        aim_run["hparams"] = simp_hyper_params
+                        hash_name = uuid.uuid4().hex
+                        with open(os.path.join(self.run_location, 'figures', f'{hash_name}'), 'w') as hparm_file:
+                            json.dumps(simp_hyper_params, hparm_file)
 
                         if not self.tensorboard_debugging:
-                            hash_name = aim_run.hashname
                             # Creates two output lines telling us the "asset" was created. Just a note so I
                             # don't go digging into why later
                             run_result.save(os.path.join(self.run_location, 'models', f'{hash_name}.tf'),
