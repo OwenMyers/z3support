@@ -202,9 +202,17 @@ class SearchTool(MLToolMixin):
                         my_viz_tool = visualize.VizTool(self.settings_file, self.run_location, False)
                         my_viz_tool.main(
                             model_path=os.path.join(self.run_location, 'models', f'{self.hash_name}.tf'))
-                        with open(os.path.join(self.run_location, 'figures', self.timestamp.replace(':', '-'), f'{self.hash_name}', 'run_params.txt'),
-                                  'w') as hparm_file:
+
+                        model_results_loc = os.path.join(self.run_location, 'figures', self.timestamp.replace(':', '-'),
+                                                         str(self.hash_name))
+                        with open(os.path.join(model_results_loc, 'run_params.txt'), 'w') as hparm_file:
                             json.dump(simp_hyper_params, hparm_file)
+
+                        with open(os.path.join(model_results_loc, 'model_summary.txt'), 'w') as summary_file:
+                            for cur_layer in run_result.layers:
+                                summary_file.write(cur_layer.name + '\n')
+                                cur_layer.summary(print_fn=lambda x: summary_file.write(x + '\n'))
+                                summary_file.write('\n\n\n')
 
 
 if __name__ == "__main__":

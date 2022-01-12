@@ -204,7 +204,7 @@ class CVAECustom(tf.keras.Model):
                 filters=encoder_filters_list[i],
                 kernel_size=encoder_kernal_list[i],
                 strides=(encoder_strides_list[i], encoder_strides_list[i]),
-                padding='same',
+                #padding='same',
                 name=f"encoder_conv_{i}",
                 kernel_initializer="he_uniform",
             )
@@ -225,12 +225,12 @@ class CVAECustom(tf.keras.Model):
         encoder_model.add(tf.keras.layers.Flatten())
         encoder_model.add(tf.keras.layers.Dense(int(latent_dim + latent_dim), kernel_initializer="he_uniform"))
 
-        if params.activation_function.lower() == 'sigmoid':
-            encoder_model.add(tf.keras.layers.Activation('sigmoid'))
-        elif (params.activation_function.lower() == 'none') or (params.activation_function.lower() == 'linear'):
-            pass
-        elif params.activation_function.lower() == 'leakyrelu':
-            encoder_model.add(tf.keras.layers.LeakyReLU())
+        #if params.activation_function.lower() == 'sigmoid':
+        #    encoder_model.add(tf.keras.layers.Activation('sigmoid'))
+        #elif (params.activation_function.lower() == 'none') or (params.activation_function.lower() == 'linear'):
+        #    pass
+        #elif params.activation_function.lower() == 'leakyrelu':
+        #    encoder_model.add(tf.keras.layers.LeakyReLU())
 
         self.encoder = encoder_model
 
@@ -239,17 +239,17 @@ class CVAECustom(tf.keras.Model):
         final_layer_width = int(input_dimension/(2 * len(encoder_filters_list)))
         dense_num_units = final_layer_width**2 * decoder_filters_list[0]
         decoder_model.add(tf.keras.layers.Dense(units=dense_num_units, kernel_initializer="he_uniform"))
-        if params.activation_function.lower() == 'sigmoid':
-            decoder_model.add(tf.keras.layers.Activation('sigmoid'))
-        elif (params.activation_function.lower() == 'none') or (
-                params.activation_function.lower() == 'linear'):
-            pass
-        elif params.activation_function.lower() == 'leakyrelu':
-            decoder_model.add(tf.keras.layers.LeakyReLU())
+        #if params.activation_function.lower() == 'sigmoid':
+        #    decoder_model.add(tf.keras.layers.Activation('sigmoid'))
+        #elif (params.activation_function.lower() == 'none') or (
+        #        params.activation_function.lower() == 'linear'):
+        #    pass
+        #elif params.activation_function.lower() == 'leakyrelu':
+        #    decoder_model.add(tf.keras.layers.LeakyReLU())
         decoder_model.add(tf.keras.layers.Reshape(
             target_shape=(final_layer_width, final_layer_width, decoder_filters_list[0])
         ))
-        for i in range(len(decoder_strides_list)):
+        for i in range(1, len(decoder_strides_list)):
             conv_transpose_layer = tf.keras.layers.Conv2DTranspose(
                 filters=decoder_filters_list[i],
                 kernel_size=decoder_kernal_list[i],
