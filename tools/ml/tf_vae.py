@@ -197,7 +197,9 @@ class CVAECustom(tf.keras.Model):
         if (len(encoder_strides_list) != len(encoder_filters_list)) or (len(encoder_filters_list) != len(encoder_kernal_list)):
             raise ValueError("Problem with strides filters or kernal list length mismatch in CVAE")
         encoder_model = tf.keras.Sequential()
-        encoder_input = tf.keras.layers.InputLayer(input_shape=(input_dimension, input_dimension, 1), name='encoder_input')
+        encoder_input = tf.keras.layers.InputLayer(
+            input_shape=(input_dimension, input_dimension, 1), name='encoder_input'
+        )
         encoder_model.add(encoder_input)
         for i in range(len(encoder_strides_list)):
             conv_layer = tf.keras.layers.Conv2D(
@@ -206,24 +208,30 @@ class CVAECustom(tf.keras.Model):
                 strides=(encoder_strides_list[i], encoder_strides_list[i]),
                 #padding='same',
                 name=f"encoder_conv_{i}",
-                kernel_initializer="he_uniform",
+                #kernel_initializer="he_uniform",
+                activation="relu"
             )
             encoder_model.add(conv_layer)
             if self.use_batch_norm:
                 encoder_model.add(tf.keras.layers.BatchNormalization())
 
-            if params.activation_function.lower() == 'sigmoid':
-                encoder_model.add(tf.keras.layers.Activation('sigmoid'))
-            elif (params.activation_function.lower() == 'none') or (params.activation_function.lower() == 'linear'):
-                pass
-            elif params.activation_function.lower() == 'leakyrelu':
-                encoder_model.add(tf.keras.layers.LeakyReLU())
+            #if params.activation_function.lower() == 'sigmoid':
+            #    encoder_model.add(tf.keras.layers.Activation('sigmoid'))
+            #elif (params.activation_function.lower() == 'none') or (params.activation_function.lower() == 'linear'):
+            #    pass
+            #elif params.activation_function.lower() == 'leakyrelu':
+            #    encoder_model.add(tf.keras.layers.LeakyReLU())
 
             if self.use_dropout:
                 encoder_model.add(tf.keras.layers.Dropout(rate=0.25))
 
         encoder_model.add(tf.keras.layers.Flatten())
-        encoder_model.add(tf.keras.layers.Dense(int(latent_dim + latent_dim), kernel_initializer="he_uniform"))
+        encoder_model.add(
+            tf.keras.layers.Dense(
+                int(latent_dim + latent_dim),
+                #kernel_initializer="he_uniform"
+            )
+        )
 
         #if params.activation_function.lower() == 'sigmoid':
         #    encoder_model.add(tf.keras.layers.Activation('sigmoid'))
@@ -238,7 +246,12 @@ class CVAECustom(tf.keras.Model):
         decoder_model.add(tf.keras.layers.InputLayer(input_shape=(latent_dim,))),
         final_layer_width = int(input_dimension/(2 * len(encoder_filters_list)))
         dense_num_units = final_layer_width**2 * decoder_filters_list[0]
-        decoder_model.add(tf.keras.layers.Dense(units=dense_num_units, kernel_initializer="he_uniform"))
+        decoder_model.add(tf.keras.layers.Dense(
+                units=dense_num_units,
+                activation=tf.nn.relu,
+                #kernel_initializer="he_uniform"
+            )
+        )
         #if params.activation_function.lower() == 'sigmoid':
         #    decoder_model.add(tf.keras.layers.Activation('sigmoid'))
         #elif (params.activation_function.lower() == 'none') or (
@@ -256,20 +269,21 @@ class CVAECustom(tf.keras.Model):
                 strides=(decoder_strides_list[i], decoder_strides_list[i]),
                 padding='same',
                 name=f"decoder_conv_transpose_{i}",
-                kernel_initializer="he_uniform",
+                activation="relu"
+                #kernel_initializer="he_uniform",
             )
             decoder_model.add(conv_transpose_layer)
             if i < len(decoder_strides_list) - 1:
                 if self.use_batch_norm:
                     decoder_model.add(tf.keras.layers.BatchNormalization())
 
-                if params.activation_function.lower() == 'sigmoid':
-                    decoder_model.add(tf.keras.layers.Activation('sigmoid'))
-                elif (params.activation_function.lower() == 'none') or (
-                        params.activation_function.lower() == 'linear'):
-                    pass
-                elif params.activation_function.lower() == 'leakyrelu':
-                    decoder_model.add(tf.keras.layers.LeakyReLU())
+                #if params.activation_function.lower() == 'sigmoid':
+                #    decoder_model.add(tf.keras.layers.Activation('sigmoid'))
+                #elif (params.activation_function.lower() == 'none') or (
+                #        params.activation_function.lower() == 'linear'):
+                #    pass
+                #elif params.activation_function.lower() == 'leakyrelu':
+                #    decoder_model.add(tf.keras.layers.LeakyReLU())
 
                 if self.use_dropout:
                     decoder_model.add(tf.keras.layers.Dropout(rate=0.25))
