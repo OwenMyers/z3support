@@ -275,40 +275,24 @@ class CVAECustom(tf.keras.Model):
 
         decoder_model = tf.keras.Sequential()
         decoder_model.add(tf.keras.layers.InputLayer(input_shape=(latent_dim,))),
-        final_layer_width = int(input_dimension/(2 * len(encoder_filters_list)))
+        final_layer_width = int(input_dimension/(2 ** len(encoder_filters_list)))
         dense_num_units = final_layer_width**2 * decoder_filters_list[0]
         decoder_model.add(tf.keras.layers.Dense(
                 units=dense_num_units,
-                activation=tf.nn.relu,
                 #kernel_initializer="he_uniform"
             )
         )
 
-        #decoder_model.add(tf.keras.layers.InputLayer(input_shape=(latent_dim,)))
-        #decoder_model.add(tf.keras.layers.Dense(units=7*7*32, activation=tf.nn.relu))
-        #decoder_model.add(tf.keras.layers.Reshape(target_shape=(7, 7, 32)))
-
-
-#        #if params.activation_function.lower() == 'sigmoid':
-#        #    decoder_model.add(tf.keras.layers.Activation('sigmoid'))
-#        #elif (params.activation_function.lower() == 'none') or (
-#        #        params.activation_function.lower() == 'linear'):
-#        #    pass
-#        #elif params.activation_function.lower() == 'leakyrelu':
-#        #    decoder_model.add(tf.keras.layers.LeakyReLU())
+        if params.activation_function.lower() == 'sigmoid':
+            decoder_model.add(tf.keras.layers.Activation('sigmoid'))
+        elif (params.activation_function.lower() == 'none') or (
+                params.activation_function.lower() == 'linear'):
+            pass
+        elif params.activation_function.lower() == 'leakyrelu':
+            decoder_model.add(tf.keras.layers.LeakyReLU())
         decoder_model.add(tf.keras.layers.Reshape(
             target_shape=(final_layer_width, final_layer_width, decoder_filters_list[0])
         ))
-
-        #decoder_model.add(tf.keras.layers.Conv2DTranspose(
-        #    filters=64, kernel_size=3, strides=2, padding='same',
-        #    activation='relu'))
-        #decoder_model.add(tf.keras.layers.Conv2DTranspose(
-        #    filters=32, kernel_size=3, strides=2, padding='same',
-        #    activation='relu'))
-        ## No activation
-        #decoder_model.add(tf.keras.layers.Conv2DTranspose(
-        #    filters=1, kernel_size=3, strides=1, padding='same'))
 
         for i in range(1, len(decoder_strides_list)):
             decoder_model.add(tf.keras.layers.Conv2DTranspose(
@@ -317,26 +301,24 @@ class CVAECustom(tf.keras.Model):
                 strides=decoder_strides_list[i],
                 padding='same',
                 name=f"decoder_conv_transpose_{i}",
-                activation="relu"
                 #kernel_initializer="he_uniform",
             ))
-            #decoder_model.add(conv_transpose_layer)
-            #if i < len(decoder_strides_list) - 1:
-            #    if self.use_batch_norm:
-            #        decoder_model.add(tf.keras.layers.BatchNormalization())
+            if i < len(decoder_strides_list) - 1:
+                if self.use_batch_norm:
+                    decoder_model.add(tf.keras.layers.BatchNormalization())
 
-            #    #if params.activation_function.lower() == 'sigmoid':
-            #    #    decoder_model.add(tf.keras.layers.Activation('sigmoid'))
-            #    #elif (params.activation_function.lower() == 'none') or (
-            #    #        params.activation_function.lower() == 'linear'):
-            #    #    pass
-            #    #elif params.activation_function.lower() == 'leakyrelu':
-            #    #    decoder_model.add(tf.keras.layers.LeakyReLU())
+                if params.activation_function.lower() == 'sigmoid':
+                    decoder_model.add(tf.keras.layers.Activation('sigmoid'))
+                elif (params.activation_function.lower() == 'none') or (
+                        params.activation_function.lower() == 'linear'):
+                    pass
+                elif params.activation_function.lower() == 'leakyrelu':
+                    decoder_model.add(tf.keras.layers.LeakyReLU())
 
-            #    if self.use_dropout:
-            #        decoder_model.add(tf.keras.layers.Dropout(rate=0.25))
-#        if params.final_sigmoid:
-#            decoder_model.add(tf.keras.layers.Activation('sigmoid'))
+                if self.use_dropout:
+                    decoder_model.add(tf.keras.layers.Dropout(rate=0.25))
+        if params.final_sigmoid:
+            decoder_model.add(tf.keras.layers.Activation('sigmoid'))
         decoder_model.add(tf.keras.layers.Conv2DTranspose(
             filters=1, kernel_size=3, strides=1, padding='same'))
         self.decoder = decoder_model
@@ -486,13 +468,13 @@ def compute_loss(model, x):
     mean, logvar = encode(model, x=x)
     z = reparameterize(mean=mean, logvar=logvar)
     x_logit = decode(model, z)
-    cross_ent = tf.nn.sigmoid_cross_entropy_with_logits(logits=x_logit, labels=x)
-    logpx_z = -tf.reduce_sum(cross_ent, axis=[1, 2, 3])
-    #cross_ent = -vae_r_loss(x, x_logit)
-    #logpx_z = cross_ent
+    #cross_ent = tf.nn.sigmoid_cross_entropy_with_logits(logits=x_logit, labels=x)
+    #logpx_z = -tf.reduce_sum(cross_ent, axis=[1, 2, 3])
+    cross_ent = -gl_vae_r_loss(x, x_logit)
+    logpx_z = cross_ent
     logpz = log_normal_pdf(z, 0., 0.)
     logqz_x = log_normal_pdf(z, mean, logvar)
-    return -tf.reduce_mean(logpx_z + logpz - logqz_x)
+    return -tf.reduce_mean(10.0*logpx_z + logpz - logqz_x)
 
 
 def compute_loss_breakout_px_z(model, x):

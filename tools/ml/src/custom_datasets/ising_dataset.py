@@ -28,7 +28,8 @@ class IsingDataset:
         lattice_size = 40
         path_list = [
             #"/home/owen/repos/z3support/data/split_ising_data/t1.npy",
-            "/home/owen/repos/z3support/data/split_ising_data/t2.npy",
+            #"/home/owen/repos/z3support/data/split_ising_data/t2.npy",
+            os.path.join("C:/", "Users", "owend", "PycharmProjects", "z3support", "data", "t2.npy")
         ]
         all_data, data_labels = cls.import_data(path_list)
 
