@@ -18,6 +18,6 @@ class MnistDataset:
             return x_train[:4000], y_train[:4000]
         return x_test[:4000], y_test[:4000]
 
-        if train:
-            return x_train, y_train
-        return x_test, y_test
+#        if train:
+#            return x_train, y_train
+#        return x_test, y_test
