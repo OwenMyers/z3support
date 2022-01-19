@@ -1,6 +1,7 @@
 import tensorflow as tf
 import numpy as np
 import time
+from tensorflow.keras.layers import UpSampling2D
 
 
 class CVAEOrig(tf.keras.Model):
@@ -185,45 +186,7 @@ class CVAECustom(tf.keras.Model):
         decoder_filters_list = params.decoder_filters_list
         decoder_kernal_list = params.decoder_kernal_list
 
-        #self.encoder = tf.keras.Sequential(
-        #    [
-        #        tf.keras.layers.InputLayer(input_shape=(28, 28, 1)),
-        #        tf.keras.layers.Conv2D(
-        #            filters=32, kernel_size=3, strides=(2, 2), activation='relu'),
-        #        tf.keras.layers.Conv2D(
-        #            filters=64, kernel_size=3, strides=(2, 2), activation='relu'),
-        #        tf.keras.layers.Flatten(),
-        #        # No activation
-        #        tf.keras.layers.Dense(latent_dim + latent_dim),
-        #    ]
-        #)
-
-        #self.decoder = tf.keras.Sequential(
-        #    [
-        #        tf.keras.layers.InputLayer(input_shape=(latent_dim,)),
-        #        tf.keras.layers.Dense(units=7*7*32, activation=tf.nn.relu),
-        #        tf.keras.layers.Reshape(target_shape=(7, 7, 32)),
-        #        tf.keras.layers.Conv2DTranspose(
-        #            filters=64, kernel_size=3, strides=2, padding='same',
-        #            activation='relu'),
-        #        tf.keras.layers.Conv2DTranspose(
-        #            filters=32, kernel_size=3, strides=2, padding='same',
-        #            activation='relu'),
-        #        # No activation
-        #        tf.keras.layers.Conv2DTranspose(
-        #            filters=1, kernel_size=3, strides=1, padding='same'),
-        #    ]
-        #)
-
-
-        # input_dimension = 12
-        # encoder_strides_list = [2, 2]
-        # encoder_filters_list = [5, 10]
-        # encoder_kernal_list = [3, 3]
-
-        # decoder_strides_list = [1, 2, 2]
-        # decoder_filters_list = [10, 5, 1]
-        # decoder_kernal_list = [3, 3, 3]
+        avg_pool = params.avg_pool
 
         if (len(encoder_strides_list) != len(encoder_filters_list)) or (len(encoder_filters_list) != len(encoder_kernal_list)):
             raise ValueError("Problem with strides filters or kernal list length mismatch in CVAE")
@@ -232,6 +195,10 @@ class CVAECustom(tf.keras.Model):
             input_shape=(input_dimension, input_dimension, 1), name='encoder_input'
         )
         encoder_model.add(encoder_input)
+        if avg_pool:
+            input_dimension = int(input_dimension/2.0)
+            encoder_model.add(tf.keras.layers.AveragePooling2D(pool_size=(2, 2)))
+
         for i in range(len(encoder_strides_list)):
             conv_layer = tf.keras.layers.Conv2D(
                 filters=encoder_filters_list[i],
@@ -319,8 +286,11 @@ class CVAECustom(tf.keras.Model):
                     decoder_model.add(tf.keras.layers.Dropout(rate=0.25))
         if params.final_sigmoid:
             decoder_model.add(tf.keras.layers.Activation('sigmoid'))
+
         decoder_model.add(tf.keras.layers.Conv2DTranspose(
             filters=1, kernel_size=3, strides=1, padding='same'))
+        if avg_pool:
+            decoder_model.add(UpSampling2D())
         self.decoder = decoder_model
 
     def call(self, inputs):

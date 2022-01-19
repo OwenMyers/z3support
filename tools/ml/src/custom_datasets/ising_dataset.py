@@ -53,10 +53,12 @@ class IsingDataset:
     def augment_data(x, y):
         to_add_x_list = []
         to_add_y_list = []
+        n = 2
         for cur_x, cur_y in zip(x,y):
-            to_add_x_list.append(np.fliplr(cur_x))
+            augment = cur_x
+            to_add_x_list.append(np.fliplr(augment))
             to_add_y_list.append(cur_y)
-            to_add_x_list.append(np.rot90(cur_x))
+            to_add_x_list.append(np.rot90(augment))
             to_add_y_list.append(cur_y)
 
         return np.append(x, to_add_x_list, axis=0), np.append(y, to_add_y_list, axis=0)
