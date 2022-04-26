@@ -4,7 +4,9 @@
 Note: The prefix for python I'm using is just to make sure the
 person running ensures they have the expected python3 binary
 
-`cd` in to this directory
+```
+cd <in to this README's directory>
+```
 
 See if you already have `virtualenv`
 
