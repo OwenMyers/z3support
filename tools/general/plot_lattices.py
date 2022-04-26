@@ -137,6 +137,11 @@ def main():
         ax.set_ylim([-0.5, float(L) - 0.5])
 
         #plt.show()
+        if not os.path.exists('figures'):
+            os.mkdir('figures')
+        if not os.path.exists(os.path.join('figures', 'lattices')):
+            os.mkdir(os.path.join('figures', 'lattices'))
+
         full_fig_name = os.path.join('figures', 'lattices', cur_f.split('.')[0] + '.png')
         plt.savefig(full_fig_name, dpi=300)
         plt.close(fig)
