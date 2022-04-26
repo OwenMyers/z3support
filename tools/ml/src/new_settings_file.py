@@ -31,17 +31,36 @@ def main():
         FEATURE_MAP_STEPS=2, 4, 8, 16
         STRIDE_SIZES=1
         EARLY_STOPPING_PATIENCE=5
+        USE_BATCH_NORMALIZATION=True,False
+        USE_DROPOUT=False # optional ,True
+        OPTIMIZE_STEP_SIZE=1e-4
 
     Note that the ``timestamp`` is set by the script. Don't change this.
 
     In the ``[Data]`` sections the user will specify the different sources of data to include in the training.
-    See the "Transforming Data For Autoencoder" section for more details on options and what is done with the data.
+    There are two different "modes".
+
+    * One: you have saved physics data (on a lattice) as numpy files and you want to train against the contents of
+      those files. In that case  do the following and see the "Transforming Data For Autoencoder" section for
+      more details on options and what is done with the data.
+
     Example::
 
         [Data]
-        S3=False
         DATA1=/full/path/to/data1.npy
         DATA2=/full/path/to/data2.npy
+
+    * Two: you have a way of generating the data on the fly or you want a more complete wrapper for a dataset,
+      you will want to prefix with "generator-" and only supply data for "DATA1"
+
+    Example::
+
+        [Data]
+        DATA1=generator-MnistDataset
+
+    In the first type of data specification, the lables are determined by the file names. Assumption being that
+    Each different file represents a dataset from a different type of system. In the second case you wrap all
+    that up in the wrapper class and must be able to provide the lables.
 
     In section ``[Plotting]`` you can set some plotting options like::
 
@@ -55,7 +74,7 @@ def main():
 
             $ python src/new_setting_file.py -d settings
 
-        If you ommit the ``-d`` flag  which specifies a directory to place the new file in, then you will get your
+        If you omit the ``-d`` flag  which specifies a directory to place the new file in, then you will get your
         file in the directory you ran the python command from.
 
     :return: None

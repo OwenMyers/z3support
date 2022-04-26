@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Create Settings File &mdash; autoencode 0.0.1 documentation</title>
+      <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Run Grid Search" href="run_grid_search.html" />
+    <link rel="prev" title="Prepare Data" href="prepare_data.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="../index.html" class="icon icon-home"> autoencode
+          </a>
+              <div class="version">
+                0.0
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="workflow.html">Workflow</a></li>
+<li class="toctree-l1"><a class="reference internal" href="prepare_data.html">Prepare Data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="prepare_data.html#function-and-code-docs">Function and Code Docs</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Create Settings File</a></li>
+<li class="toctree-l1"><a class="reference internal" href="run_grid_search.html">Run Grid Search</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">autoencode</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
+      <li>Create Settings File</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/usage/settings_and_config.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="create-settings-file">
+<h1>Create Settings File<a class="headerlink" href="#create-settings-file" title="Permalink to this headline"></a></h1>
+<p><a class="reference internal" href="#module-src.new_settings_file.main" title="src.new_settings_file.main"><code class="xref py py-mod docutils literal notranslate"><span class="pre">src.new_settings_file.main</span></code></a></p>
+<span class="target" id="module-src.new_settings_file.main"></span><p>Run this to create a timestamped settings file</p>
+<p>This settings file will have the following sections</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">[Settings]</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">[Data]</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">[Plotting]</span></code></p></li>
+</ul>
+<p>In the <code class="docutils literal notranslate"><span class="pre">[Settings]</span></code> section the user will specify the sets of hyper parameters to be swept over as well as any
+singleton hyper parameters and some genereal settings items. Complete example of items:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">[</span><span class="n">Settings</span><span class="p">]</span>
+<span class="n">timestamp</span><span class="o">=</span><span class="mi">2020</span><span class="o">-</span><span class="mi">08</span><span class="o">-</span><span class="mi">08</span><span class="n">T16</span><span class="p">:</span><span class="mi">21</span><span class="p">:</span><span class="mf">45.693965</span>
+<span class="n">L</span><span class="o">=</span><span class="mi">8</span>
+<span class="n">FEATURE_MAP_START</span><span class="o">=</span><span class="mi">16</span>
+<span class="n">EPOCHS</span><span class="o">=</span><span class="mi">32</span>
+<span class="c1"># quick run of single param or full param sweep. Use True for testing.</span>
+<span class="n">QUICK_RUN</span><span class="o">=</span><span class="kc">False</span>
+<span class="n">VERBOSE</span><span class="o">=</span><span class="kc">False</span>
+<span class="c1"># result dir in the tensorboard_raw directory</span>
+<span class="n">TENSORBOARD_SUB_DIR</span><span class="o">=</span><span class="n">hp_autoencoder</span>
+<span class="n">BATCH_SIZES</span><span class="o">=</span><span class="mi">8</span><span class="p">,</span> <span class="mi">16</span><span class="p">,</span> <span class="mi">32</span>
+<span class="n">N_LAYERS</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">4</span>
+<span class="n">FEATURE_MAP_STEPS</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">8</span><span class="p">,</span> <span class="mi">16</span>
+<span class="n">STRIDE_SIZES</span><span class="o">=</span><span class="mi">1</span>
+<span class="n">EARLY_STOPPING_PATIENCE</span><span class="o">=</span><span class="mi">5</span>
+</pre></div>
+</div>
+<p>Note that the <code class="docutils literal notranslate"><span class="pre">timestamp</span></code> is set by the script. Don’t change this.</p>
+<p>In the <code class="docutils literal notranslate"><span class="pre">[Data]</span></code> sections the user will specify the different sources of data to include in the training.
+There are two different “modes”.</p>
+<ul class="simple">
+<li><p>One: you have saved physics data (on a lattice) as numpy files and you want to train against the contents of
+those files. In that case  do the following and see the “Transforming Data For Autoencoder” section for
+more details on options and what is done with the data.</p></li>
+</ul>
+<p>Example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">[</span><span class="n">Data</span><span class="p">]</span>
+<span class="n">DATA1</span><span class="o">=/</span><span class="n">full</span><span class="o">/</span><span class="n">path</span><span class="o">/</span><span class="n">to</span><span class="o">/</span><span class="n">data1</span><span class="o">.</span><span class="n">npy</span>
+<span class="n">DATA2</span><span class="o">=/</span><span class="n">full</span><span class="o">/</span><span class="n">path</span><span class="o">/</span><span class="n">to</span><span class="o">/</span><span class="n">data2</span><span class="o">.</span><span class="n">npy</span>
+</pre></div>
+</div>
+<ul class="simple">
+<li><p>Two: you have a way of generating the data on the fly or you want a wrapper for existing TF datasets. In which
+case you will want to prefix with “generator-” and only supply data for “DATA1”</p></li>
+</ul>
+<p>Example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">[</span><span class="n">Data</span><span class="p">]</span>
+<span class="n">DATA1</span><span class="o">=</span><span class="n">generator</span><span class="o">-</span><span class="n">MnistDataset</span>
+</pre></div>
+</div>
+<p>In the first type of data specification, the lables are determined by the file names. Assumption being that
+Each different file represents a dataset from a different type of system. In the second case you wrap all
+that up in the wrapper class and must be able to provide the lables.</p>
+<p>In section <code class="docutils literal notranslate"><span class="pre">[Plotting]</span></code> you can set some plotting options like:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">[</span><span class="n">Plotting</span><span class="p">]</span>
+<span class="n">N_FEATURE_MAPS</span><span class="o">=</span><span class="mi">10</span>
+</pre></div>
+</div>
+<p>Which will plot 10 randomly selected feature maps in the final model when <code class="docutils literal notranslate"><span class="pre">visualize.py</span></code> is run</p>
+<dl>
+<dt>Example:</dt><dd><p>Run:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ python src/new_setting_file.py -d settings
+</pre></div>
+</div>
+<p>If you omit the <code class="docutils literal notranslate"><span class="pre">-d</span></code> flag  which specifies a directory to place the new file in, then you will get your
+file in the directory you ran the python command from.</p>
+</dd>
+</dl>
+<dl class="field-list simple">
+<dt class="field-odd">return</dt>
+<dd class="field-odd"><p>None</p>
+</dd>
+</dl>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="prepare_data.html" class="btn btn-neutral float-left" title="Prepare Data" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="run_grid_search.html" class="btn btn-neutral float-right" title="Run Grid Search" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2020, Owen Myers.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

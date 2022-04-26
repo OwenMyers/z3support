@@ -2,7 +2,7 @@
 # Than other dataset forms. This tool makes it easy to look at what the dataset
 # is passing in to the model
 
-from tf_dataset.minst_dataset import MnistDataset
+from custom_datasets.minst_dataset import MnistDataset
 import time
 import numpy as np
 

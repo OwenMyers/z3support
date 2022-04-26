@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>src.grid_search &mdash; autoencode 0.0.1 documentation</title>
+      <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/doctools.js"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="../../index.html" class="icon icon-home"> autoencode
+          </a>
+              <div class="version">
+                0.0
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../usage/workflow.html">Workflow</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../usage/prepare_data.html">Prepare Data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../usage/prepare_data.html#function-and-code-docs">Function and Code Docs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../usage/settings_and_config.html">Create Settings File</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../usage/run_grid_search.html">Run Grid Search</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">autoencode</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
+          <li><a href="../index.html">Module code</a> &raquo;</li>
+      <li>src.grid_search</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for src.grid_search</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">pickle</span>
+<span class="kn">from</span> <span class="nn">aim</span> <span class="kn">import</span> <span class="n">Run</span>
+<span class="kn">import</span> <span class="nn">json</span>
+<span class="kn">import</span> <span class="nn">tf_vae</span>
+<span class="kn">import</span> <span class="nn">time</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">from</span> <span class="nn">hashlib</span> <span class="kn">import</span> <span class="n">sha1</span>
+<span class="kn">from</span> <span class="nn">tensorflow.keras.utils</span> <span class="kn">import</span> <span class="n">plot_model</span>
+<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
+<span class="kn">from</span> <span class="nn">abc</span> <span class="kn">import</span> <span class="n">ABCMeta</span>
+<span class="kn">from</span> <span class="nn">tensorflow.keras.models</span> <span class="kn">import</span> <span class="n">Model</span>
+<span class="kn">from</span> <span class="nn">tensorflow.keras</span> <span class="kn">import</span> <span class="n">models</span>
+<span class="kn">from</span> <span class="nn">tensorboard.plugins.hparams</span> <span class="kn">import</span> <span class="n">api</span> <span class="k">as</span> <span class="n">hp</span>
+<span class="kn">import</span> <span class="nn">tensorflow</span> <span class="k">as</span> <span class="nn">tf</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">argparse</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">from</span> <span class="nn">tools.ml.src.base</span> <span class="kn">import</span> <span class="n">MLToolMixin</span><span class="p">,</span> <span class="n">r_loss</span><span class="p">,</span> <span class="n">vae_r_loss</span>
+<span class="kn">from</span> <span class="nn">tools.ml.src.custom_callbacks</span> <span class="kn">import</span> <span class="n">CustomCallbacks</span><span class="p">,</span> <span class="n">step_decay_schedule</span>
+<span class="c1">#from tensorflow.keras.datasets import mnist</span>
+<span class="kn">from</span> <span class="nn">tensorflow.keras.layers</span> <span class="kn">import</span> <span class="n">Input</span><span class="p">,</span> <span class="n">Conv2D</span><span class="p">,</span> <span class="n">Conv2DTranspose</span><span class="p">,</span> <span class="n">BatchNormalization</span><span class="p">,</span> <span class="n">LeakyReLU</span><span class="p">,</span> <span class="n">Dropout</span><span class="p">,</span> <span class="n">Activation</span><span class="p">,</span> <span class="n">Flatten</span><span class="p">,</span> <span class="n">Dense</span><span class="p">,</span> <span class="n">Reshape</span><span class="p">,</span> <span class="n">Lambda</span>
+<span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s2">&quot;CUDA_VISIBLE_DEVICES&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;-1&quot;</span>
+
+
+<div class="viewcode-block" id="SearchTool"><a class="viewcode-back" href="../../usage/run_grid_search.html#src.grid_search.SearchTool">[docs]</a><span class="k">class</span> <span class="nc">SearchTool</span><span class="p">(</span><span class="n">MLToolMixin</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Grid Search made EZ</span>
+
+<span class="sd">    Primary purpose of this class:</span>
+
+<span class="sd">    * One: Collect high-level run operations in one place</span>
+<span class="sd">    * Two: Inherit general ML tools from the MLMixin which abstract lower level operations</span>
+<span class="sd">    * Three: Provide functionality for the grid search, namely the organization and visualization of performance</span>
+<span class="sd">      of different hyperparameter models.</span>
+
+<span class="sd">    **One**</span>
+
+<span class="sd">    Example of a run (hopefully this feels simple):</span>
+
+<span class="sd">    Example::</span>
+
+<span class="sd">        python grid_search.py --settings /path/to/generated/settings/file.yml --run-location ./</span>
+
+<span class="sd">    The idea being that everything important is just specified in the yaml file rather than at the command line.</span>
+
+<span class="sd">    **Two**</span>
+
+<span class="sd">    See the ``MLToolMixin`` docs for information on some of the lower level stuff managed by this class. Note that</span>
+<span class="sd">    one of the things ``MLToolMixin`` does is provide simple &quot;deserialization&quot; of the yaml file :o. In this class</span>
+<span class="sd">    you will see attributes with names analogous to those things provided int the settings file and they come from</span>
+<span class="sd">    the ``MLToolMixin``.</span>
+
+<span class="sd">    **Three**</span>
+
+<span class="sd">    See ``main()`` method doc</span>
+
+<span class="sd">    **Note**</span>
+
+<span class="sd">    This class/file is meant to be run as a script.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">settings_file</span><span class="p">,</span> <span class="n">working_location</span><span class="p">):</span>
+
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">settings_file</span><span class="p">,</span> <span class="n">working_location</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">early_stopping_patience</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">[</span><span class="s1">&#39;Settings&#39;</span><span class="p">][</span><span class="s1">&#39;EARLY_STOPPING_PATIENCE&#39;</span><span class="p">])</span>
+
+<div class="viewcode-block" id="SearchTool.train_test_model"><a class="viewcode-back" href="../../usage/run_grid_search.html#src.grid_search.SearchTool.train_test_model">[docs]</a>    <span class="k">def</span> <span class="nf">train_test_model</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">run_dir</span><span class="p">,</span> <span class="n">hyper_params</span><span class="p">,</span> <span class="n">x_test</span><span class="p">,</span> <span class="n">x_train</span><span class="p">,</span> <span class="n">aim_run</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Looping over the epochs happens here&quot;&quot;&quot;</span>
+
+        <span class="n">optimizer</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">keras</span><span class="o">.</span><span class="n">optimizers</span><span class="o">.</span><span class="n">Adam</span><span class="p">(</span><span class="mf">1e-5</span><span class="p">)</span>
+
+        <span class="n">batch_size</span> <span class="o">=</span> <span class="n">hyper_params</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">hp_batch_size</span><span class="p">]</span>
+
+        <span class="n">train_dataset</span> <span class="o">=</span> <span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">Dataset</span><span class="o">.</span><span class="n">from_tensor_slices</span><span class="p">(</span><span class="n">x_train</span><span class="p">)</span><span class="o">.</span><span class="n">batch</span><span class="p">(</span><span class="n">batch_size</span><span class="p">))</span>
+        <span class="n">test_dataset</span> <span class="o">=</span> <span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">Dataset</span><span class="o">.</span><span class="n">from_tensor_slices</span><span class="p">(</span><span class="n">x_test</span><span class="p">)</span><span class="o">.</span><span class="n">batch</span><span class="p">(</span><span class="n">batch_size</span><span class="p">))</span>
+
+        <span class="n">epochs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">epochs</span>
+        <span class="c1"># set the dimensionality of the latent space to a plane for visualization later</span>
+        <span class="n">latent_dim</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">latent_dim</span>
+        <span class="n">num_examples_to_generate</span> <span class="o">=</span> <span class="mi">4</span>
+
+        <span class="c1"># TODO revisit this section. May want to remove it depending on how we decide to create the plots (unused!)</span>
+        <span class="c1"># (Post TODO) keeping the random vector constant for generation (prediction) so it will be easier to see the</span>
+        <span class="c1"># improvement.</span>
+        <span class="n">random_vector_for_generation</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span>
+            <span class="n">shape</span><span class="o">=</span><span class="p">[</span><span class="n">num_examples_to_generate</span><span class="p">,</span> <span class="n">latent_dim</span><span class="p">])</span>
+        <span class="n">model</span> <span class="o">=</span> <span class="n">tf_vae</span><span class="o">.</span><span class="n">CVAE</span><span class="p">(</span><span class="n">latent_dim</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">batch_size</span> <span class="o">&gt;=</span> <span class="n">num_examples_to_generate</span>
+        <span class="k">for</span> <span class="n">test_batch</span> <span class="ow">in</span> <span class="n">test_dataset</span><span class="o">.</span><span class="n">take</span><span class="p">(</span><span class="mi">1</span><span class="p">):</span>
+            <span class="n">test_sample</span> <span class="o">=</span> <span class="n">test_batch</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="n">num_examples_to_generate</span><span class="p">,</span> <span class="p">:,</span> <span class="p">:,</span> <span class="p">:]</span>
+
+        <span class="n">model</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="n">loss</span><span class="o">=</span><span class="n">tf_vae</span><span class="o">.</span><span class="n">compute_loss</span><span class="p">)</span>
+        <span class="n">elbo</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">for</span> <span class="n">epoch</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">epochs</span> <span class="o">+</span> <span class="mi">1</span><span class="p">):</span>
+            <span class="n">start_time</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+            <span class="k">for</span> <span class="n">train_x</span> <span class="ow">in</span> <span class="n">train_dataset</span><span class="p">:</span>
+                <span class="n">model</span><span class="o">.</span><span class="n">train_step</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">train_x</span><span class="p">,</span> <span class="n">optimizer</span><span class="p">)</span>
+            <span class="n">end_time</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+
+            <span class="n">loss</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">keras</span><span class="o">.</span><span class="n">metrics</span><span class="o">.</span><span class="n">Mean</span><span class="p">()</span>
+            <span class="k">for</span> <span class="n">test_x</span> <span class="ow">in</span> <span class="n">test_dataset</span><span class="p">:</span>
+                <span class="n">loss</span><span class="p">(</span><span class="n">tf_vae</span><span class="o">.</span><span class="n">compute_loss</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">test_x</span><span class="p">))</span>
+            <span class="n">elbo</span> <span class="o">=</span> <span class="o">-</span><span class="n">loss</span><span class="o">.</span><span class="n">result</span><span class="p">()</span>
+            <span class="c1"># display.clear_output(wait=False)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Epoch: </span><span class="si">{}</span><span class="s1">, Test set ELBO: </span><span class="si">{}</span><span class="s1">, time elapse for current epoch: </span><span class="si">{}</span><span class="s1">&#39;</span>
+                  <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">epoch</span><span class="p">,</span> <span class="n">elbo</span><span class="p">,</span> <span class="n">end_time</span> <span class="o">-</span> <span class="n">start_time</span><span class="p">))</span>
+
+            <span class="n">aim_run</span><span class="o">.</span><span class="n">track</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">elbo</span><span class="o">.</span><span class="n">numpy</span><span class="p">()),</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;loss&#39;</span><span class="p">,</span> <span class="n">epoch</span><span class="o">=</span><span class="n">epoch</span><span class="p">,</span> <span class="n">context</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;subset&quot;</span><span class="p">:</span> <span class="s2">&quot;train&quot;</span> <span class="p">})</span>
+            <span class="c1"># generate_and_save_images(model, epoch, test_sample)</span>
+
+        <span class="n">model</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">x_train</span><span class="p">[:</span><span class="mi">1000</span><span class="p">])</span>
+        <span class="k">return</span> <span class="n">model</span><span class="p">,</span> <span class="nb">float</span><span class="p">(</span><span class="n">elbo</span><span class="o">.</span><span class="n">numpy</span><span class="p">())</span></div>
+
+<div class="viewcode-block" id="SearchTool.run"><a class="viewcode-back" href="../../usage/run_grid_search.html#src.grid_search.SearchTool.run">[docs]</a>    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">run_dir</span><span class="p">,</span> <span class="n">hyper_params</span><span class="p">,</span> <span class="n">x_test</span><span class="p">,</span> <span class="n">x_train</span><span class="p">,</span> <span class="n">aim_run</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Just runs the ``train_test_model`` method&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">train_test_model</span><span class="p">(</span><span class="n">run_dir</span><span class="p">,</span> <span class="n">hyper_params</span><span class="p">,</span> <span class="n">x_test</span><span class="p">,</span> <span class="n">x_train</span><span class="p">,</span> <span class="n">aim_run</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="SearchTool.main"><a class="viewcode-back" href="../../usage/run_grid_search.html#src.grid_search.SearchTool.main">[docs]</a>    <span class="k">def</span> <span class="nf">main</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Looping over hyperparameters and interfacing with ``aim``, the experiment tracker, here&quot;&quot;&quot;</span>
+        <span class="n">x_train</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data_train</span>
+        <span class="n">x_test</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data_test</span>
+
+        <span class="n">c</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">for</span> <span class="n">batch_size</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">hp_batch_size</span><span class="o">.</span><span class="n">domain</span><span class="o">.</span><span class="n">values</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">n_layers</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">hp_n_layers</span><span class="o">.</span><span class="n">domain</span><span class="o">.</span><span class="n">values</span><span class="p">:</span>
+                <span class="k">for</span> <span class="n">f_map_step</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">hp_feature_map_step</span><span class="o">.</span><span class="n">domain</span><span class="o">.</span><span class="n">values</span><span class="p">:</span>
+                    <span class="k">for</span> <span class="n">stride</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">hp_stride_size</span><span class="o">.</span><span class="n">domain</span><span class="o">.</span><span class="n">values</span><span class="p">:</span>
+                        <span class="k">for</span> <span class="n">use_batch_normalization</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">hp_use_batch_normalization</span><span class="o">.</span><span class="n">domain</span><span class="o">.</span><span class="n">values</span><span class="p">:</span>
+                            <span class="k">for</span> <span class="n">use_dropout</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">hp_use_dropout</span><span class="o">.</span><span class="n">domain</span><span class="o">.</span><span class="n">values</span><span class="p">:</span>
+                                <span class="n">hyper_params</span> <span class="o">=</span> <span class="p">{</span>
+                                    <span class="bp">self</span><span class="o">.</span><span class="n">hp_batch_size</span><span class="p">:</span> <span class="n">batch_size</span><span class="p">,</span>
+                                    <span class="bp">self</span><span class="o">.</span><span class="n">hp_n_layers</span><span class="p">:</span> <span class="n">n_layers</span><span class="p">,</span>
+                                    <span class="bp">self</span><span class="o">.</span><span class="n">hp_feature_map_step</span><span class="p">:</span> <span class="n">f_map_step</span><span class="p">,</span>
+                                    <span class="bp">self</span><span class="o">.</span><span class="n">hp_stride_size</span><span class="p">:</span> <span class="n">stride</span><span class="p">,</span>
+                                    <span class="bp">self</span><span class="o">.</span><span class="n">hp_use_batch_normalization</span><span class="p">:</span> <span class="n">use_batch_normalization</span><span class="p">,</span>
+                                    <span class="bp">self</span><span class="o">.</span><span class="n">hp_use_dropout</span><span class="p">:</span> <span class="n">use_dropout</span>
+                                <span class="p">}</span>
+                                <span class="n">simp_hyper_params</span> <span class="o">=</span> <span class="p">{</span>
+                                    <span class="s1">&#39;hp_batch_size&#39;</span><span class="p">:</span> <span class="n">batch_size</span><span class="p">,</span>
+                                    <span class="s1">&#39;hp_n_layers&#39;</span><span class="p">:</span> <span class="n">n_layers</span><span class="p">,</span>
+                                    <span class="s1">&#39;hp_feature_map_step&#39;</span><span class="p">:</span> <span class="n">f_map_step</span><span class="p">,</span>
+                                    <span class="s1">&#39;hp_stride_size&#39;</span><span class="p">:</span> <span class="n">stride</span><span class="p">,</span>
+                                    <span class="s1">&#39;hp_use_batch_normalization&#39;</span><span class="p">:</span> <span class="n">use_batch_normalization</span><span class="p">,</span>
+                                    <span class="s1">&#39;hp_use_dropout&#39;</span><span class="p">:</span> <span class="n">use_dropout</span>
+                                <span class="p">}</span>
+                                <span class="n">c</span> <span class="o">+=</span> <span class="mi">1</span>
+                                <span class="n">run_name</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;run-</span><span class="si">{</span><span class="n">c</span><span class="si">}</span><span class="s2">&quot;</span>
+                                <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;--- Starting trial: </span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="n">run_name</span><span class="p">)</span>
+                                <span class="nb">print</span><span class="p">({</span><span class="n">h</span><span class="o">.</span><span class="n">name</span><span class="p">:</span> <span class="n">hyper_params</span><span class="p">[</span><span class="n">h</span><span class="p">]</span> <span class="k">for</span> <span class="n">h</span> <span class="ow">in</span> <span class="n">hyper_params</span><span class="p">})</span>
+                                <span class="n">aim_run</span> <span class="o">=</span> <span class="n">Run</span><span class="p">()</span>
+                                <span class="n">run_result</span><span class="p">,</span> <span class="n">loss</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">run</span><span class="p">(</span>
+                                    <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">run_location</span><span class="p">,</span> <span class="s1">&#39;tensorboard_raw&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">tensorboard_sub_dir</span><span class="p">,</span>
+                                                 <span class="n">run_name</span><span class="p">),</span>
+                                    <span class="n">hyper_params</span><span class="p">,</span>
+                                    <span class="n">x_test</span><span class="p">,</span>
+                                    <span class="n">x_train</span><span class="p">,</span>
+                                    <span class="n">aim_run</span>
+                                <span class="p">)</span>
+                                <span class="c1"># After each run lets attempt to log a sample of activations for the different layers</span>
+                                <span class="n">simp_hyper_params</span><span class="p">[</span><span class="s1">&#39;loss&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">loss</span>
+
+                                <span class="n">aim_run</span><span class="p">[</span><span class="s2">&quot;hparams&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">simp_hyper_params</span>
+                                <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">tensorboard_debugging</span><span class="p">:</span>
+                                    <span class="n">hash_name</span> <span class="o">=</span> <span class="n">aim_run</span><span class="o">.</span><span class="n">hashname</span>
+                                    <span class="c1"># Creates two output lines telling us the &quot;asset&quot; was created. Just a note so I</span>
+                                    <span class="c1"># don&#39;t go digging into why later</span>
+                                    <span class="n">run_result</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">run_location</span><span class="p">,</span> <span class="s1">&#39;models&#39;</span><span class="p">,</span> <span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">hash_name</span><span class="si">}</span><span class="s1">.tf&#39;</span><span class="p">),</span>
+                                                    <span class="n">save_format</span><span class="o">=</span><span class="s1">&#39;tf&#39;</span><span class="p">,</span> <span class="n">save_traces</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span></div></div>
+
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
+    <span class="n">logging</span><span class="o">.</span><span class="n">basicConfig</span><span class="p">(</span><span class="n">level</span><span class="o">=</span><span class="n">logging</span><span class="o">.</span><span class="n">INFO</span><span class="p">)</span>
+    <span class="n">parser</span> <span class="o">=</span> <span class="n">argparse</span><span class="o">.</span><span class="n">ArgumentParser</span><span class="p">(</span><span class="n">description</span><span class="o">=</span><span class="s1">&#39;Run a parameter sweep to find the best autoencoder.&#39;</span><span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;--settings&#39;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s1">&#39;Settings file location&#39;</span><span class="p">,</span> <span class="n">required</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;--run-location&#39;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s1">&#39;Path you want the run to be done at&#39;</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="s1">&#39;./&#39;</span><span class="p">)</span>
+    <span class="n">args</span> <span class="o">=</span> <span class="n">parser</span><span class="o">.</span><span class="n">parse_args</span><span class="p">()</span>
+
+    <span class="n">tool</span> <span class="o">=</span> <span class="n">SearchTool</span><span class="p">(</span><span class="n">args</span><span class="o">.</span><span class="n">settings</span><span class="p">,</span> <span class="n">args</span><span class="o">.</span><span class="n">run_location</span><span class="p">)</span>
+    <span class="n">tool</span><span class="o">.</span><span class="n">main</span><span class="p">()</span>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2020, Owen Myers.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
