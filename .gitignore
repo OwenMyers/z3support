@@ -13,7 +13,7 @@ papers/
 tensorboard_raw/
 workspace.xml
 notebooks/model_checkpoit.hdf5
-notebooks/models/
+notebooks/raw_model_files/
 notebooks/play.ipynb
 tools/ml/figures/
 tools/ml/model_checkpoints/
