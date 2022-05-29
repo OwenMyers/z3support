@@ -23,8 +23,8 @@ class DenseVariationalAutoencoder():
                  input_dim,
                  encoder_layer_sizes,
                  decoder_layer_sizes,
-                 non_linear_activation_bool=True,
                  z_dim,
+                 non_linear_activation_bool=True,
                  use_batch_norm=False,
                  use_dropout=False,
                  ):
@@ -61,6 +61,10 @@ class DenseVariationalAutoencoder():
             if self.use_dropout:
                 x = Dropout(rate=0.25)(x)
 
+
+        shape_before_flattening = K.int_shape(x)[1:]
+        x = Flatten()(x)
+
         self.mu = Dense(self.z_dim, name='mu')(x)
         self.log_var = Dense(self.z_dim, name='log_var')(x)
 
@@ -80,10 +84,9 @@ class DenseVariationalAutoencoder():
 
         decoder_input = Input(shape=(self.z_dim,), name='decoder_input')
 
+        x = Dense(np.prod(shape_before_flattening))(decoder_input)
+
         for i, j in enumerate(self.decoder_layer_sizes):
-            if i == 0:
-                x = Dense(j)(decoder_input)
-                continue
             x = Dense(j)(x)
 
             if i < len(self.decoder_layer_sizes) - 1:
@@ -105,8 +108,6 @@ class DenseVariationalAutoencoder():
         self.model = Model(model_input, model_output)
 
 
-    # We are done up-to here --> TODO finish transitioning the rest of this
-    # model
     def compile(self, learning_rate, r_loss_factor):
         self.learning_rate = learning_rate
 
@@ -127,7 +128,6 @@ class DenseVariationalAutoencoder():
         optimizer = tf.keras.optimizers.Adam(learning_rate)
         self.model.compile(optimizer=optimizer, loss = vae_loss,  metrics = [vae_r_loss, vae_kl_loss])
 
-
     def save(self, folder):
 
         if not os.path.exists(folder):
@@ -138,16 +138,13 @@ class DenseVariationalAutoencoder():
 
         with open(os.path.join(folder, 'params.pkl'), 'wb') as f:
             pickle.dump([
-                self.input_dim
-                , self.encoder_conv_filters
-                , self.encoder_conv_kernel_size
-                , self.encoder_conv_strides
-                , self.decoder_conv_t_filters
-                , self.decoder_conv_t_kernel_size
-                , self.decoder_conv_t_strides
-                , self.z_dim
-                , self.use_batch_norm
-                , self.use_dropout
+                self.input_dim,
+                self.encoder_layer_sizes,
+                self.decoder_layer_sizes,
+                self.non_linear_activation_bool,
+                self.z_dim,
+                self.use_batch_norm,
+                self.use_dropout,
                 ], f)
 
         self.plot_model(folder)
@@ -177,8 +174,6 @@ class DenseVariationalAutoencoder():
             , callbacks = callbacks_list
         )
 
-
-
     def train_with_generator(self, data_flow, epochs, steps_per_epoch, run_folder, print_every_n_batches = 100, initial_epoch = 0, lr_decay = 1, ):
 
         custom_callback = CustomCallback(run_folder, print_every_n_batches, initial_epoch, self)
@@ -201,6 +196,7 @@ class DenseVariationalAutoencoder():
             , steps_per_epoch=steps_per_epoch 
             )
 
+    # We are done up-to here --> TODO finish transitioning the rest of this model
     def plot_model(self, run_folder):
         plot_model(self.model, to_file=os.path.join(run_folder ,'viz/model.png'), show_shapes = True, show_layer_names = True)
         plot_model(self.encoder, to_file=os.path.join(run_folder ,'viz/encoder.png'), show_shapes = True, show_layer_names = True)
