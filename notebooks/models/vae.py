@@ -62,8 +62,8 @@ class DenseVariationalAutoencoder():
                 x = Dropout(rate=0.25)(x)
 
 
-        shape_before_flattening = K.int_shape(x)[1:]
-        x = Flatten()(x)
+        #shape_before_flattening = K.int_shape(x)[1:]
+        #x = Flatten()(x)
 
         self.mu = Dense(self.z_dim, name='mu')(x)
         self.log_var = Dense(self.z_dim, name='log_var')(x)
@@ -84,7 +84,7 @@ class DenseVariationalAutoencoder():
 
         decoder_input = Input(shape=(self.z_dim,), name='decoder_input')
 
-        x = Dense(np.prod(shape_before_flattening))(decoder_input)
+        x = Dense(self.z_dim)(decoder_input)
 
         for i, j in enumerate(self.decoder_layer_sizes):
             x = Dense(j)(x)
@@ -113,11 +113,11 @@ class DenseVariationalAutoencoder():
 
         ### COMPILATION
         def vae_r_loss(y_true, y_pred):
-            r_loss = K.mean(K.square(y_true - y_pred), axis = [1,2,3])
+            r_loss = K.mean(K.square(y_true - y_pred), axis=1)
             return r_loss_factor * r_loss
 
         def vae_kl_loss(y_true, y_pred):
-            kl_loss =  -0.5 * K.sum(1 + self.log_var - K.square(self.mu) - K.exp(self.log_var), axis = 1)
+            kl_loss =  -0.5 * K.sum(1 + self.log_var - K.square(self.mu) - K.exp(self.log_var), axis=1)
             return kl_loss
 
         def vae_loss(y_true, y_pred):
@@ -171,7 +171,7 @@ class DenseVariationalAutoencoder():
             , shuffle = True
             , epochs = epochs
             , initial_epoch = initial_epoch
-            , callbacks = callbacks_list
+            #, callbacks = callbacks_list
         )
 
     def train_with_generator(self, data_flow, epochs, steps_per_epoch, run_folder, print_every_n_batches = 100, initial_epoch = 0, lr_decay = 1, ):

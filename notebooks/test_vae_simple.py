@@ -15,6 +15,8 @@ N_DENSE = 2
 L=8
 TRAINING_FRACTION = 0.8
 NON_LINEAR_ACTIVATION_BOOL=True
+LEARNING_RATE = 0.0005
+R_LOSS_FACTOR = 1000
 
 user = 1
 if user == 1:
@@ -69,15 +71,31 @@ test_with_meta_info = filterned_confs.drop(index=train_with_meta_info.index)
 train = train_with_meta_info.drop(["T","M"], axis=1)
 test = test_with_meta_info.drop(["T","M"], axis=1)
 
-x = train.to_numpy().reshape(-1,L*L,1)
-x_test = test.to_numpy().reshape(-1,L*L,1)
+x = train.to_numpy().reshape(-1,L*L)
+x_test = test.to_numpy().reshape(-1,L*L)
 
 x = x.astype(float)
 
 vae = DenseVariationalAutoencoder(
-    input_dim=(L,1),
+    input_dim=(L*L,),
     encoder_layer_sizes=[2],
-    decoder_layer_sizes=[2, L],
+    decoder_layer_sizes=[2, L*L],
     z_dim=2,
     non_linear_activation_bool=NON_LINEAR_ACTIVATION_BOOL
+)
+vae.compile(LEARNING_RATE, R_LOSS_FACTOR)
+vae.plot_model(prefix_data)
+
+BATCH_SIZE = 16
+EPOCHS = 20
+PRINT_EVERY_N_BATCHES = 100
+INITIAL_EPOCH = 0
+
+vae.train(     
+    x,
+    batch_size=BATCH_SIZE,
+    epochs=EPOCHS,
+    run_folder=RUN_FOLDER,
+    print_every_n_batches=PRINT_EVERY_N_BATCHES,
+    initial_epoch=INITIAL_EPOCH,
 )
