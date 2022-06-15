@@ -117,7 +117,9 @@ class DenseVariationalAutoencoder():
             return r_loss_factor * r_loss
 
         def vae_kl_loss(y_true, y_pred):
-            kl_loss =  -0.5 * K.sum(1 + self.log_var - K.square(self.mu) - K.exp(self.log_var), axis=1)
+            kl_loss =  -0.5 * K.sum(
+                1 + self.log_var - K.square(self.mu) - K.exp(self.log_var), axis=1
+            )
             return kl_loss
 
         def vae_loss(y_true, y_pred):
