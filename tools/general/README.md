@@ -43,19 +43,19 @@ Upgrate your virtualenv pip (default pip will be the virtualenv pip)
 pip install --upgrade pip
 ```
 
-cd into the root of the repo
-
+cd into the root of the repo, or if you are in the directory of this README
+then:
 ```
 cd ../../
 ```
 
-install the local files
+install the local files (from the project root, not this README's location)
 
 ```
 python setup.py develop
 ```
 
-come back here
+come back here (to this README's directory)
 
 ```
 cd tools/general/
