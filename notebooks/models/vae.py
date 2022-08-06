@@ -16,6 +16,7 @@ import numpy as np
 import json
 import os
 import pickle
+import datetime
 
 
 class DenseVariationalAutoencoder():
@@ -164,7 +165,9 @@ class DenseVariationalAutoencoder():
         checkpoint1 = ModelCheckpoint(checkpoint_filepath, save_weights_only = True, verbose=1)
         checkpoint2 = ModelCheckpoint(os.path.join(run_folder, 'weights/weights.h5'), save_weights_only = True, verbose=1)
 
-        callbacks_list = [checkpoint1, checkpoint2, custom_callback, lr_sched]
+        log_dir = "~/logs/fit/" + datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
+        tensorboard_callback = tf.keras.callbacks.TensorBoard(log_dir=log_dir, histogram_freq=1)
+        callbacks_list = [checkpoint1, checkpoint2, custom_callback, lr_sched, tensorboard_callback]
 
         self.model.fit(     
             x_train
@@ -379,7 +382,9 @@ class VariationalAutoencoder():
         checkpoint1 = ModelCheckpoint(checkpoint_filepath, save_weights_only = True, verbose=1)
         checkpoint2 = ModelCheckpoint(os.path.join(run_folder, 'weights/weights.h5'), save_weights_only = True, verbose=1)
 
-        callbacks_list = [checkpoint1, checkpoint2, custom_callback, lr_sched]
+        log_dir = "/home/owen/repos/z3support/logs/fit/" + datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
+        tensorboard_callback = tf.keras.callbacks.TensorBoard(log_dir=log_dir, histogram_freq=1)
+        callbacks_list = [checkpoint1, checkpoint2, custom_callback, lr_sched, tensorboard_callback]
 
         self.model.fit(     
             x_train
