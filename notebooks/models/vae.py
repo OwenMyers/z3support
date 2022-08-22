@@ -156,7 +156,16 @@ class DenseVariationalAutoencoder():
     def load_weights(self, filepath):
         self.model.load_weights(filepath)
 
-    def train(self, x_train, batch_size, epochs, run_folder, print_every_n_batches = 100, initial_epoch = 0, lr_decay = 1):
+    def train(self,
+              x_train,
+              batch_size,
+              epochs,
+              run_folder,
+              print_every_n_batches = 100,
+              initial_epoch = 0,
+              lr_decay = 1,
+              x_test=None
+              ):
 
         custom_callback = CustomCallback(run_folder, print_every_n_batches, initial_epoch, self)
         lr_sched = step_decay_schedule(initial_lr=self.learning_rate, decay_factor=lr_decay, step_size=1)
@@ -165,18 +174,28 @@ class DenseVariationalAutoencoder():
         checkpoint1 = ModelCheckpoint(checkpoint_filepath, save_weights_only = True, verbose=1)
         checkpoint2 = ModelCheckpoint(os.path.join(run_folder, 'weights/weights.h5'), save_weights_only = True, verbose=1)
 
-        log_dir = "~/logs/fit/" + datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
-        tensorboard_callback = tf.keras.callbacks.TensorBoard(log_dir=log_dir, histogram_freq=1)
-        callbacks_list = [checkpoint1, checkpoint2, custom_callback, lr_sched, tensorboard_callback]
+        log_dir = "/home/owen/logs/fit/" + datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
+        tensorboard_callback = tf.keras.callbacks.TensorBoard(log_dir=log_dir, histogram_freq=0)
+        #callbacks_list = [checkpoint1, checkpoint2, custom_callback, lr_sched, tensorboard_callback]
+        callbacks_list = [tensorboard_callback]
 
-        self.model.fit(     
-            x_train
-            , x_train
-            , batch_size = batch_size
-            , shuffle = True
-            , epochs = epochs
-            , initial_epoch = initial_epoch
-            #, callbacks = callbacks_list
+        kwargs = {
+            "batch_size": batch_size,
+            "shuffle": True,
+            "epochs": epochs,
+            "initial_epoch": initial_epoch,
+            "callbacks": callbacks_list,
+            "validation_split": 0.5,
+            #"validation_steps": 1
+        }
+        #if x_test is not None:
+        #    kwargs["validation_data"] = (x_test, x_test)
+        #    kwargs["validation_data"] = x_test
+
+        return self.model.fit(
+            x_train,
+            x_train,
+            **kwargs
         )
 
     def train_with_generator(self, data_flow, epochs, steps_per_epoch, run_folder, print_every_n_batches = 100, initial_epoch = 0, lr_decay = 1, ):
@@ -198,7 +217,7 @@ class DenseVariationalAutoencoder():
             , epochs = epochs
             , initial_epoch = initial_epoch
             , callbacks = callbacks_list
-            , steps_per_epoch=steps_per_epoch 
+            , steps_per_epoch=steps_per_epoch
             )
 
     # We are done up-to here --> TODO finish transitioning the rest of this model
@@ -382,7 +401,7 @@ class VariationalAutoencoder():
         checkpoint1 = ModelCheckpoint(checkpoint_filepath, save_weights_only = True, verbose=1)
         checkpoint2 = ModelCheckpoint(os.path.join(run_folder, 'weights/weights.h5'), save_weights_only = True, verbose=1)
 
-        log_dir = "/home/owen/repos/z3support/logs/fit/" + datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
+        log_dir = "/home/owen/logs/fit/" + datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
         tensorboard_callback = tf.keras.callbacks.TensorBoard(log_dir=log_dir, histogram_freq=1)
         callbacks_list = [checkpoint1, checkpoint2, custom_callback, lr_sched, tensorboard_callback]
 
