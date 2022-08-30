@@ -13,7 +13,7 @@ pgf_with_rc_fonts = {"pgf.texsystem": "pdflatex"}
 matplotlib.rcParams.update(pgf_with_rc_fonts)
 
 
-L = 6
+L = 40
 LINE_SIZE = 0.05
 # link length 
 LINK_LENGTH = 1.0
@@ -117,6 +117,8 @@ def list_of_vertices_on_sublattice(l, shaped_array):
                 elif shaped_array[i, (j-1)%l][0] == -1:
                     cur_row['W'] = 'Blank'
 
+                cur_row['x'] = j
+                cur_row['y'] = i
                 cur_v.fill_from_csv_row(cur_row)
 
                 vertex_list.append(cur_v)
@@ -159,9 +161,9 @@ def main():
                     tri_patches += vertex.tri_patches
             elif FILE_TYPE == 2:
                 config_array = np.genfromtxt(csv_file, delimiter=' ')
-                print(config_array)
-                
-
+                config_array = config_array[0].reshape(L, L, -1)
+                vertex_list = list_of_vertices_on_sublattice(L, config_array)
+                print(vertex_list)
             collection = PatchCollection(rect_patches)
             collection.set_color('grey')
             ax.add_collection(collection)
