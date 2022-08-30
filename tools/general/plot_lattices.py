@@ -98,6 +98,30 @@ def list_of_vertices_on_sublattice(l, shaped_array):
             # only make a vertex for one sublattice
             if (i + j) % 2 == 0:
                 cur_v = Vertex(lat_size)
+                cur_row = {}
+                if shaped_array[i, j][0] == 1:
+                    cur_row['E'] = "Out"
+                elif shaped_array[i, j][0] == -1:
+                    cur_row['E'] = "Blank"
+                if shaped_array[i, j][1] == 1:
+                    cur_row['N'] = "Out"
+                elif shaped_array[i, j][1] == -1:
+                    cur_row['N'] = "Blank"
+
+                if shaped_array[(i-1)%l, j][1] == 1:
+                    cur_row['S'] = 'In'
+                elif shaped_array[(i-1)%l, j][1] == -1:
+                    cur_row['S'] = 'Blank'
+                if shaped_array[i, (j-1)%l][0] == 1:
+                    cur_row['W'] = 'In'
+                elif shaped_array[i, (j-1)%l][0] == -1:
+                    cur_row['W'] = 'Blank'
+
+                cur_v.fill_from_csv_row(cur_row)
+
+                vertex_list.append(cur_v)
+    return vertex_list
+
 
 def main():
     lat_size = Point(L, L)
