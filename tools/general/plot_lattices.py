@@ -6,6 +6,7 @@ import os
 import csv
 import matplotlib.pyplot as plt
 import matplotlib
+import numpy as np
 
 #plt.style.use('aps')
 pgf_with_rc_fonts = {"pgf.texsystem": "pdflatex"}
@@ -17,6 +18,11 @@ LINE_SIZE = 0.05
 # link length 
 LINK_LENGTH = 1.0
 
+# Two types of files
+# 1) a file for each configuration; a row for each vertex
+# 2) all in one file; a row for each configuration
+
+FILE_TYPE = 2
 
 def adjusted_figure():
     fig = plt.figure()
@@ -84,6 +90,14 @@ def plot_test_points(ax, lat_size):
     collection.set_color('black')
     ax.add_collection(collection)
 
+def list_of_vertices_on_sublattice(l, shaped_array):
+    lat_size = Point(l, l)
+    vertex_list = []
+    for i in range(l):
+        for j in range(l):
+            # only make a vertex for one sublattice
+            if (i + j) % 2 == 0:
+                cur_v = Vertex(lat_size)
 
 def main():
     lat_size = Point(L, L)
@@ -95,7 +109,7 @@ def main():
     for cur_f in lattice_files:
         rect_patches = []
         tri_patches = []
-        if '.csv' not in cur_f:
+        if not (('.csv' in cur_f) or ('.txt' in cur_f)):
             continue
 
         fig, ax = adjusted_figure()
@@ -107,16 +121,22 @@ def main():
         full_f_name = os.path.join('lattices', cur_f)
 
         with open(full_f_name, 'r') as csv_file:
-            reader = csv.DictReader(csv_file)
-            
-            for row in reader:
-            
-                vertex = Vertex(lat_size)
-                vertex.fill_from_csv_row(row)
-                vertex.make_patches_to_plot(LINK_LENGTH, link_width_factor=0.15)
 
-                rect_patches += vertex.rect_patches
-                tri_patches += vertex.tri_patches
+            if FILE_TYPE == 1:
+                reader = csv.DictReader(csv_file)
+
+                for row in reader:
+
+                    vertex = Vertex(lat_size)
+                    vertex.fill_from_csv_row(row)
+                    vertex.make_patches_to_plot(LINK_LENGTH, link_width_factor=0.15)
+
+                    rect_patches += vertex.rect_patches
+                    tri_patches += vertex.tri_patches
+            elif FILE_TYPE == 2:
+                config_array = np.genfromtxt(csv_file, delimiter=' ')
+                print(config_array)
+                
 
             collection = PatchCollection(rect_patches)
             collection.set_color('grey')
