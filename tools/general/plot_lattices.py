@@ -13,7 +13,7 @@ pgf_with_rc_fonts = {"pgf.texsystem": "pdflatex"}
 matplotlib.rcParams.update(pgf_with_rc_fonts)
 
 
-L = 40
+L = 4
 LINE_SIZE = 0.05
 # link length 
 LINK_LENGTH = 1.0
@@ -163,6 +163,12 @@ def main():
                 config_array = np.genfromtxt(csv_file, delimiter=' ')
                 config_array = config_array[0].reshape(L, L, -1)
                 vertex_list = list_of_vertices_on_sublattice(L, config_array)
+
+                for cur_vertex in vertex_list:
+                    cur_vertex.make_patches_to_plot(LINK_LENGTH, link_width_factor=0.15)
+                    rect_patches += cur_vertex.rect_patches
+                    #tri_patches += cur_vertex.tri_patches
+
                 print(vertex_list)
             collection = PatchCollection(rect_patches)
             collection.set_color('grey')
