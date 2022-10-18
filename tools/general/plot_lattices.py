@@ -22,7 +22,12 @@ LINK_LENGTH = 1.0
 # 1) a file for each configuration; a row for each vertex
 # 2) all in one file; a row for each configuration
 
-FILE_TYPE = 2
+FILE_TYPE = 1
+
+# 1) z3
+# 2) z2
+SYSTEM_TYPE = 1
+
 
 def adjusted_figure():
     fig = plt.figure()
@@ -160,14 +165,18 @@ def main():
                     rect_patches += vertex.rect_patches
                     tri_patches += vertex.tri_patches
             elif FILE_TYPE == 2:
-                config_array = np.genfromtxt(csv_file, delimiter=' ')
+                if SYSTEM_TYPE == 1:
+                    config_array = np.genfromtxt(csv_file, delimiter=',')
+                elif SYSTEM_TYPE == 2:
+                    config_array = np.genfromtxt(csv_file, delimiter=' ')
                 config_array = config_array[0].reshape(L, L, -1)
                 vertex_list = list_of_vertices_on_sublattice(L, config_array)
 
                 for cur_vertex in vertex_list:
                     cur_vertex.make_patches_to_plot(LINK_LENGTH, link_width_factor=0.15)
                     rect_patches += cur_vertex.rect_patches
-                    #tri_patches += cur_vertex.tri_patches
+                    if SYSTEM_TYPE == 1:
+                        tri_patches += cur_vertex.tri_patches
 
                 print(vertex_list)
             collection = PatchCollection(rect_patches)
